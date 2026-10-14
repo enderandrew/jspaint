@@ -64,7 +64,7 @@ Name: <input type="text" name="name" maxlength="${MAX_NAME}" size="20" required>
 			return { status: 400, error: "A name and a message are needed to sign the guestbook." };
 		}
 		const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
-		const ok = await context.state.add_guestbook_entry({ name, message, ip_hash: await visitor_hash("guestbook", ip) });
+		const ok = await context.state.add_guestbook_entry({ name, message, ip_hash: await visitor_hash("guestbook", ip, context.pepper) });
 		if (!ok) {
 			return { status: 429, error: "You're signing too fast. Try again in a minute." };
 		}

@@ -261,7 +261,7 @@ async function handle_action(request, url, env) {
 	if ((await state.moderation())?.disabled) { return unavailable(); }
 	const result = await definition.action({
 		form,
-		context: { site, page: "", page_uploaded: null, state, request, files: site_files(env.SITES, site), page_html: "" },
+		context: { site, page: "", page_uploaded: null, state, request, files: site_files(env.SITES, site), page_html: "", pepper: env.VISITOR_PEPPER },
 	});
 	if (result.location) {
 		return new Response(null, { status: result.status || 303, headers: { ...PAGE_HEADERS, Location: result.location } });
@@ -327,7 +327,7 @@ function with_report_link(html, site, page) {
 /**
  * GET /~name/x/report?page=… shows the form; POST takes it, and forwards the report to the editor Worker (POST
  * /api/reports, which keeps three a day per visitor and shows them to the admin). Plain pages, in the 404's style.
- * @param {Request} request @param {URL} url @param {{ SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string }} env @param {ExecutionContext} ctx @param {string} site
+ * @param {Request} request @param {URL} url @param {{ SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, VISITOR_PEPPER?: string }} env @param {ExecutionContext} ctx @param {string} site
  */
 async function handle_report(request, url, env, ctx, site) {
 	const page_of = (/** @type {string} */ value) => (valid_path(value) && is_html_path(value) ? value : "index.html");
@@ -360,7 +360,7 @@ async function handle_report(request, url, env, ctx, site) {
 	const reason = String(form.get("reason") || "").trim().slice(0, MAX_REPORT_CHARS);
 	if (String(form.get("website") || "")) { return shell("Thank you", "<p>Your report was sent.</p>"); } // (the honeypot: pretend)
 	if (reason.length < 3) { return refusal(400, "<p>Say a little about what's wrong with the page.</p>"); }
-	const ip_hash = await visitor_hash("view", request.headers.get("CF-Connecting-IP") || "unknown");
+	const ip_hash = await visitor_hash("view", request.headers.get("CF-Connecting-IP") || "unknown", env.VISITOR_PEPPER);
 	let outcome = "sent";
 	if (env.EDITOR_URL) {
 		try {
@@ -518,7 +518,7 @@ function with_stylesheet(html, href) {
 export default {
 	/**
 	 * @param {Request} request
-	 * @param {{ SITES: R2Bucket, SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, SITES_URL?: string }} env
+	 * @param {{ SITES: R2Bucket, SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, SITES_URL?: string, VISITOR_PEPPER?: string }} env
 	 */
 	async fetch(request, env, ctx) {
 		try {
@@ -537,7 +537,7 @@ export default {
 	},
 	/**
 	 * @param {Request} request
-	 * @param {{ SITES: R2Bucket, SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, SITES_URL?: string }} env
+	 * @param {{ SITES: R2Bucket, SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, SITES_URL?: string, VISITOR_PEPPER?: string }} env
 	 * @param {ExecutionContext} ctx
 	 */
 	async serve(request, env, ctx) {
@@ -627,7 +627,7 @@ export default {
 		 * @param {string} page @param {boolean} visit
 		 * @returns {Promise<{ generation: number, hits: number }>}
 		 */
-		const look = async (page, visit) => state.view(visit && !CRAWLER_UA.test(request.headers.get("User-Agent") || "") ? await visitor_hash("view", client_ip(request)) : "", page);
+		const look = async (page, visit) => state.view(visit && !CRAWLER_UA.test(request.headers.get("User-Agent") || "") ? await visitor_hash("view", client_ip(request), env.VISITOR_PEPPER) : "", page);
 		/**
 		 * The cached page, answered: the counter's slot gets the count (this visit included, and counted after the answer),
 		 * the visitor's headers go on, HEAD gets no body.
