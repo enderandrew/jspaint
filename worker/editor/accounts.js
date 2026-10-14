@@ -5,6 +5,7 @@
 // Also the accounts (auth.js): users, their identities (a Google account; later an email, a phone, a passkey — one
 // row each, joined by verified email), sessions (as hashes), and which user owns which site.
 import { DurableObject } from "cloudflare:workers";
+import { unify_user_emails } from "./merge-users.js";
 
 export class Accounts extends DurableObject {
 	/**
@@ -35,6 +36,9 @@ export class Accounts extends DurableObject {
 			}
 			// Visitors' reports of pages (the sites Worker forwards its form), three a day per visitor
 			sql.exec("CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, site TEXT NOT NULL, page TEXT NOT NULL, reason TEXT NOT NULL, ip_hash TEXT NOT NULL, created INTEGER NOT NULL, resolved INTEGER NOT NULL DEFAULT 0)");
+			// One row per email: rows a split sign-in doubled are folded into the oldest, then the unique index (merge-users.js)
+			const { merged } = unify_user_emails(sql);
+			if (merged) { console.log(`accounts: merged ${merged} duplicate user row(s) by email`); }
 			return Promise.resolve();
 		});
 	}
@@ -155,6 +159,7 @@ export class Accounts extends DurableObject {
 	sign_in_identity({ provider, subject, email, name }) {
 		const sql = this.ctx.storage.sql;
 		const now = Date.now();
+		email = String(email || "").trim().toLowerCase();
 		let row = sql.exec("SELECT user_id FROM identities WHERE provider = ? AND subject = ?", provider, subject).toArray()[0];
 		let user_id = row ? String(row.user_id) : "";
 		let created = false;
@@ -163,11 +168,19 @@ export class Accounts extends DurableObject {
 			user_id = row ? String(row.id) : "";
 		}
 		if (!user_id) {
-			user_id = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => b.toString(16).padStart(2, "0")).join("");
-			sql.exec("INSERT INTO users (id, email, name, created, seen) VALUES (?, ?, ?, ?, ?)", user_id, email || null, name || null, now, now);
-			created = true;
-		} else {
-			sql.exec("UPDATE users SET seen = ?, name = COALESCE(NULLIF(?, ''), name), email = COALESCE(email, NULLIF(?, '')) WHERE id = ?", now, name, email, user_id);
+			// A new person — unless another sign-in made the row between the look and the insert: `users.email` is unique,
+			// the insert is ignored, and theirs is the account. (One object runs one call at a time, so that can't happen
+			// here today; it's written so it needn't be.)
+			const fresh = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => b.toString(16).padStart(2, "0")).join("");
+			sql.exec("INSERT OR IGNORE INTO users (id, email, name, created, seen) VALUES (?, ?, ?, ?, ?)", fresh, email || null, name || null, now, now);
+			row = email ? sql.exec("SELECT id FROM users WHERE email = ?", email).toArray()[0] : null;
+			user_id = row ? String(row.id) : fresh;
+			created = user_id === fresh;
+		}
+		if (!created) {
+			sql.exec("UPDATE users SET seen = ?, name = COALESCE(NULLIF(?, ''), name) WHERE id = ?", now, name, user_id);
+			// An account without an address learns this one, unless another account already has it
+			if (email) { sql.exec("UPDATE users SET email = ? WHERE id = ? AND email IS NULL AND NOT EXISTS (SELECT 1 FROM users WHERE email = ?)", email, user_id, email); }
 		}
 		sql.exec("INSERT INTO identities (provider, subject, user_id, email, created) VALUES (?, ?, ?, ?, ?) ON CONFLICT(provider, subject) DO UPDATE SET email = excluded.email", provider, subject, user_id, email || null, now);
 		return { user: /** @type {any} */ (this.get_user(user_id)), created };
@@ -213,8 +226,20 @@ export class Accounts extends DurableObject {
 		const row = this.ctx.storage.sql.exec("SELECT user_id FROM owners WHERE site = ?", site).toArray()[0];
 		return row ? String(row.user_id) : null;
 	}
-	/** @param {string} site @param {string} user_id */
+	/**
+	 * A user takes a site: theirs if nobody owns it (or they already do), else not — the first claim wins, whatever the
+	 * caller saw before (its checks and this write are separate calls; an R2 listing sits between them).
+	 * @param {string} site @param {string} user_id
+	 * @returns {{ ok: boolean, owner: string }} whether it's theirs, and whose it is
+	 */
 	claim_site(site, user_id) {
+		const sql = this.ctx.storage.sql;
+		sql.exec("INSERT INTO owners (site, user_id, claimed) VALUES (?, ?, ?) ON CONFLICT(site) DO NOTHING", site, user_id, Date.now());
+		const owner = String(sql.exec("SELECT user_id FROM owners WHERE site = ?", site).toArray()[0]?.user_id || "");
+		return { ok: owner === user_id, owner };
+	}
+	/** The master hands a site to an account, whoever had it (support, by hand). @param {string} site @param {string} user_id */
+	assign_site(site, user_id) {
 		this.ctx.storage.sql.exec("INSERT INTO owners (site, user_id, claimed) VALUES (?, ?, ?) ON CONFLICT(site) DO UPDATE SET user_id = excluded.user_id, claimed = excluded.claimed", site, user_id, Date.now());
 	}
 	/** @param {string} user_id @returns {string[]} the sites this user owns, oldest first */

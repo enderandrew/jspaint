@@ -13,6 +13,7 @@ import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasObject } from "./OnCanvasObject.js";
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 import { BLOCK_KINDS, block_kind_for, element_from_html, escape_html, get_block_kind, sanitize_html_fragment } from "./block-kinds.js";
+import { safe_block } from "./safe-markup.js";
 import { get_tool_by_id, make_or_update_undoable, select_tool, undoable } from "./functions.js";
 import { $G, E, get_help_folder_icon, get_icon_for_tool, get_rgba_from_color, make_canvas, make_css_cursor, to_canvas_coords } from "./helpers.js";
 import { deselect_sticker } from "./stickers.js";
@@ -138,6 +139,10 @@ class OnCanvasBlock extends OnCanvasObject {
 	 * @param {BlockSnapshot} snapshot
 	 */
 	constructor(snapshot) {
+		// The one gate every block passes through, whatever brought it here — a tool, a parsed page (File › Open, My
+		// Site), a live-room op or snapshot. The tag and attributes are normalized to the dialect's safe shapes
+		// (src/safe-markup.js), so `render()` may createElement from the model: if it's in the model, it's renderable.
+		snapshot = safe_block(snapshot);
 		super(snapshot.x, snapshot.y, snapshot.width, snapshot.height, false);
 		this.id = snapshot.id;
 		this.tag = snapshot.tag;
@@ -1046,6 +1051,12 @@ function set_block_source(block, changes, name = "Edit Element") {
 		if (changes.tag) { block.tag = changes.tag.toLowerCase(); }
 		if (changes.attrs) { block.attrs = { ...changes.attrs }; }
 		if (changes.html !== undefined) { block.html = changes.html; }
+		// The constructor's gate again, for the local paths that change a block in place (Edit Element HTML, the
+		// Properties dialog, Add Link, the marquee toggle): the model only ever holds the safe shapes.
+		const safe = safe_block(block);
+		block.tag = safe.tag;
+		block.attrs = safe.attrs;
+		block.html = safe.html;
 		block.kind = block_kind_for(block.tag, block.attrs);
 		block.$el.attr({ "data-kind": block.kind.id, "data-tag": block.tag }).toggleClass("x-element", block.tag.startsWith("x-"));
 		block.render();

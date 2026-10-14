@@ -200,7 +200,23 @@ try {
 	person = { ...person, sub: `sub-${stamp}-other-device` };
 	assert.equal((await (await call("/api/whoami", {}, await again())).json()).user.id, user_id, "joined by email");
 	person = { ...person, sub: `sub-${stamp}-stranger`, email: `stranger-${stamp}@example.com` };
-	assert.notEqual((await (await call("/api/whoami", {}, await again())).json()).user.id, user_id, "a different person");
+	const stranger_cookies = await again();
+	assert.notEqual((await (await call("/api/whoami", {}, stranger_cookies)).json()).user.id, user_id, "a different person");
+
+	// Two accounts take the same free name at the same instant: exactly one gets it and the other hears "taken" —
+	// the claim itself is conditional (Accounts claim_site), since the checks before it can't see a claim still in flight
+	person = { ...person, sub: `sub-${stamp}-rival`, email: `rival-${stamp}@example.com` };
+	const rival_cookies = await again();
+	const contested = `g-${stamp}-race`;
+	const take = (/** @type {Record<string, string>} */ c) => call("/auth/sites", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: contested }) }, c);
+	const raced = await Promise.all([take(stranger_cookies), take(rival_cookies)]);
+	assert.deepEqual(raced.map((r) => r.status).sort(), [200, 409], `one winner: ${raced.map((r) => r.status).join(",")}`);
+	assert.match((await raced.find((r) => r.status === 409).json()).error, /taken/);
+	const [winner, loser] = raced[0].status === 200 ? [stranger_cookies, rival_cookies] : [rival_cookies, stranger_cookies];
+	assert.equal((await (await call(`/api/whoami?site=${contested}`, {}, winner)).json()).role, "site");
+	assert.equal((await (await call(`/api/whoami?site=${contested}`, {}, loser)).json()).role, "user");
+	assert.deepEqual(await (await take(winner)).json(), { ok: true, site: contested, yours: true }, "asking again is fine for the owner");
+	assert.equal((await take(loser)).status, 409);
 	person = { ...person, email_verified: false };
 	const start = await call("/auth/google");
 	const unverified = await call(`/auth/google/callback?code=good-code&state=${new URL(start.headers.get("Location") || "").searchParams.get("state")}`, {}, { coolpaint_auth_state: cookie_from(start, "coolpaint_auth_state")?.value || "" });
@@ -230,7 +246,7 @@ try {
 	assert.equal(response.status, 409, "claiming counts too");
 	assert.deepEqual((await (await call("/api/whoami", {}, cookies)).json()).sites.length, 5);
 	assert.equal((await (await call("/auth/methods")).json()).site_limit, 5);
-	const sites_to_clean = [site, older, handed, ...extra, sixth];
+	const sites_to_clean = [site, older, handed, ...extra, sixth, contested];
 
 	// Favorite GIFs live on the account: none yet; hearts go up (newest first, kept by their own time); an un-heart
 	// takes one away; only real GifCities ids; and only for a signed-in session
@@ -278,6 +294,15 @@ try {
 	response = await call("/admin", {}, admin_cookies);
 	assert.equal(response.status, 200);
 	assert.match(await response.text(), /coolpaint\.world — admin/);
+	// Two callbacks for one brand-new Google account at the same instant: one user, not two (users.email is unique and
+	// sign_in_identity takes the row that's there), and the admin sees one account with that address
+	person = { sub: `sub-${stamp}-twins`, email: `twins-${stamp}@example.com`, email_verified: true, name: "Twin Pat" };
+	const twin_starts = await Promise.all([call("/auth/google"), call("/auth/google")]);
+	const twin_backs = await Promise.all(twin_starts.map((start) => call(`/auth/google/callback?code=good-code&state=${new URL(start.headers.get("Location") || "").searchParams.get("state")}`, {}, { coolpaint_auth_state: cookie_from(start, "coolpaint_auth_state")?.value || "" })));
+	assert.deepEqual(twin_backs.map((back) => back.status), [302, 302]);
+	const twin_ids = await Promise.all(twin_backs.map(async (back) => (await (await call("/api/whoami", {}, { coolpaint_session: cookie_from(back, "coolpaint_session")?.value || "" })).json()).user.id));
+	assert.equal(twin_ids[0], twin_ids[1], "one account");
+	assert.equal((await (await call("/api/admin/overview?fresh=1", {}, admin_cookies)).json()).users.filter((u) => u.email === person.email).length, 1, "…and one row for the address");
 	// Lock Pat: Pat's sessions end, Pat can't sign in; unlock, and Pat is back
 	person = { sub: `sub-${stamp}`, email: my_email, email_verified: true, name: "Pat Test" };
 	const pat_again = await again();

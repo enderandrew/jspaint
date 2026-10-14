@@ -15,34 +15,21 @@
 // under the site, re-read at every bump — a disabled site answers 451, a hidden page 404, a site in its first day is
 // noindex. Every page ends with a "report this page" link; /~name/x/report is the form, forwarded to the editor.
 import { DurableObject } from "cloudflare:workers";
-import { ROOT_SITE, content_type_for, extension_of, is_html_path, site_base, site_home, valid_path, valid_site_name } from "../shared/names.js";
+import { MAX_PAGE_HTML, ROOT_SITE, content_type_for, extension_of, is_html_path, publicly_servable, site_base, site_home, valid_path, valid_site_name } from "../shared/names.js";
 import { capture_exception } from "../shared/exceptions.js";
 import { find_sections, text_of } from "../shared/sections.js";
 import { sanitize_html } from "../shared/sanitize.js";
 import { escape_html, render_x_element, render_x_elements, x_elements } from "../shared/x-elements/index.js";
 import { odometer } from "../shared/x-elements/counter.js";
-import { ShortCache, client_ip, limited, report_limited, too_many } from "../shared/limits.js";
+import { ShortCache, client_ip, limited, report_limited, too_many, visitor_hash } from "../shared/limits.js";
 import { error_page_html, server_page_html } from "../shared/server-page.js";
-
-const PAGE_HEADERS = {
-	"Content-Security-Policy": "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
-	"X-Content-Type-Options": "nosniff",
-	"X-Frame-Options": "DENY",
-	"Referrer-Policy": "strict-origin-when-cross-origin",
-	// no-transform: Cloudflare then leaves the HTML alone — no Web Analytics beacon or other injected script on pages.
-	"Cache-Control": "no-cache, no-transform",
-};
+import { PAGE_HEADERS } from "../shared/headers.js";
 
 const VIEWING_WINDOW_MS = 5 * 60 * 1000; // "viewing now": loaded a page this recently
 const VIEWS_KEPT_MS = 24 * 60 * 60 * 1000;
 const GUESTBOOK_MIN_INTERVAL_MS = 30 * 1000; // per visitor
 const GUESTBOOK_MAX_PER_DAY = 20; // per visitor
 
-/** @param {string} text */
-async function sha256_hex(text) {
-	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 const GUESTBOOK_MAX_ENTRIES = 2000; // per site
 const PAGE_CACHE_S = 60 * 60; // a rendered page's life in the cache if no change ever bumps the generation (a missed ping)
 const VIEW_FLUSH_MS = 15 * 1000; // views and counter hits are tallied in memory and written this often
@@ -315,7 +302,7 @@ async function handle_preview(request, env, site) {
 		state: env.SITE_STATE.getByName(site),
 		request,
 		files: site_files(env.SITES, site),
-		page_html: typeof body.page_html === "string" ? body.page_html.slice(0, 512 * 1024) : "",
+		page_html: typeof body.page_html === "string" ? body.page_html.slice(0, MAX_PAGE_HTML) : "",
 		preview: true,
 	});
 	return reply({ html });
@@ -373,7 +360,7 @@ async function handle_report(request, url, env, ctx, site) {
 	const reason = String(form.get("reason") || "").trim().slice(0, MAX_REPORT_CHARS);
 	if (String(form.get("website") || "")) { return shell("Thank you", "<p>Your report was sent.</p>"); } // (the honeypot: pretend)
 	if (reason.length < 3) { return refusal(400, "<p>Say a little about what's wrong with the page.</p>"); }
-	const ip_hash = await sha256_hex(`view|${request.headers.get("CF-Connecting-IP") || "unknown"}`);
+	const ip_hash = await visitor_hash("view", request.headers.get("CF-Connecting-IP") || "unknown");
 	let outcome = "sent";
 	if (env.EDITOR_URL) {
 		try {
@@ -627,8 +614,8 @@ export default {
 		// Clean addresses: /about is about.html, and /blog (a folder) is blog/ — the address with the slash
 		const clean = !/\.[A-Za-z0-9]+$/.test(path) && valid_path(`${path}.html`) ? path : "";
 		if (clean) { path = `${clean}.html`; }
-		if (!valid_path(path) || path.startsWith("versions/")) {
-			return not_found(); // (versions/: earlier saves, only reachable through the editor)
+		if (!publicly_servable(path)) {
+			return not_found(); // (versions/: earlier saves, only reachable through the editor; dotfiles: the admin's marker)
 		}
 		const state = env.SITE_STATE.getByName(site);
 		const cache = caches.default;
@@ -640,7 +627,7 @@ export default {
 		 * @param {string} page @param {boolean} visit
 		 * @returns {Promise<{ generation: number, hits: number }>}
 		 */
-		const look = async (page, visit) => state.view(visit && !CRAWLER_UA.test(request.headers.get("User-Agent") || "") ? await sha256_hex(`view|${client_ip(request)}`) : "", page);
+		const look = async (page, visit) => state.view(visit && !CRAWLER_UA.test(request.headers.get("User-Agent") || "") ? await visitor_hash("view", client_ip(request)) : "", page);
 		/**
 		 * The cached page, answered: the counter's slot gets the count (this visit included, and counted after the answer),
 		 * the visitor's headers go on, HEAD gets no body.
@@ -674,7 +661,7 @@ export default {
 			// (links to our own hosts aren't outbound; under a localhost editor — dev, tests — any localhost port is ours too)
 			const own_hosts = [url.host, ...(env.SITES_URL ? [new URL(env.SITES_URL).host] : []), ...(env.EDITOR_URL ? [new URL(env.EDITOR_URL).host] : []), ...(/^http:\/\/localhost/.test(env.EDITOR_URL || "") ? [/^localhost(:\d+)?$/] : [])];
 			const sanitized = await sanitize_html(await object.text(), { own_hosts });
-			let rendered = await render_x_elements(sanitized, { site, page, page_uploaded: object.uploaded, state, request, files, page_html: sanitized, count_slot: true });
+			let rendered = await render_x_elements(sanitized, { site, page, page_uploaded: object.uploaded, state, request, files, page_html: sanitized.slice(0, MAX_PAGE_HTML), count_slot: true });
 			if (await files.has("site.css")) { rendered = await with_stylesheet(rendered, `${site_base(site)}/site.css`); }
 			rendered = with_report_link(rendered, site, page);
 			const fresh = new Response(rendered, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${PAGE_CACHE_S}`, "X-Counter": /data-x-counter=/.test(rendered) ? "1" : "0" } });

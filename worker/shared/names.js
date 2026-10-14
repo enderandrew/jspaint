@@ -52,6 +52,18 @@ function valid_path(path) {
 	return segments.every((segment) => PATH_SEGMENT.test(segment) && segment !== "." && segment !== "..") && ALLOWED_EXTENSIONS.has(extension_of(path));
 }
 
+/** Whether a path inside a site is public to strangers: a valid path, never the owner's saved versions (the sites
+ * Worker refuses `versions/` when serving; the editor's public file reads refuse it the same way, so a page the
+ * admin hid can't be read through its old copies), never a dotfile (the admin's marker). @param {string} path */
+function publicly_servable(path) {
+	return valid_path(path) && !path.startsWith("versions/") && !(path.split("/").pop() || "").startsWith(".");
+}
+
+/** The most page HTML an <x-*> renderer reads of a page (its sections, for `<x-toc>` and folder summaries): where a
+ * page is read, it's read only this far, so a crafted multi-megabyte page can't turn the section scan (quadratic at
+ * worst) into Worker CPU. The same cap the preview route applies — one number, both places. */
+const MAX_PAGE_HTML = 512 * 1024;
+
 /** @param {string} path */
 function extension_of(path) {
 	const match = /\.([A-Za-z0-9]+)$/.exec(path);
@@ -99,4 +111,4 @@ function site_home(site) {
 	return `${site_base(site)}/`;
 }
 
-export { ALLOWED_EXTENSIONS, ROOT_SITE, content_type_for, extension_of, is_html_path, reserved_site_name, site_base, site_home, sniff_type, valid_path, valid_site_name };
+export { ALLOWED_EXTENSIONS, MAX_PAGE_HTML, ROOT_SITE, content_type_for, extension_of, is_html_path, publicly_servable, reserved_site_name, site_base, site_home, sniff_type, valid_path, valid_site_name };

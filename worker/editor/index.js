@@ -32,8 +32,9 @@
 // says which. Reads of site files are public. Open sign-up / Google OAuth come later (docs/PLAN.md phase 5).
 import { inject_analytics } from "../shared/analytics.js";
 import { capture_exception } from "../shared/exceptions.js";
+import { PAGE_HEADERS } from "../shared/headers.js";
 import { ShortCache, client_ip, limited, report_limited, too_many } from "../shared/limits.js";
-import { ROOT_SITE, content_type_for, is_html_path, site_base, sniff_type, valid_path, valid_site_name } from "../shared/names.js";
+import { ROOT_SITE, content_type_for, is_html_path, publicly_servable, site_base, sniff_type, valid_path, valid_site_name } from "../shared/names.js";
 import { accounts_of, capture_event, editor_origin, handle_auth, session_of, with_refreshed_claims } from "./auth.js";
 import { handle_admin } from "./admin.js";
 import { notify_published, page_hidden, read_moderation } from "./moderation.js";
@@ -537,13 +538,21 @@ async function handle_site_files(request, url, env, invite = null, ctx = null) {
 	const key = prefix + path;
 
 	if (request.method === "GET" || request.method === "HEAD") {
-		// A site the admin took down, or a page the admin hid, isn't readable here either — unless you're its owner or the master
+		// A site the admin took down, a page the admin hid, or the owner's saved versions: none of it is public here
+		// — unless you're the owner or the master. (The sites Worker refuses versions/ when serving; this is the same
+		// policy, so a hidden page can't be read through its old copies.)
 		const moderation = await read_moderation(env, name);
-		if ((moderation.disabled || page_hidden(moderation, path)) && !(await role_of(request, env, name))) { return json({ error: "Not found" }, 404); }
+		const restricted = moderation.disabled || page_hidden(moderation, path) || !publicly_servable(path);
+		if (restricted && !(await role_of(request, env, name))) { return json({ error: "Not found" }, 404); }
 		const object = await env.SITES.get(key);
 		// ?optional: a probe that may well miss — answer 204 instead of 404 so the browser console stays quiet.
 		if (!object) { return url.searchParams.has("optional") ? new Response(null, { status: 204, headers: CORS_HEADERS }) : json({ error: "Not found" }, 404); }
 		const headers = new Headers(CORS_HEADERS);
+		// A site's files are user content on the editor's own origin, so they carry the sandbox's contract
+		// (worker/shared/headers.js): the strict page CSP, and nosniff — without which a browser will load a .txt
+		// from this origin as <script src=…> (the Fetch spec's MIME check for script destinations only applies when
+		// nosniff is set). The app reads these with fetch(), which response headers don't restrict.
+		for (const [header, value] of Object.entries(PAGE_HEADERS)) { headers.set(header, value); }
 		headers.set("Content-Type", content_type_for(path));
 		headers.set("Content-Length", String(object.size));
 		headers.set("ETag", object.httpEtag);
@@ -761,7 +770,10 @@ const editor = {
 				return await handle_auth(request, url, env, { role_of, password_hash, site_hash }, ctx);
 			} catch (error) {
 				console.error(error);
-				return json({ error: error.message || String(error) }, 500);
+				// The same plain sentence as every server failure (docs/DESIGN.md §9): the detail goes to Error
+				// tracking and the logs, never to the person — error.message can carry internals.
+				capture_exception(env, ctx, error, { worker: "jspaint-editor", route: url.pathname, method: request.method, status: 500 });
+				return json({ error: "Something went wrong on our side. Please try again in a little while.", code: "server-error" }, 500);
 			}
 		}
 		const admin = await handle_admin(request, url, env, ctx, role_of);

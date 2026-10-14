@@ -28,6 +28,7 @@
 // that by at most its hour. Routes that need the account's email or name ask for a fresh lookup.
 import { reserved_site_name, valid_site_name } from "../shared/names.js";
 import { client_ip, limited, report_limited, too_many } from "../shared/limits.js";
+import { same_origin_path } from "../../src/safe-markup.js";
 import { write_moderation } from "./moderation.js";
 import { error_page_html } from "../shared/server-page.js";
 
@@ -280,9 +281,15 @@ async function issue_session(url, env, user_id) {
 	return [set_cookie(url, env, SESSION_COOKIE, token, SESSION_TTL_MS / 1000), await claims_cookie(url, env, user_id, hash)];
 }
 
-/** Only a path on the editor itself (with its query), never another site. @param {string} next */
-function safe_next(next) {
-	return /^\/(?!\/)[^\s]*$/.test(next) ? next : "/";
+/**
+ * Only a path on the editor itself (with its query and fragment), never another site — parsed, then its origin
+ * compared (`same_origin_path` in src/safe-markup.js): the browser's URL parser reads `/\evil.com` as
+ * `//evil.com`, which the old syntax regex let through, and an open redirect on the sign-in return path is a
+ * phishing prime spot.
+ * @param {string} next @param {string} origin - the editor's own origin
+ */
+function safe_next(next, origin) {
+	return typeof next === "string" && next.startsWith("/") && same_origin_path(next, origin) ? next : "/";
 }
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" }; // (index.js narrows this to the exact origin, with credentials, for a localhost pair)
@@ -320,7 +327,7 @@ async function handle_auth(request, url, env, { role_of, password_hash, site_has
 			// Start: remember a random state (and where to go afterwards), then send them to the provider
 			if (request.method !== "GET") { return json({ error: "Method not allowed" }, 405); }
 			const state = random_token(16);
-			const next = safe_next(url.searchParams.get("next") || "/");
+			const next = safe_next(url.searchParams.get("next") || "/", editor_origin(url, env));
 			const params = new URLSearchParams({ client_id: client.id, redirect_uri, response_type: "code", scope: provider.scope, state, ...provider.extra });
 			return new Response(null, {
 				status: 302,
@@ -354,7 +361,7 @@ async function handle_auth(request, url, env, { role_of, password_hash, site_has
 		if (created) {
 			capture_event(env, ctx, "signup", user.id, { email: user.email || "", name: user.name || "", provider: name });
 		}
-		const headers = new Headers({ Location: safe_next(next), "Cache-Control": "no-store" });
+		const headers = new Headers({ Location: safe_next(next, editor_origin(url, env)), "Cache-Control": "no-store" });
 		for (const cookie of await issue_session(url, env, user.id)) { headers.append("Set-Cookie", cookie); }
 		headers.append("Set-Cookie", clear_state);
 		return new Response(null, { status: 302, headers });
@@ -414,7 +421,7 @@ async function handle_auth(request, url, env, { role_of, password_hash, site_has
 		if (await site_hash(env, site, { fresh: true })) { return json({ error: "That site has a password: claim it with the password", claimable: true }, 409); }
 		const listing = await env.SITES.list({ prefix: `sites/${site}/`, limit: 1 });
 		if (listing.objects.length) { return json({ error: "That name is taken" }, 409); }
-		await accounts.claim_site(site, session.id);
+		if (!(await accounts.claim_site(site, session.id)).ok) { return json({ error: "That name is taken" }, 409); } // (someone else's claim landed first)
 		refresh_claims(request, env, session.id, session.hash); // (the claims cookie names the new site at once)
 		await write_moderation(env, ctx, site, { created: Date.now() }, session.email || "system"); // (its first day is noindex)
 		capture_event(env, ctx, "site_claimed", session.id, { site, email: session.email || "" });
@@ -439,7 +446,7 @@ async function handle_auth(request, url, env, { role_of, password_hash, site_has
 		const given = password ? await password_hash(env.SITE_EDIT_SECRET, site, password) : "";
 		const is_master = (await role_of(request, env, site)) === "master";
 		if (!is_master && (!stored || !given || given !== stored)) { return json({ error: "The password was rejected" }, 401); }
-		await accounts.claim_site(site, session.id);
+		if (!(await accounts.claim_site(site, session.id)).ok) { return json({ error: "That site is someone else's" }, 409); } // (claimed since the look above)
 		refresh_claims(request, env, session.id, session.hash);
 		capture_event(env, ctx, "site_claimed", session.id, { site, email: session.email || "" });
 		return json({ ok: true, site, yours: true });
@@ -502,7 +509,7 @@ async function handle_auth(request, url, env, { role_of, password_hash, site_has
 		const accounts = accounts_of(env);
 		const user = await accounts.user_by_email(email);
 		if (!user) { return json({ error: "No account with that email has signed in yet" }, 404); }
-		await accounts.claim_site(site, user.id);
+		await accounts.assign_site(site, user.id);
 		return json({ ok: true, site, user: { email: user.email, name: user.name } });
 	}
 	return json({ error: "Not found" }, 404);

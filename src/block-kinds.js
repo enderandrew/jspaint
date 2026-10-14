@@ -4,6 +4,7 @@
 // registry the Workers render from (worker/shared/x-elements/); the copy here is the offline default and is
 // refreshed from the editor's /api/x-elements when Paint is signed in to a site.
 import { get_site_editor_url } from "./site-publish.js";
+import { CONTENT_BLOCKED_TAGS as BLOCKED_TAGS, URL_ATTRIBUTES, url_is_dangerous } from "./safe-markup.js";
 
 /**
  * @typedef {object} BlockProp - one attribute in an element's Properties dialog
@@ -294,12 +295,11 @@ async function refresh_x_element_kinds() {
 	} catch (_error) { /* offline, or no editor configured */ }
 }
 
-const BLOCKED_TAGS = new Set(["script", "iframe", "frame", "frameset", "object", "embed", "applet", "base", "form", "input", "button", "textarea", "select", "noscript", "meta", "link", "style", "template"]);
-const DANGEROUS_URL = /^\s*(?:javascript|vbscript|data:text\/html|data:application)/i;
-
 /**
  * Removes anything executable from a parsed element tree, in place. The Workers sanitize again on save and
- * on serve; this keeps Paint's own origin safe when opening a page from anywhere.
+ * on serve; this keeps Paint's own origin safe when opening a page from anywhere. The policy — blocked tags,
+ * URL attributes, what a dangerous URL is — is shared with the Workers (src/safe-markup.js), so the two
+ * sanitizers can't drift; the URL check is parse-based, so a tab inside a scheme doesn't slip past.
  * @param {Element | DocumentFragment} root
  */
 function sanitize_tree(root) {
@@ -310,7 +310,7 @@ function sanitize_tree(root) {
 		}
 		for (const attr of [...el.attributes]) {
 			const name = attr.name.toLowerCase();
-			if (name.startsWith("on") || name === "srcdoc" || name === "contenteditable" || (/^(href|src|action|background|xlink:href|usemap|poster|data)$/.test(name) && DANGEROUS_URL.test(attr.value))) {
+			if (name.startsWith("on") || name === "srcdoc" || name === "contenteditable" || (URL_ATTRIBUTES.has(name) && url_is_dangerous(attr.value))) {
 				el.removeAttribute(attr.name);
 			}
 		}

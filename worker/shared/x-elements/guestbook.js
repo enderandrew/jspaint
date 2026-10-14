@@ -3,17 +3,20 @@
 // sites Worker handles at /~name/x/guestbook, or /x/guestbook for the root site); entries live in the site's Durable
 // Object, newest first.
 import { ROOT_SITE, site_base, site_home } from "../names.js";
+import { visitor_hash } from "../limits.js";
+import { same_origin_path } from "../../../src/safe-markup.js";
 import { escape_html } from "./index.js";
 
 /**
- * A same-site path to return to after signing: starts at the site's home, can't leave it (or, for the root site, wander
- * into someone's /~name/), and can't be an absolute or protocol-relative URL.
- * @param {unknown} value @param {string} site
+ * A same-site path to return to after signing: starts at the site's home, can't leave it (or, for the root site,
+ * wander into someone's /~name/), and can't be an absolute or protocol-relative URL — judged by the browser's own
+ * URL parser (`same_origin_path`: it reads `/\evil.com` as `//evil.com`, which a syntax regex didn't).
+ * @param {unknown} value @param {string} site @param {string} origin - the page's own origin
  */
-function safe_back(value, site) {
+function safe_back(value, site, origin) {
 	const home = site_home(site);
 	const back = String(value || "");
-	const ok = back.startsWith(home) && !back.includes("//") && !back.includes("..") && !(site === ROOT_SITE && back.startsWith("/~"));
+	const ok = back.startsWith(home) && !back.includes("..") && !(site === ROOT_SITE && back.startsWith("/~")) && same_origin_path(back, origin);
 	return ok ? back : home;
 }
 
@@ -51,8 +54,9 @@ Name: <input type="text" name="name" maxlength="${MAX_NAME}" size="20" required>
 	 * @param {{ form: FormData, context: import("./index.js").XElementContext }} input
 	 */
 	async action({ form, context }) {
+		const origin = new URL(context.request.url).origin;
 		if (String(form.get("website") || "")) {
-			return { status: 303, location: safe_back(form.get("back"), context.site) }; // honeypot: pretend it worked
+			return { status: 303, location: safe_back(form.get("back"), context.site, origin) }; // honeypot: pretend it worked
 		}
 		const name = String(form.get("name") || "").trim().slice(0, MAX_NAME);
 		const message = String(form.get("message") || "").trim().slice(0, MAX_MESSAGE);
@@ -60,16 +64,11 @@ Name: <input type="text" name="name" maxlength="${MAX_NAME}" size="20" required>
 			return { status: 400, error: "A name and a message are needed to sign the guestbook." };
 		}
 		const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
-		const ok = await context.state.add_guestbook_entry({ name, message, ip_hash: await hash(ip) });
+		const ok = await context.state.add_guestbook_entry({ name, message, ip_hash: await visitor_hash("guestbook", ip) });
 		if (!ok) {
 			return { status: 429, error: "You're signing too fast. Try again in a minute." };
 		}
-		return { status: 303, location: `${safe_back(form.get("back"), context.site)}#guestbook` };
+		return { status: 303, location: `${safe_back(form.get("back"), context.site, origin)}#guestbook` };
 	},
 };
 
-/** @param {string} text */
-async function hash(text) {
-	const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-	return [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
-}

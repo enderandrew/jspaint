@@ -33,6 +33,20 @@ function client_ip(request) {
 }
 
 /**
+ * The visitor hash for view counts, guestbooks, and reports: HMAC-SHA256 with a pepper that's part of the code.
+ * Not a secret — the sites Worker deliberately holds none — but it means a leaked database alone can't turn the
+ * hashes back into addresses (the plain SHA-256 of an IPv4 address is a rainbow table away). 64 hex chars, the
+ * shape the editor's report route already validates; a distinct `kind` keeps the stores from correlating.
+ * @param {string} kind - what the hash is for ("view", "guestbook"); part of the message, not a prefix convention
+ * @param {string} ip
+ */
+async function visitor_hash(kind, ip) {
+	const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("coolpaint visitor pepper v1"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+	const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${kind}|${ip}`)));
+	return [...mac].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
  * The 429: a plain sentence, a code the client can recognize, and when to try again.
  * @param {number} [retry_after_s]
  * @param {Record<string, string>} [headers]
@@ -97,4 +111,4 @@ class ShortCache {
 	}
 }
 
-export { SLOW_DOWN_TEXT, ShortCache, client_ip, limited, report_limited, too_many };
+export { SLOW_DOWN_TEXT, ShortCache, client_ip, limited, report_limited, too_many, visitor_hash };

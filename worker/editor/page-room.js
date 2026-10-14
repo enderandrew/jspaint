@@ -34,6 +34,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { capture_exception } from "../shared/exceptions.js";
 import { report_limited } from "../shared/limits.js";
+import { safe_block } from "../../src/safe-markup.js";
 
 const KINDS = new Set(["blocks", "stickers", "text_layers"]);
 const MAX_PATCHES = 60; // then ask a client for a fresh full picture
@@ -98,6 +99,7 @@ function apply_op_to(doc, op) {
 	const list = doc.layers[op.kind];
 	if (op.op === "set" && op.item && typeof op.item.id === "string") {
 		if (JSON.stringify(op.item).length > 200 * 1024) { return false; }
+		op.item = safe_block(op.item); // the room stores and relays only the dialect's safe shapes: a crafted draft (a script element with a same-origin src) never reaches a client, whatever its version
 		const index = list.findIndex((item) => item.id === op.item.id);
 		if (index === -1) {
 			if (list.length >= 500) { return false; }
@@ -544,7 +546,8 @@ export class PageRoom extends DurableObject {
 				this.apply_props(message);
 				if (message.layers) {
 					for (const kind of KINDS) {
-						this.doc.layers[kind] = Array.isArray(message.layers[kind]) ? message.layers[kind].slice(0, 500) : [];
+							// The same gate as apply_op_to: a seed or replace only brings blocks the dialect allows
+						this.doc.layers[kind] = Array.isArray(message.layers[kind]) ? message.layers[kind].slice(0, 500).map(safe_block).filter(Boolean) : [];
 					}
 				}
 				this.record(info, message.type, message.label); // (a checkpoint; the full picture follows as bands, the first a reset)

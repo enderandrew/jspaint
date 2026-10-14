@@ -91,9 +91,9 @@ function analytics_snippet(key, host, nonce, ctx = {}, proxy = {}) {
 function patch_meta_csp(html, nonce, hosts) {
 	return html.replace(/(<meta http-equiv="Content-Security-Policy"[^>]*content=")([^"]*)(")/i, (_match, before, csp, after) => {
 		const addition = `'nonce-${nonce}' ${hosts}`;
-		const patched = /\bscript-src\b/.test(csp)
-			? csp.replace(/\bscript-src\s+/, (/** @type {string} */ directive) => `${directive}${addition} `)
-			: `${csp.trimEnd()}; script-src ${addition}`;
+		const patched = /\bscript-src\b/.test(csp) ?
+			csp.replace(/\bscript-src\s+/, (/** @type {string} */ directive) => `${directive}${addition} `) :
+			`${csp.trimEnd()}; script-src ${addition}`;
 		return before + patched + after;
 	});
 }
