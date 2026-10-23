@@ -4,6 +4,7 @@
 		"node_modules",
 		"lib",
 		"out", // Electron Forge output
+		"pages-dist", // GitHub Pages build
 		"*.png",
 		"*.gif",
 		"*.jpg",

@@ -14,6 +14,7 @@ export default [
 			"**/.vscode/",
 			"**/lib/", // vendored dependencies
 			"**/out/", // Electron build
+			"**/pages-dist/", // GitHub Pages build (scripts/build-pages.mjs)
 			"**/build/", // maybe nothing
 			"**/dist/", // maybe nothing
 			"**/worker/editor/dist/", // built copy of the Paint app for the editor Worker
