@@ -9,6 +9,7 @@ import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_sel
 import { show_page_history } from "./page-history.js";
 import { show_help } from "./help.js";
 import { is_ai_mode_active, start_ai_mode, toggle_ai_mode } from "./ai-mode.js";
+import { show_enhance_dialog } from "./ai-enhance.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -1215,6 +1216,17 @@ const menus = {
 				start_ai_mode({ different: true });
 			},
 			description: "Starts a new painting for the AI to create.",
+		},
+		MENU_DIVIDER,
+		{
+			label: "&Enhance!",
+			speech_recognition: [
+				"enhance", "AI enhance", "AI upscale", "upscale", "zoom and enhance", "zoom enhance", "add detail", "make it sharper",
+			],
+			action: () => {
+				show_enhance_dialog();
+			},
+			description: "Uses AI to add more detail to the picture or selection.",
 		},
 	],
 	[localize("&Help")]: [
