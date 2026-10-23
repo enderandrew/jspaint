@@ -13,6 +13,8 @@ import { show_enhance_dialog } from "./ai-enhance.js";
 import { content_aware_fill } from "./ai-content-aware-fill.js";
 import { show_prompt_box } from "./ai-prompt.js";
 import { is_assistant_visible, toggle_assistant } from "./ai-assistant.js";
+import { is_blue_screen_brush_active, toggle_blue_screen_brush } from "./blue-screen-brush.js";
+import { show_defragment_dialog } from "./defragment.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -774,6 +776,14 @@ const menus = {
 			description: localize("Inverts the colors of the picture or a selection."),
 		},
 		{
+			label: "Defra&gment Canvas...",
+			speech_recognition: [
+				"defragment", "defragment canvas", "defrag", "defragment picture", "defragment image", "sort pixels", "optimize picture",
+			],
+			action: () => { show_defragment_dialog(); },
+			description: "Rearranges the picture's pixels so they're stored together, for faster access.",
+		},
+		{
 			label: localize("Flip Sticker &Horizontal"),
 			speech_recognition: ["flip sticker", "flip sticker horizontal", "flip sticker horizontally", "mirror sticker"],
 			enabled: () => !!get_selected_sticker(),
@@ -1140,6 +1150,17 @@ const menus = {
 				show_edit_colors_window();
 			},
 			description: localize("Creates a new color."),
+		},
+		{
+			label: "&Blue Screen Brush",
+			speech_recognition: [
+				"blue screen brush", "blue screen", "blue screen of death", "BSOD brush", "fatal exception brush", "crash brush",
+			],
+			checkbox: {
+				toggle: () => { toggle_blue_screen_brush(); },
+				check: () => is_blue_screen_brush_active(),
+			},
+			description: "Paints with a fatal exception. May crash occasionally.",
 		},
 		{
 			label: localize("&Get Colors"),
