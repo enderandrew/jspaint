@@ -12,6 +12,7 @@ import { is_ai_mode_active, start_ai_mode, toggle_ai_mode } from "./ai-mode.js";
 import { show_enhance_dialog } from "./ai-enhance.js";
 import { content_aware_fill } from "./ai-content-aware-fill.js";
 import { show_prompt_box } from "./ai-prompt.js";
+import { is_assistant_visible, toggle_assistant } from "./ai-assistant.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -1249,6 +1250,20 @@ const menus = {
 				content_aware_fill();
 			},
 			description: "Removes the selected part of the picture, and fills it in intelligently.",
+		},
+		MENU_DIVIDER,
+		{
+			label: "&Show Assistant",
+			speech_recognition: [
+				"assistant", "show assistant", "hide assistant", "toggle assistant", "paperclip", "help me", "office assistant",
+			],
+			checkbox: {
+				toggle: () => {
+					toggle_assistant();
+				},
+				check: () => is_assistant_visible(),
+			},
+			description: "Shows or hides your helpful Paint Assistant.",
 		},
 	],
 	[localize("&Help")]: [

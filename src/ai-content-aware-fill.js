@@ -17,7 +17,7 @@ const HELPER_PATH = "images/clippy.jpg";
 let helper_promise = null;
 
 /** Loads the helper image, with its white background made transparent. */
-function load_helper() {
+export function load_helper() {
 	helper_promise ??= new Promise((resolve, reject) => {
 		const img = new Image();
 		img.onload = () => resolve(cut_out_background(img));
