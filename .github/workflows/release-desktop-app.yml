@@ -16,15 +16,22 @@ jobs:
         os: [ubuntu-22.04, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      # checkout v7, setup-node v7 and release-action v1.21.0 all run on Node 24
+      # (GitHub removed the Node 20 runtime for actions in September 2026).
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          # Node 24 LTS. Electron Forge 8 needs Node 22.13 or newer.
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          cache: npm
 
       - name: Install Node.js dependencies
         run: npm ci
+        env:
+          # The Cypress tests don't run here, so skip downloading its binary.
+          CYPRESS_INSTALL_BINARY: "0"
 
       - name: Build and upload binaries
         run: npm run electron:publish
@@ -40,7 +47,7 @@ jobs:
 
       - name: Update Release
         if: runner.os == 'Windows'
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         with:
           body: ${{ steps.changelog.outputs.changelog }}
           allowUpdates: true
