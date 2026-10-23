@@ -1,0 +1,54 @@
+name: Deploy web app to GitHub Pages
+
+# Publishes just the browser app (index.html and what it loads) to GitHub Pages.
+# scripts/build-pages.mjs decides what goes in: no Electron files, build tools, tests,
+# docs, localization sources, source maps, or vendored libraries' own tooling.
+#
+# One-time setup: Settings > Pages > Build and deployment > Source: "GitHub Actions".
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write # to deploy to Pages
+  id-token: write # to prove the deployment comes from this workflow
+
+# One deployment at a time; let an in-progress deployment finish rather than cancelling it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The build script only uses Node's built-in modules, so no npm install is needed.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Copy the web app's files
+        run: node scripts/build-pages.mjs pages-dist
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: pages-dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
