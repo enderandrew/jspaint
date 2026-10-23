@@ -8,6 +8,7 @@ import { palette_formats } from "./file-format-data.js";
 import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_page_history } from "./page-history.js";
 import { show_help } from "./help.js";
+import { is_ai_mode_active, start_ai_mode, toggle_ai_mode } from "./ai-mode.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -1188,6 +1189,32 @@ const menus = {
 				});
 			},
 			description: localize("Saves the current palette of colors to a file."),
+		},
+	],
+	// Parody: there's no AI, just a painting hidden under the canvas (ai-mode.js)
+	["&AI"]: [
+		{
+			label: "&AI Mode",
+			speech_recognition: [
+				"AI mode", "toggle AI mode", "AI painting", "AI art", "artificial intelligence", "auto paint", "paint for me",
+			],
+			checkbox: {
+				toggle: () => {
+					toggle_ai_mode();
+				},
+				check: () => is_ai_mode_active(),
+			},
+			description: "Lets our neural brush turn your strokes into a masterpiece.",
+		},
+		{
+			label: "&New AI Masterpiece",
+			speech_recognition: [
+				"new AI masterpiece", "new AI painting", "generate new painting", "regenerate", "generate masterpiece",
+			],
+			action: () => {
+				start_ai_mode({ different: true });
+			},
+			description: "Starts a new painting for the AI to create.",
 		},
 	],
 	[localize("&Help")]: [

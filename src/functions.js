@@ -14,6 +14,7 @@ import { $G, E, TAU, debounce, from_canvas_coords, get_help_folder_icon, get_ico
 import { apply_image_transformation, draw_grid, draw_selection_box, flip_horizontal, flip_vertical, invert_monochrome, invert_rgb, rotate, stretch_and_skew, threshold_black_and_white } from "./image-manipulation.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { add_block, clear_blocks, legacy_size_for, restore_blocks, snapshot_blocks } from "./blocks.js";
+import { ai_mode_canvas_for_saving, ai_mode_settle, is_ai_mode_active } from "./ai-mode.js";
 import { HTML_FORMAT_ID, open_collage_from_file, serialize_collage_html } from "./collage-format.js";
 import { save_page_to_site } from "./my-site.js";
 import { get_page_properties, reset_page_properties, set_page_properties } from "./page-properties.js";
@@ -2194,6 +2195,8 @@ function undoable({ name, icon, use_loose_canvas_changes, soft, assume_saved }, 
 		window.console?.log(`History node switched during undoable callback for ${name}, from`, before_callback_history_node, "to", current_history_node);
 	}
 
+	ai_mode_settle(); // AI Mode: turn whatever was drawn into the hidden painting
+
 	const image_data = main_ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
 
 	redos.length = 0;
@@ -2237,6 +2240,7 @@ function undoable({ name, icon, use_loose_canvas_changes, soft, assume_saved }, 
 function make_or_update_undoable(undoable_meta, undoable_action) {
 	if (current_history_node.futures.length === 0 && undoable_meta.match(current_history_node)) {
 		undoable_action();
+		ai_mode_settle(); // AI Mode: turn whatever was drawn into the hidden painting
 		current_history_node.image_data = main_ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
 		current_history_node.selection_image_data = selection && selection.canvas.ctx.getImageData(0, 0, selection.canvas.width, selection.canvas.height);
 		current_history_node.selection_x = selection && selection.x;
@@ -3931,6 +3935,7 @@ function save_as_prompt({
  * @param {(Blob)=> void} blob_callback - This function is called with the blob, or may never be called if there is an error.
  */
 function write_image_file(canvas, mime_type, blob_callback) {
+	canvas = ai_mode_canvas_for_saving(canvas); // AI Mode: save the blank areas as white, not transparent
 	const ctx = canvas.getContext("2d");
 	const bmp_match = mime_type.match(/^image\/(?:x-)?bmp\s*(?:-(\d+)bpp)?/);
 	if (mime_type === HTML_FORMAT_ID) {
@@ -4188,6 +4193,9 @@ function read_image_file(blob, callback) {
  * @param {Blob} blob - The saved file blob.
  */
 function update_from_saved_file(blob) {
+	if (is_ai_mode_active()) {
+		return; // the file is a flattened copy; reloading it would fill in the blank areas (ai-mode.js)
+	}
 	if (blob.type === HTML_FORMAT_ID) {
 		return; // web pages aren't re-read for color reduction; the canvas is already what was saved
 	}

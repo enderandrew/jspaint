@@ -30,6 +30,8 @@ try {
 
 const match_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/1j01/jspaint/issues/184
 const canvas_has_any_apparent_image_data = () =>
+	// AI Mode's blank canvas is transparent on purpose (ai-mode.js), so it isn't data loss
+	$("body").hasClass("ai-mode") ||
 	main_canvas.ctx.getImageData(0, 0, main_canvas.width, main_canvas.height).data.some((v) => v > match_threshold);
 
 let $recovery_window;
