@@ -2,7 +2,11 @@
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "ES2022",
-		"moduleResolution": "node", // Fixes error TS2792: Cannot find module 'electron'. https://stackoverflow.com/a/46562884/2624876
+		"moduleResolution": "bundler", // ("node" was removed in TypeScript 7) Fixes error TS2792: Cannot find module 'electron'. https://stackoverflow.com/a/46562884/2624876
+		// TypeScript 6+ no longer loads every @types package automatically, and turns on strict mode
+		// by default. These keep the checks the same as they were under TypeScript 5.
+		"types": ["dom-speech-recognition", "jquery", "node", "wicg-file-system-access", "youtube"],
+		"strict": false,
 	},
 	"include": [
 		"src/**/*",

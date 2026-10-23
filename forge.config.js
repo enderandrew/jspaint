@@ -59,6 +59,9 @@ module.exports = {
 			// like https://github.com/electron/forge/issues/492#issuecomment-385956851
 		},
 		junk: true,
+		// Electron Forge 8 (@electron/packager 19) turned ASAR on by default. The app has always shipped
+		// unpacked, and the wallpaper module runs a bundled helper binary that can't run from inside an archive.
+		asar: false,
 		// TODO: assess filtering of files; I see eslint in node_modules, why? prune is true by default
 		ignore: [
 			".history", // VS Code "Local History" extension
@@ -204,9 +207,10 @@ module.exports = {
 		{
 			name: "@electron-forge/publisher-github",
 			config: {
+				// Publish to the repository the workflow runs in (e.g. a fork), or upstream when run locally.
 				repository: {
-					owner: "1j01",
-					name: "jspaint",
+					owner: (process.env.GITHUB_REPOSITORY || "1j01/jspaint").split("/")[0],
+					name: (process.env.GITHUB_REPOSITORY || "1j01/jspaint").split("/")[1],
 				},
 				prerelease: false,
 				draft: true,
