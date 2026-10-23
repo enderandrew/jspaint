@@ -10,6 +10,8 @@ import { show_page_history } from "./page-history.js";
 import { show_help } from "./help.js";
 import { is_ai_mode_active, start_ai_mode, toggle_ai_mode } from "./ai-mode.js";
 import { show_enhance_dialog } from "./ai-enhance.js";
+import { content_aware_fill } from "./ai-content-aware-fill.js";
+import { show_prompt_box } from "./ai-prompt.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -1217,6 +1219,16 @@ const menus = {
 			},
 			description: "Starts a new painting for the AI to create.",
 		},
+		{
+			label: "&Prompt...",
+			speech_recognition: [
+				"prompt", "AI prompt", "show prompt", "prompt box", "generate image", "generate an image", "text to image", "AI generate",
+			],
+			action: () => {
+				show_prompt_box();
+			},
+			description: "Describe an image, and the AI will generate it.",
+		},
 		MENU_DIVIDER,
 		{
 			label: "&Enhance!",
@@ -1227,6 +1239,16 @@ const menus = {
 				show_enhance_dialog();
 			},
 			description: "Uses AI to add more detail to the picture or selection.",
+		},
+		{
+			label: "&Content-Aware Fill",
+			speech_recognition: [
+				"content aware fill", "content-aware fill", "remove object", "remove this", "erase object", "fill selection", "magic eraser",
+			],
+			action: () => {
+				content_aware_fill();
+			},
+			description: "Removes the selected part of the picture, and fills it in intelligently.",
 		},
 	],
 	[localize("&Help")]: [

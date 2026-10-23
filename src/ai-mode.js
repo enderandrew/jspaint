@@ -54,7 +54,7 @@ $G.on("history-update", () => {
 });
 
 /** Finds images/ai-1.jpg, ai-2.jpg, ... until one is missing. */
-async function find_sources() {
+export async function find_sources() {
 	if (source_urls) { return source_urls; }
 	const found = [];
 	for (let n = 1; n <= MAX_SOURCES; n++) {
