@@ -1505,7 +1505,7 @@ function update_fill_and_stroke_colors_and_lineWidth(selected_tool) {
 			((reverse !== reverse_because_fill_only) ? "background" : "foreground");
 	main_ctx.fillStyle = fill_color =
 		main_ctx.strokeStyle = stroke_color =
-		selected_colors[color_k];
+			selected_colors[color_k];
 
 	/** @type {ColorSelectionSlot} */
 	let fill_color_k =

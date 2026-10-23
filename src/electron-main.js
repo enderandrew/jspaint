@@ -80,7 +80,8 @@ app.commandLine.appendSwitch("force-device-scale-factor", 1);
 // Reloading and dev tools shortcuts
 const isDev = process.env.ELECTRON_DEBUG === "1" || !isPackaged;
 if (isDev) {
-	require("electron-debug")({ showDevTools: false });
+	// electron-debug 4+ is ESM-only, so it has to be loaded with import()
+	import("electron-debug").then(({ default: debug }) => debug({ showDevTools: false }));
 }
 
 // @TODO: let user apply this setting somewhere in the UI (togglable)
@@ -216,44 +217,12 @@ const createWindow = () => {
 		});
 	});
 
-	// Allow write access to files dropped onto the window.
-	// I'm not sure if this is more secure than handling it in the preload script with IPC,
-	// but it might be, due to the isolated context.
-	// TODO: is there a way to intercept drag and drop from the main process directly?
-	// "will-navigate" isn't sent even if the app's dragstart/dragover/drop handlers are disabled.
-	// If there was an event for dropped files, or an API like wasFileDropped(filePath) or more generally,
-	// wasFileOpenedByUserGesture(filePath), that would allow for tighter control.
-	// Right now the renderer process tells the main process what file paths are allowed,
-	// which is not ideal, although it's within an isolated world, and even separate from the preload script.
+	// Write access to files dropped onto the window is granted by the "dropped-file" handler below.
+	// (This used to read File.path in an isolated world, but Electron 32 removed File.path.
+	// The preload script now uses webUtils.getPathForFile(), which only returns paths for files
+	// that really came from the OS, so page script can't forge one.)
 	// For file dialogs and command line arguments and all the other ways to open files,
-	// the file list is managed exclusively by the main process, so drag and drop is the weak link.
-	// If drag and drop could be handled by the main process, it would be more secure overall.
-	editor_window.webContents.on("did-finish-load", () => {
-		// Could use contextBridge, but re-registering an event listener recursively was easier.
-		// It's a pattern I've done before, and this code actually worked on the first try.
-		function handle_one_drop() {
-			editor_window.webContents.executeJavaScriptInIsolatedWorld(777, [
-				{
-					code: `
-						new Promise((resolve, reject) => {
-							// The app's normal drag and drop handling will take care of dragstart, dragover,
-							// and actually opening files. This is just to allow write access to the dropped file.
-							window.addEventListener("drop", (event) => {
-								const file_path = event.dataTransfer.files[0].path;
-								resolve(file_path);
-							}, { once: true });
-						})
-					`,
-				},
-			]).then((file_path) => {
-				console.log("Allowing write access to dropped file:", file_path);
-				allowed_file_paths.push(file_path);
-				editor_window.webContents.send("open-file", file_path);
-				handle_one_drop();
-			});
-		}
-		handle_one_drop();
-	});
+	// the file list is managed exclusively by the main process.
 };
 
 // Register listeners outside of createWindow to avoid them being added multiple times
@@ -273,6 +242,16 @@ const createWindow = () => {
 		// not sure if this is the best way to do this, but like,
 		// it shouldn't open the file if the window is closed and re-opened, right?
 		initial_file_path = null;
+	});
+	// A file was dropped onto the window. The preload script gets its real path with
+	// webUtils.getPathForFile(), which only returns paths for files that actually came from the OS
+	// (File.path, used before, was removed in Electron 32).
+	ipcMain.on("dropped-file", (event, file_path) => {
+		if (!editor_window || event.sender !== editor_window.webContents) return;
+		if (typeof file_path !== "string" || !file_path) return;
+		console.log("Allowing write access to dropped file:", file_path);
+		allowed_file_paths.push(file_path);
+		editor_window.webContents.send("open-file", file_path);
 	});
 	ipcMain.on("set-represented-filename", (_event, filePath) => {
 		// filePath of "" is used to reset the title bar's filename,
@@ -549,22 +528,14 @@ const createWindow = () => {
 			// Note: { scale: "center" } is only supported on macOS.
 			// I worked around this by providing an image with a transparent margin on other platforms,
 			// in setWallpaperCentered.
-			return new Promise((resolve, _reject) => {
-				require("wallpaper").set(image_path, { scale: "center" }, (error) => {
-					if (error) {
-						resolve({ responseCode: "SET_WALLPAPER_FAILED", error });
-					} else {
-						resolve({ responseCode: "SUCCESS" });
-					}
-				});
-			});
-			// Newer promise-based wallpaper API that I can't import:
-			// try {
-			// 	await setWallpaper(image_path, { scale: "center" });
-			// } catch (error) {
-			// 	return { responseCode: "SET_WALLPAPER_FAILED", error };
-			// }
-			// return { responseCode: "SUCCESS" };
+			// wallpaper 5+ is ESM-only, so it has to be loaded with import()
+			try {
+				const { setWallpaper } = await import("wallpaper");
+				await setWallpaper(image_path, { scale: "center" });
+			} catch (error) {
+				return { responseCode: "SET_WALLPAPER_FAILED", error };
+			}
+			return { responseCode: "SUCCESS" };
 		}
 	});
 }

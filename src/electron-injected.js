@@ -7,7 +7,7 @@
 // I've enabled sandboxing, so the fs module is not available.
 // Operations must be carried out in the main process.
 
-const { /*contextBridge,*/ ipcRenderer } = require("electron");
+const { /*contextBridge,*/ ipcRenderer, webUtils } = require("electron");
 
 // const { are_you_sure, open_from_file, show_error_message, show_about_paint, sanity_check_blob } = require("./functions.js");
 // const { get_format_from_extension } = require("./helpers.js");
@@ -22,6 +22,19 @@ const { isDev, isMacOS, initialFilePath } = ipcRenderer.sendSync("get-env-info")
 // contextBridge.exposeInMainWorld("initial_system_file_handle", initialFilePath);
 
 // contextBridge.exposeInMainWorld("electron_app", {
+
+// Allow write access to files dropped onto the window (so Save writes back to them).
+// The app's normal drag and drop handling still opens the file; this just tells the main process its path.
+// webUtils.getPathForFile() returns "" for anything that isn't a real file from the OS,
+// so page script can't use this to get access to arbitrary paths.
+window.addEventListener("drop", (event) => {
+	if (!event.isTrusted || !event.dataTransfer) return;
+	const file = event.dataTransfer.files[0];
+	const file_path = file ? webUtils.getPathForFile(file) : "";
+	if (file_path) {
+		ipcRenderer.send("dropped-file", file_path);
+	}
+}, true);
 
 window.is_electron_app = true;
 window.electron_is_dev = isDev;
