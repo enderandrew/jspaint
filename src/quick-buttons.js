@@ -1,5 +1,5 @@
 // @ts-check
-/* global $bottom, localize, redos, undos */
+/* global $bottom, $right, localize, redos, undos */
 // Undo and Redo buttons in the bottom bar, next to the colors (with the pan joystick). Same undo tree as Ctrl+Z
 // and Edit › Undo / Repeat; handy on a phone, where there's no keyboard. (Extras › Eye Gaze Mode has its own big
 // floating Undo button for that mode; this pair is always there.)
@@ -88,6 +88,15 @@ function init_quick_buttons() {
 	$G.on("history-update", update_enabled);
 	update_enabled();
 
+	// With Extras › Vertical Color Box, the bottom bar is empty (no height), so the buttons move under the colors on the right
+	const place = () => {
+		const vertical = $("body").hasClass("vertical-color-box-mode");
+		$container?.toggleClass("in-right-column", vertical).appendTo(vertical ? $right : $bottom);
+	};
+	// (after the color box re-docks itself, so the buttons end up below it)
+	$G.on("vertical-color-box-mode-toggled", () => { setTimeout(place, 0); });
+	setTimeout(place, 0);
+
 	$("<style>").text(`
 		.component-area.bottom {
 			position: relative;
@@ -101,6 +110,13 @@ function init_quick_buttons() {
 			align-items: center;
 			gap: 6px;
 			z-index: 5;
+		}
+		.quick-buttons.in-right-column {
+			position: static;
+			transform: none;
+			flex-wrap: wrap;
+			justify-content: center;
+			margin: 8px 4px;
 		}
 		.quick-button {
 			width: 30px;

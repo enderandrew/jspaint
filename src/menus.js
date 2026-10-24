@@ -17,6 +17,7 @@ import { is_blue_screen_brush_active, toggle_blue_screen_brush } from "./blue-sc
 import { show_defragment_dialog } from "./defragment.js";
 import { show_paint_plus } from "./paint-plus.js";
 import { show_terms_of_service } from "./terms-of-service.js";
+import { simulateRandomGesturesPeriodically, simulatingGestures, stopSimulatingGestures } from "./simulate-random-gestures.js";
 import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
 	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_posterize, show_sharpen, show_threshold
@@ -1504,6 +1505,26 @@ const menus = {
 		// 	},
 		// 	description: localize("Configures JS Paint."),
 		// }
+		{
+			emoji_icon: "🤪",
+			label: localize("&Draw Randomly"),
+			speech_recognition: [
+				"draw randomly", "draw pseudorandomly", "draw wildly", "make random art",
+			],
+			checkbox: {
+				toggle: () => {
+					if (simulatingGestures) {
+						stopSimulatingGestures();
+					} else {
+						simulateRandomGesturesPeriodically();
+					}
+				},
+				check: () => {
+					return simulatingGestures;
+				},
+			},
+			description: localize("Draws randomly with different tools."),
+		},
 		MENU_DIVIDER,
 		{
 			emoji_icon: "💄",
@@ -1679,6 +1700,73 @@ const menus = {
 			)),
 		},
 		{
+			emoji_icon: "🧑",
+			// label: localize("Head Tracking"),
+			// label: localize("M&ove Cursor With Head"),
+			label: localize("Head Tracker"), // adding (Experimental) makes it too long, "WIP" or "Beta" feels too techy
+			speech_recognition: [
+				"head tracking", "head tracker", "move cursor with head", "control cursor with head", "mouse with head", "mouse cursor with head",
+				"face tracking", "face tracker", "move cursor with face", "control cursor with face", "mouse with face", "mouse cursor with face",
+				"head mouse", "face mouse", "facial mouse",
+				"head cursor", "face cursor", "facial cursor",
+				"head pointer", "face pointer", "facial pointer",
+				"head control", "face control", "facial control",
+				"head movement", "face movement", "facial movement",
+				"head motion", "face motion", "facial motion",
+				"head gestures", "face gestures", "facial gestures",
+				"tracky mouse", // name of the library
+			],
+			checkbox: {
+				toggle: () => {
+					if (/head-tracker/i.test(location.hash)) {
+						change_url_param("head-tracker", false);
+					} else {
+						change_url_param("head-tracker", true);
+					}
+				},
+				check: () => {
+					return /head-tracker/i.test(location.hash);
+				},
+			},
+			description: localize("Controls the cursor with head movements."),
+		},
+		// Later on I'll probably merge the Head Tracker and Dwell Clicker options into a Tracky Mouse option,
+		// or I'll create a preferences screen, where I'll be able to better clarify the relationships between features.
+		{
+			emoji_icon: "⏱️",
+			// label: localize("Dwell &Click"),
+			label: localize("Dwell &Clicker"),
+			speech_recognition: [
+				"dwell clicking", "dwell click", "dwell clicker", "auto click", "auto clicker", "auto clicking", "click automatically",
+				"stop clicking", "stop auto clicking", "stop auto click", "stop auto clicker", "stop dwell clicking", "stop dwell click", "stop dwell clicker",
+			],
+			checkbox: {
+				toggle: () => {
+					if (/head-tracker/i.test(location.hash)) {
+						// @TODO: confirmation dialog that you could cancel with dwell clicking!
+						// Or: make head tracker work independently of dwell clicking, i.e. with facial gestures
+						// if (confirm("This will disable head tracker mode.")) {
+						// change_some_url_params({
+						// 	"head-tracker": false,
+						// 	"dwell-clicker": false,
+						// });
+						// }
+					} else if (/dwell-clicker/i.test(location.hash)) {
+						change_url_param("dwell-clicker", false);
+					} else {
+						change_url_param("dwell-clicker", true);
+					}
+				},
+				check: () => {
+					return /dwell-clicker|head-tracker/i.test(location.hash);
+				},
+			},
+			enabled: () => {
+				return !/head-tracker/i.test(location.hash);
+			},
+			description: localize("Clicks automatically after hovering in one place."),
+		},
+		{
 			emoji_icon: "🔍",
 			// label: localize("&Enlarge Buttons"), // too specific; it also enlarges windows and other UI elements
 			label: localize("&Enlarge UI"), // a bit technical, but hopefully common enough
@@ -1699,6 +1787,50 @@ const menus = {
 				},
 			},
 			description: localize("Enlarges buttons, windows, and menus for easier clicking."),
+		},
+		{
+			emoji_icon: "↩️", // doesn't match orientation of the actual button icon's arrow
+			// label: localize("&Floating Undo/Redo Buttons"),
+			// label: localize("Easy Undo/Redo"),
+			// label: localize("Easy &Undo"),
+			// label: localize("Easy &Undo Button"),
+			// label: localize("Floating &Undo"), // it might not always be floating, it might become part of the tool box
+			label: localize("Quick Undo Button"), // a bit long
+			// label: localize("Quick Undo"), // "Quick Undo" also refers to pressing both mouse buttons to cancel an action, not that you can't have multiple ways to "quick undo" if that's the better name
+			speech_recognition: [
+				"quick undo button", "toggle quick undo button", "floating undo button", "easy undo", "big undo button",
+			],
+			checkbox: {
+				toggle: () => {
+					change_url_param("easy-undo", !/easy-undo/i.test(location.hash));
+				},
+				check: () => {
+					return /easy-undo/i.test(location.hash);
+				},
+			},
+			description: localize("Adds a button for undoing the last action."),
+		},
+		{
+			emoji_icon: "↕️",
+			label: localize("&Vertical Color Box"),
+			speech_recognition: [
+				"toggle vertical color box", "toggle vertical color box mode",
+				"toggle vertical colors box", "toggle vertical colors box mode",
+				"toggle vertical palette", "toggle vertical palette mode",
+				"toggle horizontal color box", "toggle horizontal color box mode",
+				"toggle horizontal colors box", "toggle horizontal colors box mode",
+				"toggle horizontal palette", "toggle horizontal palette mode",
+				// @TODO: "use a vertical/horizontal color box", "place palette on the left", "make palette tall/wide", etc.
+			],
+			checkbox: {
+				toggle: () => {
+					change_url_param("vertical-color-box-mode", !/vertical-color-box-mode/i.test(location.hash));
+				},
+				check: () => {
+					return /vertical-color-box-mode/i.test(location.hash);
+				},
+			},
+			description: localize("Arranges the color box vertically."),
 		},
 		{
 			emoji_icon: "🎙️",

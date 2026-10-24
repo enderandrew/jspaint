@@ -56,11 +56,15 @@ function set_plan(plan, { discounted = false } = {}) {
 	update_badge();
 }
 
-function update_badge() {
+function update_badge(tries_left = 100) {
 	document.querySelectorAll(".paint-plus-badge").forEach((badge) => badge.remove());
 	if (subscription.plan === "free") { return; }
 	const menus = document.querySelector(".menus");
-	if (!menus) { return; }
+	if (!menus) {
+		// the menu bar isn't built yet (on page load)
+		if (tries_left > 0) { setTimeout(() => update_badge(tries_left - 1), 100); }
+		return;
+	}
 	const badge = E("span");
 	badge.className = "paint-plus-badge";
 	const ultra = subscription.plan === "ultra";
@@ -339,4 +343,4 @@ $G.on("history-update", () => {
 });
 
 // The badge, once the menu bar exists
-setTimeout(update_badge, 0);
+setTimeout(() => update_badge(), 0);

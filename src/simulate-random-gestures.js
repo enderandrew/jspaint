@@ -214,7 +214,9 @@ export const simulateRandomGesturesPeriodically = () => {
 		}
 		if (seededRandom() < switchToolsChance) {
 			let multiToolsPlz = seededRandom() < multiToolsChance;
-			$(choose($(".tool, tool-button"))).trigger($.Event("click", { shiftKey: multiToolsPlz }));
+			// only the paint tools, not the page tools below the groove (they open dialogs instead of painting)
+			const $paint_tools = $(".tool, tool-button").filter((_, el) => $(el).prevAll(".tool-divider").length === 0);
+			$(choose($paint_tools)).trigger($.Event("click", { shiftKey: multiToolsPlz }));
 		}
 		if (seededRandom() < pickToolOptionsChance) {
 			$(choose($(".tool-options *"))).trigger("click");
