@@ -38,7 +38,11 @@ const folders = {
 		/^lib\/gif\.js\//.test(file) ||
 		/^lib\/98\.css\/[^/]+\.css$/.test(file) ||
 		/^lib\/os-gui\/(\$Window\.js|MenuBar\.js|parse-theme\.js|build\/)/.test(file) ||
-		/^lib\/pdf\.js\/(LICENSE$|build\/|web\/cmaps\/)/.test(file) ||
+		/^lib\/bmp-js\//.test(file) ||
+		// (Firebase loads when a multi-user session starts: src/sessions.js)
+		/^lib\/firebase\//.test(file) ||
+		// (PDF.js loads its CMaps, fonts, color profiles and image decoders by URL: getDocument() in src/functions.js)
+		/^lib\/pdf\.js\/(LICENSE$|build\/|cmaps\/|standard_fonts\/|iccs\/|wasm\/)/.test(file) ||
 		// (tracky-mouse's images/ folder is for its own website and desktop app; Eye Gaze Mode only shows the logo)
 		/^lib\/tracky-mouse\/(LICENSE\.txt$|core\/|images\/tracky-mouse-logo-512\.png$)/.test(file),
 };
