@@ -185,5 +185,110 @@
 			<param name="Local" value="paint_toolbox.html">
 			</OBJECT>
 	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Using the AI Menu">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Let the AI paint a masterpiece (AI Mode)">
+			<param name="Local" value="paint_ai_mode.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Generate a picture from a description">
+			<param name="Local" value="paint_ai_prompt.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Enhance a picture">
+			<param name="Local" value="paint_ai_enhance.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Remove something with Content-Aware Fill">
+			<param name="Local" value="paint_content_aware_fill.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Show or hide the Paint Assistant">
+			<param name="Local" value="paint_assistant.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Adjusting Colors and Effects">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Change the brightness or contrast of a picture">
+			<param name="Local" value="paint_brightness_contrast.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Change the colors of a picture">
+			<param name="Local" value="paint_hue_saturation.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Reduce a picture to fewer colors">
+			<param name="Local" value="paint_posterize_threshold.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Blur, sharpen, or add noise to a picture">
+			<param name="Local" value="paint_blur_sharpen.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Apply a one-click filter">
+			<param name="Local" value="paint_quick_filters.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Use the novelty adjustments">
+			<param name="Local" value="paint_novelty_filters.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Special Effects">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Defragment your picture">
+			<param name="Local" value="paint_defragment.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Paint with the Blue Screen Brush">
+			<param name="Local" value="paint_blue_screen_brush.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Let Paint draw randomly">
+			<param name="Local" value="paint_draw_randomly.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Accessibility">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Control Paint with your head or by hovering">
+			<param name="Local" value="paint_head_tracker.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add a large Undo button">
+			<param name="Local" value="paint_quick_undo.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Arrange the color box vertically">
+			<param name="Local" value="paint_vertical_color_box.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Subscriptions and Other Paperwork">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Upgrade to Paint+">
+			<param name="Local" value="paint_plus.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Read the Terms of Service">
+			<param name="Local" value="paint_terms_of_service.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Other commands">
+			<param name="Local" value="paint_other_commands.html">
+			</OBJECT>
+	</UL>
 </UL>
 </BODY></HTML>

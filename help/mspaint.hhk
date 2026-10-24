@@ -9,11 +9,45 @@
 
 <UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="1998 film filter">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="accessibility">
+              <param name="Name" value="To add a large Undo button">
+              <param name="Local" value="paint_quick_undo.html">
+              <param name="Name" value="To arrange the color box vertically">
+              <param name="Local" value="paint_vertical_color_box.html">
+              <param name="Name" value="To control Paint with your head or by hovering">
+              <param name="Local" value="paint_head_tracker.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="adding custom colors">
               <param name="Name" value="To copy color from one area or object to another">
               <param name="Local" value="paint_not_in_color_box.html">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="adjustments">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
+              <param name="Name" value="To blur, sharpen, or add noise to a picture">
+              <param name="Local" value="paint_blur_sharpen.html">
+              <param name="Name" value="To change the brightness or contrast of a picture">
+              <param name="Local" value="paint_brightness_contrast.html">
+              <param name="Name" value="To change the colors of a picture">
+              <param name="Local" value="paint_hue_saturation.html">
+              <param name="Name" value="To reduce a picture to fewer colors">
+              <param name="Local" value="paint_posterize_threshold.html">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="AI Mode">
+              <param name="Name" value="To let the AI paint a masterpiece (AI Mode)">
+              <param name="Local" value="paint_ai_mode.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="airbrush tool">
@@ -31,11 +65,30 @@
               <param name="Local" value="paint_curves.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="assistant">
+              <param name="Name" value="To remove something with Content-Aware Fill">
+              <param name="Local" value="paint_content_aware_fill.html">
+              <param name="Name" value="To show or hide the Paint Assistant">
+              <param name="Local" value="paint_assistant.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="attitude">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="attributes">
               <param name="Name" value="To change the size of your picture">
               <param name="Local" value="paint_change_size.html">
               <param name="Name" value="To use black and white instead of color">
               <param name="Local" value="paint_blackwhite.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="auto contrast">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="background (desktop)">
@@ -70,6 +123,16 @@
               <param name="Local" value="paint_clear_image.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="blue screen brush">
+              <param name="Name" value="To paint with the Blue Screen Brush">
+              <param name="Local" value="paint_blue_screen_brush.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="blur">
+              <param name="Name" value="To blur, sharpen, or add noise to a picture">
+              <param name="Local" value="paint_blur_sharpen.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="borders">
               <param name="Name" value="To change the color of an existing line">
               <param name="Local" value="paint_change_color.html">
@@ -88,6 +151,11 @@
               <param name="Local" value="paint_rectangles.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="brightness">
+              <param name="Name" value="To change the brightness or contrast of a picture">
+              <param name="Local" value="paint_brightness_contrast.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="brush">
               <param name="Name" value="To paint with a brush">
               <param name="Local" value="paint_brush.html">
@@ -95,6 +163,11 @@
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="buttons, see tools">
               <param name="See Also" value="tools">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="camera">
+              <param name="Name" value="To control Paint with your head or by hovering">
+              <param name="Local" value="paint_head_tracker.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="can of paint">
@@ -107,6 +180,11 @@
               <param name="Name" value="canceling actions">
               <param name="Name" value="To undo changes">
               <param name="Local" value="paint_undo.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="canceling Paint+">
+              <param name="Name" value="To upgrade to Paint+">
+              <param name="Local" value="paint_plus.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="centered wallpaper">
@@ -303,9 +381,28 @@
                  </OBJECT>
    </UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="colors of the wind">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
+              <param name="Name" value="To upgrade to Paint+">
+              <param name="Local" value="paint_plus.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="complementary colors">
               <param name="Name" value="To invert all the colors in a picture">
               <param name="Local" value="paint_invert.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="content-aware fill">
+              <param name="Name" value="To remove something with Content-Aware Fill">
+              <param name="Local" value="paint_content_aware_fill.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="contrast">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
+              <param name="Name" value="To change the brightness or contrast of a picture">
+              <param name="Local" value="paint_brightness_contrast.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="converting colors">
@@ -357,6 +454,11 @@
               <param name="See Also" value="selections">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="deep fry">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="defaults">
               <param name="Name" value="To set the default foreground and background colors">
               <param name="Local" value="paint_set_default_colors.html">
@@ -365,6 +467,11 @@
               <param name="Name" value="defining custom colors">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="defragmenting">
+              <param name="Name" value="To defragment your picture">
+              <param name="Local" value="paint_defragment.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="desktop background">
@@ -414,6 +521,11 @@
                  </OBJECT>
    </UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="doctor">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="dragging">
 <param name="Name" value="To copy and paste part of a picture">
 <param name="Local" value="paint_cutout_copy_move.html">
@@ -447,6 +559,11 @@
               <param name="Name" value="Draw Opaque command">
               <param name="Name" value="To specify transparent or opaque drawing">
               <param name="Local" value="paint_trans_opaque.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="draw randomly">
+              <param name="Name" value="To let Paint draw randomly">
+              <param name="Local" value="paint_draw_randomly.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="drawing">
@@ -519,9 +636,24 @@
               <param name="Local" value="paint_not_in_color_box.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="dwell clicker">
+              <param name="Name" value="To control Paint with your head or by hovering">
+              <param name="Local" value="paint_head_tracker.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="ellipses">
               <param name="Name" value="To draw an ellipse or circle">
               <param name="Local" value="paint_ovals.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="emboss">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="enhance">
+              <param name="Name" value="To enhance a picture">
+              <param name="Local" value="paint_ai_enhance.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="enlarging pictures">
@@ -576,6 +708,16 @@
               <param name="Local" value="paint_fill.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="find edges">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="fix everything">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="flipping pictures">
               <param name="Name" value="To flip or rotate a picture or object">
               <param name="Local" value="paint_flip_picture.html">
@@ -608,11 +750,23 @@
               <param name="Local" value="paint_cutout_select.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="generating pictures">
+              <param name="Name" value="To generate a picture from a description">
+              <param name="Local" value="paint_ai_prompt.html">
+              <param name="Name" value="To let the AI paint a masterpiece (AI Mode)">
+              <param name="Local" value="paint_ai_mode.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="getting colors">
               <param name="Name" value="To copy color from one area or object to another">
               <param name="Local" value="paint_not_in_color_box.html">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="grayscale">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="greyscale">
@@ -623,6 +777,11 @@
               <param name="Name" value="grid lines">
               <param name="Name" value="To display grid lines">
               <param name="Local" value="paint_grid.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="head tracker">
+              <param name="Name" value="To control Paint with your head or by hovering">
+              <param name="Local" value="paint_head_tracker.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="height, picture">
@@ -659,6 +818,8 @@
               <param name="Name" value="hue">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              <param name="Name" value="To change the colors of a picture">
+              <param name="Local" value="paint_hue_saturation.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="image attributes">
@@ -713,6 +874,16 @@
               <param name="Local" value="paint_print.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="lens flare">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="lightness">
+              <param name="Name" value="To change the colors of a picture">
+              <param name="Local" value="paint_hue_saturation.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="lines">
               <param name="Name" value="To change the color of an existing line">
               <param name="Local" value="paint_change_color.html">
@@ -738,6 +909,11 @@
               <param name="Local" value="paint_zoom.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="make it pop">
+              <param name="Name" value="To use the novelty adjustments">
+              <param name="Local" value="paint_novelty_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="mapping colors">
               <param name="Name" value="To invert all the colors in a picture">
               <param name="Local" value="paint_invert.html">
@@ -748,6 +924,11 @@
               <param name="Name" value="margins">
               <param name="Name" value="To print a picture">
               <param name="Local" value="paint_print.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="mental imagery">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="mistakes, undoing">
@@ -802,6 +983,11 @@
               <param name="Local" value="paint_cutout_copy_move.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="noise">
+              <param name="Name" value="To blur, sharpen, or add noise to a picture">
+              <param name="Local" value="paint_blur_sharpen.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="opaque">
               <param name="Name" value="To copy and paste part of a picture">
               <param name="Local" value="paint_cutout_copy_move.html">
@@ -853,6 +1039,11 @@
               <param name="Local" value="paint_fill.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="Paint+">
+              <param name="Name" value="To upgrade to Paint+">
+              <param name="Local" value="paint_plus.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="painting">
               <param name="Name" value="To change the color of an existing line">
               <param name="Local" value="paint_change_color.html">
@@ -876,6 +1067,13 @@
               <param name="Name" value="paper size">
               <param name="Name" value="To print a picture">
               <param name="Local" value="paint_print.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="paperclip">
+              <param name="Name" value="To remove something with Content-Aware Fill">
+              <param name="Local" value="paint_content_aware_fill.html">
+              <param name="Name" value="To show or hide the Paint Assistant">
+              <param name="Local" value="paint_assistant.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="parts of pictures, see selections">
@@ -971,6 +1169,11 @@
               <param name="Local" value="paint_print.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="posterize">
+              <param name="Name" value="To reduce a picture to fewer colors">
+              <param name="Local" value="paint_posterize_threshold.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="previewing before printing">
               <param name="Name" value="To print a picture">
               <param name="Local" value="paint_print.html">
@@ -979,6 +1182,11 @@
               <param name="Name" value="printing">
               <param name="Name" value="To print a picture">
               <param name="Local" value="paint_print.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="prompt">
+              <param name="Name" value="To generate a picture from a description">
+              <param name="Local" value="paint_ai_prompt.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="rectangles">
@@ -996,6 +1204,11 @@
               <param name="Name" value="removing grid lines">
               <param name="Name" value="To display grid lines">
               <param name="Local" value="paint_grid.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="removing objects">
+              <param name="Name" value="To remove something with Content-Aware Fill">
+              <param name="Local" value="paint_content_aware_fill.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="resizing pictures">
@@ -1026,6 +1239,8 @@
               <param name="Name" value="saturation">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              <param name="Name" value="To change the colors of a picture">
+              <param name="Local" value="paint_hue_saturation.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="saving colors">
@@ -1119,6 +1334,16 @@
                  </OBJECT>
    </UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="send help">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="sepia">
+              <param name="Name" value="To apply a one-click filter">
+              <param name="Local" value="paint_quick_filters.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="setting wallpaper">
               <param name="Name" value="To use a picture as the desktop background">
               <param name="Local" value="paint_wallpaper.html">
@@ -1138,6 +1363,11 @@
               <param name="Local" value="paint_ovals.html">
               <param name="Name" value="To fill an area or object with color">
               <param name="Local" value="paint_fill.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="sharpen">
+              <param name="Name" value="To blur, sharpen, or add noise to a picture">
+              <param name="Local" value="paint_blur_sharpen.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="showing">
@@ -1252,6 +1482,11 @@
               <param name="Local" value="paint_skew_picture.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="subscription">
+              <param name="Name" value="To upgrade to Paint+">
+              <param name="Local" value="paint_plus.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="switching to black and white">
               <param name="Name" value="To use black and white instead of color">
               <param name="Local" value="paint_blackwhite.html">
@@ -1260,6 +1495,16 @@
               <param name="Name" value="switching to complementary colors">
               <param name="Name" value="To invert all the colors in a picture">
               <param name="Local" value="paint_invert.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="taxes">
+              <param name="Name" value="Other commands">
+              <param name="Local" value="paint_other_commands.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="Terms of Service">
+              <param name="Name" value="To read the Terms of Service">
+              <param name="Local" value="paint_terms_of_service.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="text">
@@ -1281,6 +1526,11 @@
               <param name="Local" value="paint_lines.html">
               <param name="Name" value="To paint with a brush">
               <param name="Local" value="paint_brush.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="threshold">
+              <param name="Name" value="To reduce a picture to fewer colors">
+              <param name="Local" value="paint_posterize_threshold.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="tiled wallpaper">
@@ -1478,6 +1728,11 @@
               <param name="Local" value="paint_text.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="undo button">
+              <param name="Name" value="To add a large Undo button">
+              <param name="Local" value="paint_quick_undo.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="undoing changes">
               <param name="Name" value="To undo changes">
               <param name="Local" value="paint_undo.html">
@@ -1486,6 +1741,11 @@
               <param name="Name" value="units of measurement">
               <param name="Name" value="To change the size of your picture">
               <param name="Local" value="paint_change_size.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="vertical color box">
+              <param name="Name" value="To arrange the color box vertically">
+              <param name="Local" value="paint_vertical_color_box.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="view options">
