@@ -375,11 +375,11 @@ They start a local server and drive the real app; see [test/site-builder/README.
 
 ### Web App (https://jspaint.app)
 
-After you've installed dependencies with `npm i`,
-use `npm run dev` to start a live-reloading server.
+Use `npm run serve` (or `node scripts/static-server.mjs`) to serve the app at http://localhost:1999/.
+It has no dependencies and no live reload: refresh after a change.
 
 Make sure any layout-important styles go in `layout.css`.
-When updating `layout.css`, a right-to-left version of the stylesheet is generated, using [RTLCSS](https://rtlcss.com/).  
+When updating `layout.css`, regenerate the right-to-left version of the stylesheet with `npm run build-css` (it uses [RTLCSS](https://rtlcss.com/)).  
 You should test the RTL layout by changing the language to Arabic or Hebrew.
 Go to **Extras > Language > العربية** or **עברית**.  
 See [Control Directives](https://rtlcss.com/learn/usage-guide/control-directives/) for how to control the RTL layout.
@@ -403,7 +403,6 @@ It is also possible to run JS Paint without Electron Forge, using `npx jspaint`;
 
 New releases are built in GitHub Actions. See [Release Process](./release-process.md).
 
-[Live Server]: https://github.com/1j01/live-server
 [Node.js]: https://nodejs.org/
 [electron-debug]: https://github.com/sindresorhus/electron-debug
 

@@ -17,10 +17,7 @@
 
 ### Extended editing
 
-* Optional fill tolerance (slider that you enable from a settings menu?)
-
 * Transparency
-	* Color opacity slider
 	* Toggle between blend and copy (overwrite) modes
 	* Maybe equivalize any rgba(X, X, X, 0) in fill algorithm?
 	There'd still be the possibility of 1/255th opacity pixels,
