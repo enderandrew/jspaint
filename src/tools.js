@@ -1,6 +1,6 @@
 // @ts-check
 /* global selection:writable, stroke_size:writable, textbox:writable */
-/* global $canvas, $canvas_area, $status_size, airbrush_size, brush_shape, brush_size, button, canvas_handles, ctrl, eraser_size, fill_color, pick_color_slot, get_language, localize, magnification, main_canvas, main_ctx, pencil_size, pointer, pointer_active, pointer_over_canvas, pointer_previous, pointer_start, return_to_magnification, selected_colors, shift, stroke_color, transparency */
+/* global $canvas, $canvas_area, $status_size, airbrush_size, brush_shape, brush_size, button, canvas_handles, ctrl, eraser_size, fill_color, pick_color_slot, get_language, localize, magnification, main_canvas, main_ctx, pencil_size, pointer, pointer_active, pointer_over_canvas, pointer_previous, pointer_start, pointer_type, return_to_magnification, selected_colors, shift, stroke_color, transparency */
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 // import { get_language, localize } from "./app-localization.js";
@@ -521,7 +521,7 @@ const tools = [{
 			const test_image_data = ctx.getImageData(rect_x, rect_y, rect_w, rect_h);
 			const result_image_data = this.mask_canvas.ctx.getImageData(rect_x, rect_y, rect_w, rect_h);
 
-			const fill_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/1j01/jspaint/issues/184
+			const fill_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/enderandrew/jspaint/issues/184
 
 			for (let i = 0, l = test_image_data.data.length; i < l; i += 4) {
 				if (
@@ -727,7 +727,25 @@ const tools = [{
 		// ctx.strokeStyle = "#f0f";
 		// ctx.strokeRect(rect_x1, rect_y1, rect_w, rect_h);
 	},
+	pending_touch_zoom: null,
 	pointerdown(_ctx, x, y) {
+		// On a touch screen, wait until the finger lifts: a second finger means a pinch or a pan, not a zoom here
+		if (pointer_type === "touch") {
+			this.pending_touch_zoom = { x, y };
+			return;
+		}
+		this.zoom_at?.(x, y);
+	},
+	pointerup(_ctx, x, y) {
+		if (this.pending_touch_zoom) {
+			this.pending_touch_zoom = null;
+			this.zoom_at?.(x, y);
+		}
+	},
+	cancel() {
+		this.pending_touch_zoom = null; // (a second finger cancels the tool's gesture)
+	},
+	zoom_at(x, y) {
 		const prev_magnification = magnification;
 		const prospective_magnification = this.getProspectiveMagnification();
 

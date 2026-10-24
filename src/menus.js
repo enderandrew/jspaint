@@ -18,6 +18,7 @@ import { show_defragment_dialog } from "./defragment.js";
 import { show_paint_plus } from "./paint-plus.js";
 import { show_terms_of_service } from "./terms-of-service.js";
 import { simulateRandomGesturesPeriodically, simulatingGestures, stopSimulatingGestures } from "./simulate-random-gestures.js";
+import { crop_to_selection } from "./crop.js";
 import { colors_of_the_wind, connect_mental_imagery, do_taxes, page_doctor, send_help, show_attitude_coach } from "./menu-jokes.js";
 import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
@@ -775,6 +776,16 @@ const menus = {
 			],
 			action: () => { image_stretch_and_skew(); },
 			description: localize("Stretches or skews the picture or a selection."),
+		},
+		{
+			label: localize("Cro&p to Selection"),
+			...shortcut("Ctrl+Shift+X"),
+			speech_recognition: [
+				"crop", "crop to selection", "crop the picture", "crop the image", "trim to selection", "keep only the selection",
+			],
+			enabled: () => !!selection,
+			action: () => { crop_to_selection(); },
+			description: localize("Cuts the picture down to the selection."),
 		},
 		{
 			label: localize("&Invert Colors"),

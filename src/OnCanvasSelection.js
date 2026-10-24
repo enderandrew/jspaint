@@ -78,6 +78,7 @@ class OnCanvasSelection extends OnCanvasObject {
 				$object_container: $canvas_area,
 				outset: 2,
 				get_rect: () => ({ x: this.x, y: this.y, width: this.width, height: this.height }),
+				proportional_with_shift: true,
 				set_rect: ({ x, y, width, height }) => {
 					undoable({
 						name: "Resize Selection",
@@ -224,7 +225,7 @@ class OnCanvasSelection extends OnCanvasObject {
 		// regardless of the pattern selected, even if the selected background color is pure black.
 		// We allow any kind of image data while in our "b&w mode".
 		// Our b&w mode is essentially 'patterns in the palette'.
-		const match_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/1j01/jspaint/issues/184
+		const match_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/enderandrew/jspaint/issues/184
 		for (let i = 0; i < cutoutImageData.data.length; i += 4) {
 			let in_cutout = sourceImageData.data[i + 3] > 1;
 			if (tool_transparent_mode) {

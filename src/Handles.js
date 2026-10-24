@@ -17,6 +17,7 @@ import { $G, E, make_css_cursor, to_canvas_coords } from "./helpers.js";
  * @param {(rect: { x: number, y: number, width: number, height: number }) => void} options.set_rect
  * @param {(rect: { x: number, y: number, width: number, height: number }, x_axis: -1 | 0 | 1, y_axis: -1 | 0 | 1) => { x: number, y: number, width: number, height: number }} [options.constrain_rect]
  * @param {boolean} [options.thick]
+ * @param {boolean} [options.proportional_with_shift] - Shift + a corner handle keeps the proportions
  * @constructor
  * @property {HTMLElement[]} handles
  * @property {() => void} hide
@@ -31,6 +32,8 @@ function Handles(options) {
 	const get_ghost_offset_left = options.get_ghost_offset_left || (() => 0);
 	const get_ghost_offset_top = options.get_ghost_offset_top || (() => 0);
 	const size_only = options.size_only || false;
+	// Holding Shift while dragging a corner keeps the width and height in proportion (selections, stickers)
+	const proportional_with_shift = options.proportional_with_shift || false;
 
 	/** @type {-1 | 0 | 1} */
 	const HANDLE_MIDDLE = 0;
@@ -133,6 +136,19 @@ function Handles(options) {
 					height: height,
 				};
 
+				if (proportional_with_shift && event.shiftKey && start_rect && x_axis !== HANDLE_MIDDLE && y_axis !== HANDLE_MIDDLE) {
+					// Scale both sides by the larger change, anchored at the opposite corner
+					const scale = Math.max(width / start_rect.width, height / start_rect.height, 1 / Math.min(start_rect.width, start_rect.height));
+					const proportional_width = Math.max(1, Math.round(start_rect.width * scale));
+					const proportional_height = Math.max(1, Math.round(start_rect.height * scale));
+					new_rect = {
+						x: x_axis === HANDLE_LEFT ? start_rect.x + start_rect.width - proportional_width : start_rect.x,
+						y: y_axis === HANDLE_TOP ? start_rect.y + start_rect.height - proportional_height : start_rect.y,
+						width: proportional_width,
+						height: proportional_height,
+					};
+				}
+
 				new_rect.width = Math.max(1, new_rect.width);
 				new_rect.height = Math.max(1, new_rect.height);
 
@@ -152,8 +168,11 @@ function Handles(options) {
 				});
 				rect = new_rect;
 			};
+			/** The object's box when the drag started, for Shift's proportions. @type {{ x: number, y: number, width: number, height: number } | null} */
+			let start_rect = null;
 			$h.add($grab_region).on("pointerdown", (event) => {
 				dragged = false;
+				start_rect = options.get_rect();
 				if (event.button === 0) {
 					$G.on("pointermove", drag);
 					$("body").css({ cursor }).addClass("cursor-bully");

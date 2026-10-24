@@ -330,6 +330,9 @@ function $Component(title, className, orientation, $el) {
 				$(e.target).closest("button").length === 0
 			);
 		if (!validTarget) { return; }
+		// With a finger, a toolbar's own body is too easy to drag out by accident while reaching for a tool or color;
+		// a toolbar that's already a window still moves by its title bar.
+		if (e.pointerType === "touch" && $c.is(e.target)) { return; }
 
 		const docked = imagine_docked_dimensions();
 		const rect = $c[0].getBoundingClientRect();

@@ -128,15 +128,60 @@ if (args.file_path) {
 // @TODO: It's been several electron versions. I doubt this is still necessary. (It was from a boilerplate.)
 /** @type {BrowserWindow | undefined} */
 let editor_window;
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let save_window_state_timer;
+
+// The window's size, position, and maximized state are remembered between runs (in the app's user data folder).
+const window_state_file = () => path.join(app.getPath("userData"), "window-state.json");
+/** @returns {{ x?: number, y?: number, width: number, height: number, maximized: boolean }} */
+const load_window_state = () => {
+	const fallback = { width: 800, height: 600, maximized: false };
+	try {
+		const state = JSON.parse(fs.readFileSync(window_state_file(), "utf8"));
+		if (!(state.width > 0 && state.height > 0)) { return fallback; }
+		const { screen } = require("electron");
+		// Only reuse the position if it's still on a screen (a monitor may have been unplugged since)
+		const on_screen = Number.isFinite(state.x) && Number.isFinite(state.y) && screen.getAllDisplays().some(({ workArea: area }) =>
+			state.x < area.x + area.width - 40 && state.x + state.width > area.x + 40 &&
+			state.y >= area.y - 10 && state.y < area.y + area.height - 40
+		);
+		return { width: state.width, height: state.height, maximized: !!state.maximized, ...(on_screen ? { x: state.x, y: state.y } : {}) };
+	} catch {
+		return fallback;
+	}
+};
+/** The size and position to come back to: the window's last normal (not maximized or minimized) bounds. */
+/** @type {{ x: number, y: number, width: number, height: number } | null} */
+let normal_bounds = null;
+/** @param {BrowserWindow} window */
+const remember_normal_bounds = (window) => {
+	if (window.isMaximized() || window.isMinimized() || window.isFullScreen()) { return; }
+	const [x, y] = window.getPosition(); // the window's position, as BrowserWindow's x/y mean it
+	const [width, height] = window.getContentSize(); // its content size, as width/height mean it (useContentSize)
+	normal_bounds = { x, y, width, height };
+};
+/** @param {BrowserWindow} window */
+const save_window_state = (window) => {
+	try {
+		remember_normal_bounds(window);
+		if (!normal_bounds) { return; }
+		fs.writeFileSync(window_state_file(), JSON.stringify({ ...normal_bounds, maximized: window.isMaximized() }));
+	} catch (error) {
+		console.warn("Couldn't save the window's size and position:", error);
+	}
+};
 
 const createWindow = () => {
+	const window_state = load_window_state();
 	// Create the browser window.
 	editor_window = new BrowserWindow({
 		useContentSize: true,
 		autoHideMenuBar: true, // it adds height for a native menu bar unless we hide it here
 		// setMenu(null) below is too late; it's already decided on the size by then
-		width: 800,
-		height: 600,
+		width: window_state.width,
+		height: window_state.height,
+		...(window_state.x !== undefined ? { x: window_state.x, y: window_state.y } : {}),
+		show: false, // until the page has loaded (ready-to-show), so it doesn't flash white
 		minWidth: 260,
 		minHeight: 360,
 		icon: path.join(__dirname, "../images/icons",
@@ -159,6 +204,25 @@ const createWindow = () => {
 	// and load the index.html of the app.
 	editor_window.loadURL(`file://${__dirname}/../index.html`);
 
+	let shown = false;
+	const show = () => {
+		if (shown || !editor_window) { return; }
+		shown = true;
+		if (window_state.maximized) {
+			editor_window.maximize();
+		}
+		editor_window.show();
+	};
+	editor_window.once("ready-to-show", show);
+	setTimeout(show, 5000); // in case the page never gets there (an error), show it anyway
+	// (the window can also be shown by a second launch, see the single instance lock)
+	for (const event of ["resize", "move", "maximize", "unmaximize"]) {
+		editor_window.on(/** @type {any} */ (event), () => {
+			clearTimeout(save_window_state_timer);
+			save_window_state_timer = setTimeout(() => { if (editor_window) { save_window_state(editor_window); } }, 500);
+		});
+	}
+
 	// Emitted when the window is closed.
 	editor_window.on("closed", () => {
 		// Dereference the window object, usually you would store windows
@@ -169,6 +233,7 @@ const createWindow = () => {
 
 	// Emitted before the window is closed.
 	editor_window.on("close", (event) => {
+		save_window_state(editor_window);
 		// Don't need to check editor_window.isDocumentEdited(),
 		// because the (un)edited state is handled by the renderer process, in are_you_sure().
 		// Note: if the web contents are not responding, this will make the app harder to close.

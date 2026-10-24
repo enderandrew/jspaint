@@ -154,6 +154,7 @@ class OnCanvasSticker extends OnCanvasObject {
 			$object_container: $canvas_area,
 			outset: 2,
 			get_rect: () => ({ x: this.x, y: this.y, width: this.width, height: this.height }),
+			proportional_with_shift: true,
 			set_rect: ({ x, y, width, height }) => {
 				undoable({
 					name: "Resize Sticker",

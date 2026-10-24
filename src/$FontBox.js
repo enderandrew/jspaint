@@ -216,6 +216,27 @@ function $FontBox() {
 	$w.$content.append($fb);
 	$w.center();
 
+	// Remember where the toolbar was put: it opens there next time (kept in the screen's bounds)
+	const POSITION_KEY = "jspaint font box position";
+	try {
+		const saved = JSON.parse(localStorage.getItem(POSITION_KEY) || "null");
+		if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+			$w.css({ left: saved.left, top: saved.top });
+			$w.applyBounds();
+		}
+	} catch { /* fine: centered */ }
+	$w.$titlebar.on("pointerdown", () => {
+		// (the pointer may let go anywhere once the window's being dragged)
+		$(window).one("pointerup", () => {
+			setTimeout(() => { // after the window's own drag handling lets go
+				try {
+					const { left, top } = $w[0].getBoundingClientRect();
+					localStorage.setItem(POSITION_KEY, JSON.stringify({ left: Math.round(left), top: Math.round(top) }));
+				} catch { /* fine */ }
+			}, 0);
+		});
+	});
+
 	// Hotfix for bug where the font dropdown would close immediately when clicked in Chrome.
 	// Code in $Window.js (from os-gui.js but PATCHED) is trying to focus the dropdown when it's already focused,
 	// or focusing the window content area. Either can cause the dropdown to close.

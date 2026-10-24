@@ -27,6 +27,7 @@ import { init_x_previews } from "./x-preview.js";
 import { init_element_selection } from "./element-selection.js";
 import { fit_page_width, init_page_scroll } from "./page-scroll.js";
 import { init_pan_joystick } from "./pan-joystick.js";
+import { crop_to_selection } from "./crop.js";
 import { init_quick_buttons } from "./quick-buttons.js";
 import { init_share } from "./share.js";
 import { init_site_button } from "./site-button.js";
@@ -1246,6 +1247,10 @@ $G.on("keydown", (e) => {
 				break;
 			case "E":
 				image_attributes();
+				break;
+			case "X":
+				if (!e.shiftKey) { return; } // Ctrl+X is Cut (the clipboard events)
+				crop_to_selection();
 				break;
 
 			// These shortcuts are mostly reserved by browsers,

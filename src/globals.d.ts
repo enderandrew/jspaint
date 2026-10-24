@@ -768,6 +768,10 @@ interface Tool {
 	updateStatus?(): void,
 	/** Used by Magnifier tool */
 	getProspectiveMagnification?(): number,
+	/** Magnifier: a touch zoom waiting for the finger to lift */
+	pending_touch_zoom?: { x: number, y: number } | null,
+	/** Magnifier: zooms in or out around a point */
+	zoom_at?(x: number, y: number): void,
 
 	/** Used by several tools */
 	mask_canvas?: PixelCanvas,
