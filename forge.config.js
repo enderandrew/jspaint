@@ -75,7 +75,6 @@ module.exports = {
 			/\.sh$/, // localization
 			/\.psd$/, // theming source files
 			"images/meta", // images used on README, OpenGraph, etc. (arguably README images could be included)
-			// TODO: "lib/pdf.js/web", // PDF.js UI? (PDF.js is only used as a library, but does it use data from this folder?)
 			// TODO: Bubblegum theme has some files that are embedded in an SVG, so they're not used directly
 			// I'd want to move them to a folder or give them a suffix or something, rather than just ignoring them as they are,
 			// since I may want to use them in the future.
