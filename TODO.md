@@ -3,16 +3,7 @@
 
 ### Help
 
-* Link-esque things
-	* Popups (I'd probably make the text within the popups selectable)
-	* Related topics (I'd probably make this a heading with links instead of the weird context menu thing)
-* Add topics
-	* In "Tips and Tricks" (which is just a lame section)
-	* Transparency
-	* Multi-user / collaboration / "To share the document On-Line" or whatever
-* Index
-* Search
-* Keyboard support
+* Keyboard support in the Contents tree (the Index and Search tabs, and the Topics Found list, have it)
 
 * Interactive tutorials?
 	* Possibly hosted by Clippy, with [ClippyJS](https://www.smore.com/clippy-js)
@@ -84,21 +75,14 @@ SVG (or HTML?) with invisible selectable transformed text elements?
 
 ### Device support
 
-* Prevent text selection in buttons and history entries
-* Enlarge menus on touch devices
-* Enlarge window titlebar close buttons on touch devices
-* Magnifier: on touchscreens, wait until pointerup to zoom
-	* To detect touchscreen usage, could keep track of whether the last pointermove had any buttons pressed... or use `pointerType`, right?
 * Alternative way to access "Color Eraser" feature without a secondary mouse button?
 * Alternative access to functionality that would normally require a keyboard (with a numpad!)
 	* Numpad +/-: Increase/Decrease brush size, Double/Halve selection size, ...
 	* Shift toggles a handful of things (could have one toggle button renamed contextually?):
-		* Proportional Resize
+		* Proportional Resize (Shift + a corner handle does it for selections and stickers; a touch alternative is still needed)
 		* Smear / Trail Selection
 		* Snap to 8 directions
 			* An isometric mode would also be good
-	* Ctrl+Select: "Crop To Selection" menu option
-* Don't drag toolbars out into windows with touch, it's too easy to do accidentally
 
 ### Tools
 
@@ -106,8 +90,6 @@ SVG (or HTML?) with invisible selectable transformed text elements?
 	* Passive: create no undoables until you do something like move or invert the selection
 		* You should be able to make a selection, then change the secondary color, then drag the selection cutting it out with the color you selected
 		* Select and deselect with no actions in between should create no undoables
-	* Proportionally resize selection while holding Shift
-		* (or maybe by default? I feel like it should be the default, tbh.)
 
 
 * Text
@@ -124,7 +106,6 @@ SVG (or HTML?) with invisible selectable transformed text elements?
 				* Scan the pixels at the left to find the maximum extent left
 				* Could store, per font, what glyphs have been tested and what's the maximum extent detected, in order to not have to rerender these
 					* "What glyphs have been tested" should be specific to font size and attributes, since an italic 'f' may extend more than a normal 'f' for instance
-	* Store position of FontBox
 
 
 * Shape Styles
@@ -138,9 +119,7 @@ SVG (or HTML?) with invisible selectable transformed text elements?
 
 Electron boilerplate stuff:
 
-* Remember window position/state
 * Set up autoupdating
-* Keep window hidden until loaded (`show: false`, [`ready-to-show`](https://electronjs.org/docs/api/browser-window#event-ready-to-show))
 
 Security:
 
@@ -151,7 +130,7 @@ Functionality:
 
 * Subwindows as separate windows
 * Document recovery without having to know about File > Manage Storage - pop up contextually with a dialog when you need it
-* Show link URLs when you hover over them, in the status bar (because we have a status bar! haha) (there's this API: [event: update-target-url](https://github.com/electron/electron/blob/master/docs/api/web-contents.md#event-update-target-url), which gave me the idea, or it could be implemented with mouse events)
+* Show link URLs when you hover over them, in the status bar: done for links on the page (src/link-hover.js); links elsewhere in the app could use Electron's [update-target-url](https://github.com/electron/electron/blob/master/docs/api/web-contents.md#event-update-target-url)
 * Recent files (could also be implemented for 98.js.org in the future)
 * macOS:
 	* `win.setSheetOffset` with the menu bar height
