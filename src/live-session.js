@@ -1208,7 +1208,7 @@ function reapply_remote_locks() {
 
 /** Call once the canvas area and status bar exist (app.js). */
 function init_live_session() {
-	/** @type {any} */ (window).live_sync_state = live_sync_state; // for tests and debugging, like api_for_cypress_tests
+	/** @type {any} */ (window).live_sync_state = live_sync_state; // for tests and debugging
 	$indicator = $(E("div")).addClass("status-field inset-shallow live-indicator").attr({ role: "status" }).hide().appendTo($status_area);
 	$indicator.on("click", () => {
 		if (!room) { return; }

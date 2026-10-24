@@ -24,7 +24,7 @@ let current_theme;
 try {
 	const grinch = localStorage[disable_seasonal_theme_key] === "true";
 	const is_december = new Date().getMonth() === 11;
-	const running_tests = "Cypress" in window;
+	const running_tests = navigator.webdriver; // (automated tests: Playwright)
 	if (is_december && !grinch && !running_tests) {
 		current_theme = "winter.css"; // overriding theme preference until you disable the seasonal theme
 		wait_for_theme_loaded(current_theme, () => { // could just wait for DOM to load, but theme is needed for the button styling

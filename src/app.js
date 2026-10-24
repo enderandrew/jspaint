@@ -1,7 +1,7 @@
 // @ts-check
 // eslint-disable-next-line no-unused-vars
 /* global airbrush_size:writable, brush_shape:writable, brush_size:writable, button:writable, ctrl:writable, eraser_size:writable, fill_color:writable, pick_color_slot:writable, history_node_to_cancel_to:writable, MenuBar:writable, my_canvas_height:writable, my_canvas_width:writable, palette:writable, pencil_size:writable, pointer:writable, pointer_active:writable, pointer_buttons:writable, pointer_over_canvas:writable, pointer_previous:writable, pointer_start:writable, pointer_type:writable, pointers:writable, reverse:writable, shift:writable, stroke_color:writable, stroke_size:writable, update_helper_layer_on_pointermove_active:writable */
-/* global AccessKeys, current_history_node, default_airbrush_size, default_brush_shape, default_brush_size, default_canvas_height, default_eraser_size, default_magnification, default_pencil_size, default_stroke_size, enable_fs_access_api, file_name, get_direction, localize, magnification, main_canvas, main_ctx, return_to_tools, selected_colors, selected_tool, selected_tools, selection, systemHooks, textbox, transparency */
+/* global AccessKeys, current_history_node, default_canvas_height, default_magnification, enable_fs_access_api, file_name, get_direction, localize, magnification, main_canvas, main_ctx, return_to_tools, selected_colors, selected_tool, selected_tools, selection, systemHooks, textbox, transparency */
 
 import { $ColorBox } from "./$ColorBox.js";
 import { $ToolBox } from "./$ToolBox.js";
@@ -18,7 +18,7 @@ import { showMessageBox } from "./msgbox.js";
 import { stopSimulatingGestures } from "./simulate-random-gestures.js";
 import { disable_speech_recognition, enable_speech_recognition, trace_and_sketch_stop } from "./speech-recognition.js";
 import { localStore } from "./storage.js";
-import { get_theme, set_theme } from "./theme.js";
+import { get_theme } from "./theme.js";
 import { add_sticker_from_blob, delete_selected_sticker, deselect_sticker, get_selected_sticker, init_stickers, is_animated_gif, nudge_selected_sticker, rotate_selected_sticker } from "./stickers.js";
 import { delete_selected_text_layer, deselect_text_layer, get_selected_text_layer, init_text_layers, nudge_selected_text_layer } from "./text-layers.js";
 import { delete_selected_block, deselect_block, edit_selected_block, end_block_editing, get_selected_block, init_blocks, is_editing_block, nudge_selected_block } from "./blocks.js";
@@ -1927,26 +1927,6 @@ $G.on("fullscreenchange webkitfullscreenchange", () => {
 	// $status_text.text(`fullscreen: ${fullscreen}`);
 	$("html").toggleClass("fullscreen", fullscreen);
 });
-// #endregion
-
-// #region Testing Helpers
-// Note: this is defined here so the app is loaded when this is defined.
-window.api_for_cypress_tests = {
-	reset_for_next_test() {
-		selected_colors.foreground = "#000";
-		selected_colors.background = "#fff";
-		brush_shape = default_brush_shape;
-		brush_size = default_brush_size;
-		eraser_size = default_eraser_size;
-		airbrush_size = default_airbrush_size;
-		pencil_size = default_pencil_size;
-		stroke_size = default_stroke_size;
-		clear();
-	},
-	selected_colors,
-	set_theme,
-	$,
-};
 // #endregion
 
 // Everything above has run: modules that act on the URL the tab was opened with (a share link, edit.<domain>/~name) go now.

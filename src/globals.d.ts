@@ -435,17 +435,6 @@ interface Window {
 	default_pencil_size: number;
 	default_stroke_size: number;
 
-	api_for_cypress_tests: {
-		reset_for_next_test: () => void;
-		selected_colors: {
-			foreground: string | CanvasPattern,
-			background: string | CanvasPattern,
-			ternary: string | CanvasPattern,
-		};
-		set_theme: (theme_file_name: string) => void;
-		$: JQueryStatic;
-	};
-
 	// app-localization.js
 	available_languages: string[];
 	loaded_localizations: (language: string, mapping: Record<string, string>) => void; // JSONP callback in the localization files

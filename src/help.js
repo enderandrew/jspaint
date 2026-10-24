@@ -342,7 +342,7 @@ function $Iframe(options) {
 		if (disable_delegate_pointerup) {
 			return;
 		}
-		// This try-catch may only be needed for running Cypress tests.
+		// (This try-catch may only be needed when the iframe's document isn't reachable.)
 		try {
 			if (iframe.contentWindow && iframe.contentWindow.jQuery) {
 				iframe.contentWindow.jQuery("body").trigger("pointerup");
@@ -373,7 +373,7 @@ function $Iframe(options) {
 			$("body").removeClass("loading-program");
 		}
 
-		// This try-catch may only be needed for running Cypress tests.
+		// (This try-catch may only be needed when the iframe's document isn't reachable.)
 		try {
 			if (window.themeCSSProperties && window.applyTheme) {
 				window.applyTheme(window.themeCSSProperties, iframe.contentDocument.documentElement);
