@@ -1,8 +1,9 @@
 // @ts-check
 // eslint-disable-next-line no-unused-vars
 /* global $thumbnail_window:writable, canvas_bounding_client_rect:writable, current_history_node:writable, file_format:writable, file_name:writable, helper_layer:writable, history_node_to_cancel_to:writable, magnification:writable, monochrome:writable, palette:writable, pointer:writable, return_to_magnification:writable, return_to_tools:writable, root_history_node:writable, saved:writable, selected_colors:writable, selected_tool:writable, selected_tools:writable, selection:writable, show_grid:writable, show_thumbnail:writable, system_file_handle:writable, textbox:writable, thumbnail_canvas:writable, tool_transparent_mode:writable, transparency:writable, undos:writable */
-/* global $canvas, $canvas_area, $colorbox, $status_text, $toolbox, $Window, AccessKeys, applyCSSProperties, decodeBMP, default_canvas_height, default_canvas_width, default_magnification, default_tool, enable_palette_loading_from_indexed_images, encodeBMP, localize, main_canvas, main_ctx, monochrome_palette, my_canvas_height, my_canvas_width, new_local_session, parseThemeFileString, pointer_active, pointers, polychrome_palette, redos, systemHooks, text_tool_font, update_fill_and_stroke_colors_and_lineWidth, UPNG, UTIF */
+/* global $canvas, $canvas_area, $colorbox, $status_text, $toolbox, $Window, AccessKeys, applyCSSProperties, default_canvas_height, default_canvas_width, default_magnification, default_tool, enable_palette_loading_from_indexed_images, localize, main_canvas, main_ctx, monochrome_palette, my_canvas_height, my_canvas_width, new_local_session, parseThemeFileString, pointer_active, pointers, polychrome_palette, redos, systemHooks, text_tool_font, update_fill_and_stroke_colors_and_lineWidth, UPNG, UTIF */
 
+import { decodeBMP, encodeBMP } from "./bmp-format.js";
 import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasHelperLayer } from "./OnCanvasHelperLayer.js";
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
@@ -4098,46 +4099,30 @@ function read_image_file(blob, callback) {
 		} else if (detected_type_id === "pdf") {
 			file_format = "application/pdf";
 
-			const pdfjs = window["pdfjs-dist/build/pdf"];
-
-			pdfjs.GlobalWorkerOptions.workerSrc = "lib/pdf.js/build/pdf.worker.js";
-
-			const file_bytes = new Uint8Array(arrayBuffer);
-
-			const loadingTask = pdfjs.getDocument({
-				data: file_bytes,
-				cMapUrl: "lib/pdf.js/web/cmaps/",
-				cMapPacked: true,
-			});
-
-			loadingTask.promise.then((pdf) => {
-				console.log("PDF loaded");
-
-				// Fetch the first page
-				// TODO: maybe concatenate all pages into one image?
-				var pageNumber = 1;
-				pdf.getPage(pageNumber).then((page) => {
-					console.log("Page loaded");
-
-					var scale = 1.5;
-					var viewport = page.getViewport({ scale });
-
-					// Prepare canvas using PDF page dimensions
-					var canvas = make_canvas(viewport.width, viewport.height);
-
-					// Render PDF page into canvas context
-					var renderContext = {
-						canvasContext: canvas.ctx,
-						viewport,
-					};
-					var renderTask = page.render(renderContext);
-					renderTask.promise.then(() => {
-						console.log("Page rendered");
-						const image_data = canvas.ctx.getImageData(0, 0, canvas.width, canvas.height);
-						callback(null, { file_format, monochrome, palette, image_data, source_blob: blob });
-					});
+			// PDF.js is an ES module, loaded the first time a PDF is opened.
+			import("../lib/pdf.js/build/pdf.min.mjs").then(async (pdfjs) => {
+				pdfjs.GlobalWorkerOptions.workerSrc = "lib/pdf.js/build/pdf.worker.min.mjs";
+				const loading_task = pdfjs.getDocument({
+					data: new Uint8Array(arrayBuffer),
+					cMapUrl: "lib/pdf.js/cmaps/",
+					cMapPacked: true,
+					standardFontDataUrl: "lib/pdf.js/standard_fonts/",
+					iccUrl: "lib/pdf.js/iccs/",
+					wasmUrl: "lib/pdf.js/wasm/",
+					isEvalSupported: false, // (never compile code from a file; it doesn't need to, to draw the page)
+					enableXfa: false,
 				});
-			}, (reason) => {
+				const pdf = await loading_task.promise;
+				// The first page
+				// TODO: maybe concatenate all pages into one image?
+				const page = await pdf.getPage(1);
+				const viewport = page.getViewport({ scale: 1.5 });
+				const canvas = make_canvas(Math.round(viewport.width), Math.round(viewport.height));
+				await page.render({ canvas, canvasContext: canvas.ctx, viewport }).promise;
+				const image_data = canvas.ctx.getImageData(0, 0, canvas.width, canvas.height);
+				loading_task.destroy();
+				callback(null, { file_format, monochrome, palette, image_data, source_blob: blob });
+			}).catch((reason) => {
 				callback(new Error(`Failed to load PDF. ${reason}`));
 			});
 		} else {

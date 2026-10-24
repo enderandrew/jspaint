@@ -1876,7 +1876,8 @@ function prevent_selection($el) {
 			e.target instanceof HTMLTextAreaElement ||
 			(e.target instanceof HTMLLabelElement && e.type !== "contextmenu") ||
 			(e.target instanceof HTMLInputElement && e.target.type !== "color") ||
-			/** @type {HTMLElement} */ (e.target).isContentEditable // a page element being edited in place (blocks.js)
+			// a page element being edited in place (blocks.js); `selectstart` can come from a text node, not an element
+			/** @type {HTMLElement} */ (e.target.nodeType === Node.TEXT_NODE ? e.target.parentElement : e.target)?.isContentEditable
 		) {
 			return;
 		}

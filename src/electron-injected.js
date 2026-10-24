@@ -176,10 +176,11 @@ window.systemHooks.showOpenFileDialog = async ({ formats, defaultPath }) => {
 		throw new Error("user canceled");
 	}
 	const filePath = filePaths[0];
-	const file = await window.systemHooks.readBlobFromHandle(filePath);
+	const file = /** @type {File} */ (await window.systemHooks.readBlobFromHandle(filePath));
 	const format = get_format_from_extension(formats, filePath);
-	const fileWithType = format?.mimeType ? new File([file], file.name, {
-		type: format.mimeType,
+	const mimeType = format && "mimeType" in format ? format.mimeType : undefined;
+	const fileWithType = mimeType ? new File([file], file.name, {
+		type: mimeType,
 		lastModified: file.lastModified,
 	}) : file;
 	return { file: fileWithType, fileHandle: filePath };

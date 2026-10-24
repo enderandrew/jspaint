@@ -14,8 +14,6 @@ declare const firebase: any;
 declare const GIF: any;
 declare const UTIF: any;
 declare const UPNG: any;
-declare const encodeBMP: any;
-declare const decodeBMP: any;
 declare const saveAs: any;
 declare const FontDetective: any;
 declare const AnyPalette: any;
