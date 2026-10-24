@@ -2,9 +2,8 @@
 
 import { save_as_prompt } from "./functions.js";
 
-// Discord Embedded App SDK, bundled with Skypack, saved from:
-// https://cdn.skypack.dev/-/@discord/embedded-app-sdk@v1.2.0-QXsdBg8VfgltgT8IEtBP/dist=es2019,mode=imports/optimized/@discord/embedded-app-sdk.js
-const Discord = await import("../lib/discord-embedded-app-sdk-v1.2.0-bundled-with-skypack.js");
+// Discord Embedded App SDK, bundled into one module (see the top of the file for how)
+const Discord = await import("../lib/discord-embedded-app-sdk-v2.5.0.js");
 // @ts-ignore
 window._Discord = Discord;
 

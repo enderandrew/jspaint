@@ -466,6 +466,7 @@ interface Window {
 	formats_unique_per_file_extension: <T extends FileFormat>(formats: T[]) => T[];
 	// sessions.js
 	new_local_session: () => void;
+	in_multi_user_session?: () => boolean;
 	// speech-recognition.js
 	search_page_html: string; // just for debugging
 	search_page_$html: JQuery; // just for debugging

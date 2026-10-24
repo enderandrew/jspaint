@@ -269,10 +269,10 @@ const createWindow = () => {
 				// connect-src needs data: for loading from localStorage,
 				// and maybe blob: for loading from IndexedDB in the future.
 				// (It uses fetch().)
-				// Note: this should mirror the CSP in index.html, except maybe for firebase stuff.
+				// Note: this should mirror the CSP in index.html (Firebase is for Extras › Multi-User; sessions.js).
 				"Content-Security-Policy": [`
 					default-src 'self';
-					script-src 'self' blob:;
+					script-src 'self' blob: https://*.firebaseio.com https://*.firebasedatabase.app;
 					style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 					img-src 'self' data: blob: http: https:;
 					font-src 'self' https://fonts.gstatic.com;

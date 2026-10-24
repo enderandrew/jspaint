@@ -5,7 +5,7 @@
 import { $DialogWindow } from "./$ToolWindow.js";
 // import { localize } from "./app-localization.js";
 import { change_url_param, get_uris, load_image_from_uri, open_from_image_info, read_image_file, redo, reset_file, show_error_message, show_resource_load_error_message, undo, undoable, update_title } from "./functions.js";
-import { $G, debounce, get_help_folder_icon, image_data_match, is_discord_embed, make_canvas, to_canvas_coords } from "./helpers.js";
+import { $G, E, debounce, get_help_folder_icon, image_data_match, is_discord_embed, make_canvas, to_canvas_coords } from "./helpers.js";
 import { storage_quota_exceeded } from "./manage-storage.js";
 import { showMessageBox } from "./msgbox.js";
 import { localStore } from "./storage.js";
@@ -259,6 +259,19 @@ user.color_transparent = `hsla(${user.hue}, ${user.saturation}%, ${user.lightnes
 user.color_desaturated = `hsla(${user.hue}, ${~~(user.saturation * 0.4)}%, ${user.lightness}%, 0.8)`;
 
 
+// Multi-user sessions (Extras › Multi-User, or #session:<name> in the address) go through a Firebase Realtime
+// Database. This is the project upstream JS Paint uses (jspaint.app); a fork with its own audience should make its
+// own (free) Firebase project, with a Realtime Database, and put its web app config here. The database URL also
+// has to be allowed by the Content-Security-Policy in index.html (script-src, for the SDK's long-polling fallback).
+const FIREBASE_CONFIG = {
+	apiKey: "AIzaSyBgau8Vu9ZE8u_j0rp-Lc044gYTX5O3X9k",
+	authDomain: "jspaint.firebaseapp.com",
+	databaseURL: "https://jspaint.firebaseio.com",
+	projectId: "firebase-jspaint",
+	storageBucket: "",
+	messagingSenderId: "63395010995",
+};
+
 // The image used for other people's cursors
 const cursor_image = new Image();
 cursor_image.src = "images/cursors/default.png";
@@ -277,38 +290,42 @@ class FirebaseSession {
 			this.start();
 		};
 		if (!FirebaseSession.fb_root) {
-			var script = document.createElement("script");
-			script.addEventListener("load", () => {
-				const config = {
-					apiKey: "AIzaSyBgau8Vu9ZE8u_j0rp-Lc044gYTX5O3X9k",
-					authDomain: "jspaint.firebaseapp.com",
-					databaseURL: "https://jspaint.firebaseio.com",
-					projectId: "firebase-jspaint",
-					storageBucket: "",
-					messagingSenderId: "63395010995",
-				};
-				firebase.initializeApp(config);
-				FirebaseSession.fb_root = firebase.database().ref("/");
-				on_firebase_loaded();
+			// The Firebase SDK (lib/firebase/) loads the first time a multi-user session starts: the app, then the database.
+			const load_script = (src) => new Promise((resolve, reject) => {
+				const script = document.createElement("script");
+				script.addEventListener("load", resolve);
+				script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)));
+				script.src = src;
+				document.head.appendChild(script);
 			});
-			script.addEventListener("error", () => {
-				show_error_message("Failed to load Firebase; the document will not load, and changes will not be saved.");
-				file_name = `[Failed to load ${this.id}]`;
-				update_title();
-			});
-			script.src = "lib/firebase.js";
-			document.head.appendChild(script);
+			load_script("lib/firebase/firebase-app-compat.js")
+				.then(() => load_script("lib/firebase/firebase-database-compat.js"))
+				.then(() => {
+					const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
+					FirebaseSession.fb_root = app.database().ref("/");
+					on_firebase_loaded();
+				}, (error) => {
+					log(error);
+					show_error_message("Failed to load Firebase; the document will not load, and changes will not be saved.");
+					file_name = `[Failed to load ${this.id}]`;
+					update_title();
+				});
 		} else {
 			on_firebase_loaded();
 		}
 	}
 	start() {
 		// @TODO: how do you actually detect if it's failing???
+		const link = `${location.origin}${location.pathname}#session:${encodeURIComponent(this.id)}`;
+		const $message = $(E("div")).append(
+			$(E("p")).append("You're in the multi-user session ", $(E("b")).text(this.id), "."),
+			$(E("p")).text("To draw together, others can open this link, or choose Extras › Multi-User › Join Session and enter the session name:"),
+			$(E("p")).append($(E("input")).addClass("inset-deep multi-user-link").attr({ readonly: "", "aria-label": "Link to this session", value: link }).css({ width: "100%", boxSizing: "border-box" })),
+			$(E("p")).text("The document may not load. Changes may not save. Multi-user sessions are public: anyone with the name can see and change the picture."),
+		);
 		showMessageBox({
-			messageHTML: `
-				<p>The document may not load. Changes may not save.</p>
-				<p>Multiuser sessions are public. There is no security.</p>
-			`,
+			title: "Multi-User",
+			messageHTML: $message[0].innerHTML,
 		});
 		// "<p>The document may not load. Changes may not save. If it does save, it's public. There is no security.</p>"// +
 		// "<p>I haven't found a way to detect Firebase quota limits being exceeded, " +
@@ -540,7 +557,7 @@ class FirebaseSession {
 		// $canvas_area.off("pointerdown.session-hook");
 		// Remove collected Firebase event listeners
 		this._fb_listeners.forEach(({ fb, event_type, callback, _error_callback }) => {
-			log(`Remove listener for ${fb.path.toString()} .on ${event_type}`);
+			log(`Remove listener for ${fb.toString()} .on ${event_type}`);
 			fb.off(event_type, callback);
 		});
 		this._fb_listeners.length = 0;
@@ -808,7 +825,7 @@ FirebaseSession.fb_root = null;
 // 		// $canvas_area.off("pointerdown.session-hook");
 // 		// Remove collected Firebase event listeners
 // 		this._fb_listeners.forEach(({ fb, event_type, callback, _error_callback }) => {
-// 			log(`Remove listener for ${fb.path.toString()} .on ${event_type}`);
+// 			log(`Remove listener for ${fb.toString()} .on ${event_type}`);
 // 			fb.off(event_type, callback);
 // 		});
 // 		this._fb_listeners.length = 0;
@@ -1120,7 +1137,12 @@ function flush_session_backup() {
 	return Promise.race([current_session.last_backup, new Promise((resolve) => { setTimeout(resolve, 3000); })]).then(() => {});
 }
 
-export { flush_session_backup, new_local_session };
+/** Whether a multi-user session (#session:<name>) is going, rather than a document saved only in this browser. */
+function in_multi_user_session() {
+	return Boolean(current_session) && !(current_session instanceof LocalSession);
+}
+
+export { flush_session_backup, in_multi_user_session, new_local_session };
 // Temporary globals until all dependent code is converted to ES Modules
 window.new_local_session = new_local_session; // used by functions.js
-
+window.in_multi_user_session = in_multi_user_session; // used by menus.js (which loads before this module)

@@ -5,6 +5,7 @@
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 import { show_edit_colors_window } from "./edit-colors.js";
 import { palette_formats } from "./file-format-data.js";
+import { show_multi_user_setup_dialog } from "./functions.js";
 import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_page_history } from "./page-history.js";
 import { show_help } from "./help.js";
@@ -33,7 +34,7 @@ import { open_live_page, publish_current_page, show_my_site_dialog, show_new_pag
 import { show_site_view } from "./site-button.js";
 import { current_site_page } from "./share.js";
 import { has_account, is_signed_in } from "./site-publish.js";
-import { is_live_sync_enabled, set_live_sync_enabled } from "./live-session.js";
+import { is_live_sync_enabled, live_sync_state, set_live_sync_enabled } from "./live-session.js";
 import { show_share_dialog } from "./share.js";
 import { BLOCK_KINDS, add_block, copy_section_link, delete_selected_block, edit_selected_block, flatten_block, flatten_blocks, get_blocks, get_selected_block, is_editing_block, reorder_block, show_block_html_dialog, show_block_properties_dialog, show_text_link_dialog } from "./blocks.js";
 import { show_page_properties_dialog } from "./page-properties.js";
@@ -57,6 +58,9 @@ function save_collage_as_web_page() {
 const looksLikeChrome = !!(window.chrome && (window.chrome.loadTimes || window.chrome.csi));
 // NOTE: Microsoft Edge includes window.chrome.app
 // (also this browser detection logic could likely use some more nuance)
+
+/** Multi-user sessions (sessions.js) are for plain pictures: a site's page is already shared live with its editors (live-session.js). */
+const can_start_multi_user = () => !is_discord_embed && !live_sync_state().room;
 
 /** @type {OSGUITopLevelMenus} */
 const menus = {
@@ -1575,6 +1579,57 @@ const menus = {
 			description: localize("Draws randomly with different tools."),
 		},
 		MENU_DIVIDER,
+		{
+			emoji_icon: "👥",
+			label: localize("&Multi-User"),
+			submenu: [
+				{
+					label: localize("&New Session From Document"),
+					speech_recognition: [
+						"new session from document", "session from document", "online session",
+						"enable multi-user", "enable multiplayer", "start multi-user", "start multiplayer",
+						"start collaboration", "start collaborating", "multi-user mode", "multiplayer mode",
+						"collaboration mode", "collaborative mode", "online mode", "go online", "share canvas",
+						"play with friends", "draw with friends", "draw together with friends", "draw together",
+						"multiplayer", "multi-user", "collaborate", "collaboration",
+					],
+					action: () => { show_multi_user_setup_dialog(true); },
+					enabled: can_start_multi_user,
+					description: localize("Starts a new multi-user session from the current document."),
+				},
+				{
+					label: localize("New &Blank Session"),
+					speech_recognition: [
+						"new blank session", "new empty session", "new blank multi-user session", "new empty multi-user session",
+						"new blank multiplayer session", "new multi-user session", "new multiplayer session",
+						"new collaboration session", "start multi-user session", "start multiplayer session",
+					],
+					action: () => { show_multi_user_setup_dialog(false); },
+					enabled: can_start_multi_user,
+					description: localize("Starts a new multi-user session from an empty document."),
+				},
+				{
+					label: "&Join Session...",
+					speech_recognition: [
+						"join session", "join a session", "join multi-user session", "join multiplayer session",
+						"join a friend", "join friends", "join collaboration",
+					],
+					action: () => { show_multi_user_setup_dialog("join"); },
+					enabled: can_start_multi_user,
+					description: "Joins someone's multi-user session by its name.",
+				},
+				{
+					label: "&Leave Session",
+					speech_recognition: [
+						"leave session", "leave multi-user session", "leave multiplayer session", "go offline", "stop collaborating",
+						"end session", "end multi-user session", "exit multi-user", "exit multiplayer",
+					],
+					action: () => { window.new_local_session(); },
+					enabled: () => !is_discord_embed && Boolean(window.in_multi_user_session?.()),
+					description: "Leaves the multi-user session, keeping a copy of the picture in this browser.",
+				},
+			],
+		},
 		{
 			emoji_icon: "💄",
 			label: localize("&Themes"),

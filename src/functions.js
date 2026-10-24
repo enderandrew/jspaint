@@ -4260,50 +4260,62 @@ function sanity_check_blob(blob, okay_callback, magic_number_bytes, magic_wanted
 	}
 }
 
+const SESSION_NAME_PATTERN = "[-0-9A-Za-z\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u02af\\u1d00-\\u1d25\\u1d62-\\u1d65\\u1d6b-\\u1d77\\u1d79-\\u1d9a\\u1e00-\\u1eff\\u2090-\\u2094\\u2184-\\u2184\\u2488-\\u2490\\u271d-\\u271d\\u2c60-\\u2c7c\\u2c7e-\\u2c7f\\ua722-\\ua76f\\ua771-\\ua787\\ua78b-\\ua78c\\ua7fb-\\ua7ff\\ufb00-\\ufb06]+";
+
 /**
- * @param {boolean} from_current_document
+ * Extras › Multi-User: start a session (from the current picture, or a blank one), or join one by name.
+ * Everything happens in this window, rather than a new tab, so it also works where Paint is embedded in another
+ * page (such as a desktop in a web page), which has no address bar to share or paste a link in.
+ * @param {boolean | "join"} mode - true: from the current document; false: a blank one; "join": an existing session
  */
-function show_multi_user_setup_dialog(from_current_document) {
+function show_multi_user_setup_dialog(mode) {
+	const joining = mode === "join";
 	const $w = $DialogWindow();
-	$w.title("Multi-User Setup").addClass("horizontal-buttons");
+	$w.title(joining ? "Join Multi-User Session" : "Multi-User Setup").addClass("horizontal-buttons");
 	$w.$main.html(`
-		${from_current_document ? "<p>This will make the current document public.</p>" : ""}
+		${mode === true ? "<p>This will make the current document public.</p>" : ""}
 		<p>
-			<!-- Choose a name for the multi-user session, included in the URL for sharing: -->
-			Enter the session name that will be used in the URL for sharing:
+			${joining ?
+				"Enter the name of the session to join (or paste a link to it). If nobody has used that name yet, a new session starts with your picture." :
+				"Enter the session name that will be used in the link for sharing:"}
 		</p>
 		<p>
 			<label>
-				<span class="partial-url-label">jspaint.app/#session:</span>
+				<span class="partial-url-label"></span>
 				<input
 					type="text"
 					id="session-name"
 					aria-label="session name"
-					pattern="[-0-9A-Za-z\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u02af\\u1d00-\\u1d25\\u1d62-\\u1d65\\u1d6b-\\u1d77\\u1d79-\\u1d9a\\u1e00-\\u1eff\\u2090-\\u2094\\u2184-\\u2184\\u2488-\\u2490\\u271d-\\u271d\\u2c60-\\u2c7c\\u2c7e-\\u2c7f\\ua722-\\ua76f\\ua771-\\ua787\\ua78b-\\ua78c\\ua7fb-\\ua7ff\\ufb00-\\ufb06]+"
 					title="Numbers, letters, and hyphens are allowed."
 					class="inset-deep"
 				>
 			</label>
 		</p>
 	`);
+	$w.$main.find(".partial-url-label").text(`${location.host}${location.pathname.replace(/index\.html$/, "")}#session:`);
 	const $session_name = $w.$main.find("#session-name");
 	$w.$main.css({ maxWidth: "500px" });
-	$w.$Button("Start", () => {
+	$w.$Button(joining ? "Join" : "Start", () => {
 		let name = String($session_name.val()).trim();
-
+		// (a pasted link: the part after #session:)
+		const link_match = name.match(/#(?:.*,)?session:([^,]+)$/i);
+		if (link_match) {
+			try { name = decodeURIComponent(link_match[1]); } catch { name = link_match[1]; }
+		}
 		if (name == "") {
 			show_error_message("The session name cannot be empty.");
-		} else if ($session_name.is(":invalid")) {
+		} else if (!new RegExp(`^${SESSION_NAME_PATTERN}$`).test(name)) {
 			show_error_message("The session name must be made from only numbers, letters, and hyphens.");
-		} else {
-			if (from_current_document) {
-				change_url_param("session", name);
-			} else {
-				// @TODO: load new empty session in the same browser tab
-				// (or at least... keep settings like vertical-color-box-mode?)
-				window.open(`${location.origin}${location.pathname}#session:${name}`);
-			}
+		} else if (mode === false) {
 			$w.close();
+			are_you_sure(() => {
+				reset_file();
+				reset_canvas_and_history();
+				change_url_param("session", name);
+			});
+		} else {
+			$w.close();
+			change_url_param("session", name);
 		}
 	}, { type: "submit" });
 	$w.$Button(localize("Cancel"), () => {
