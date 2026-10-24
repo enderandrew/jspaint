@@ -1164,6 +1164,11 @@
               <param name="Local" value="paint_blur_sharpen.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="opacity">
+              <param name="Name" value="To make a picture see-through">
+              <param name="Local" value="paint_opacity.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="opaque">
               <param name="Name" value="To copy and paste part of a picture">
               <param name="Local" value="paint_cutout_copy_move.html">
@@ -1828,6 +1833,11 @@
               <param name="Local" value="paint_flip_picture.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="tolerance, fill">
+              <param name="Name" value="To fill an area or object with color">
+              <param name="Local" value="paint_fill.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="toolbar, text">
               <param name="Name" value="To type and format text">
               <param name="Local" value="paint_text.html">
@@ -1981,6 +1991,11 @@
                  <param name="Local" value="paint_toolbox.html">
                  </OBJECT>
    </UL>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="translucent pictures">
+              <param name="Name" value="To make a picture see-through">
+              <param name="Local" value="paint_opacity.html">
+              </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="transparency">
               <param name="Name" value="To make part of a picture transparent">

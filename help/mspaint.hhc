@@ -321,6 +321,10 @@
 			<param name="Local" value="paint_hue_saturation.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Make a picture see-through">
+			<param name="Local" value="paint_opacity.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Reduce a picture to fewer colors">
 			<param name="Local" value="paint_posterize_threshold.html">
 			</OBJECT>
