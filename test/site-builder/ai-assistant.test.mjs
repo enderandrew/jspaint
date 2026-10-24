@@ -5,7 +5,7 @@ import { assert, click_menu_item, open_paint, select_tool } from "./helpers.mjs"
 
 const { page, close } = await open_paint();
 await page.clock.install(); // so the test can skip the quiet time between tips
-// A stand-in for images/clippy.jpg (the real one isn't in the repo)
+// A stand-in for images/clippy.jpg, so the test doesn't depend on that picture
 await page.route("**/images/clippy.jpg", (route) => route.fulfill({
 	contentType: "image/svg+xml",
 	body: `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="100"><rect width="60" height="100" fill="#fff"/><rect x="20" y="10" width="20" height="80" fill="#88a"/></svg>`,

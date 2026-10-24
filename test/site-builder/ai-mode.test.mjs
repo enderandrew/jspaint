@@ -4,8 +4,13 @@
 import { assert, canvas_box, click_menu_item, open_paint, select_tool, type_text_box } from "./helpers.mjs";
 
 const { page, close, errors } = await open_paint({ viewport: { width: 1280, height: 1000 } });
-// AI Mode finds its paintings by loading images/ai-1.jpg, ai-2.jpg, ... until one is missing,
-// so one 404 is expected. Chrome logs it without the URL, so check the responses themselves.
+// Only painting 1, whatever else is in images/, so the painting is always the same one
+await page.route(/\/images\/ai-(\d+)\.(jpg|png|webp)$/, (route, request) => {
+	const [, n, extension] = /ai-(\d+)\.(\w+)$/.exec(new URL(request.url()).pathname);
+	return n === "1" && extension === "jpg" ? route.continue() : route.fulfill({ status: 404, body: "" });
+});
+// AI Mode finds its paintings by loading images/ai-1.jpg, ai-2.jpg, ... (or .png, .webp) until one is missing,
+// so a few 404s are expected. Chrome logs it without the URL, so check the responses themselves.
 const not_found = [];
 page.on("response", (response) => { if (response.status() === 404) { not_found.push(new URL(response.url()).pathname); } });
 
@@ -147,7 +152,7 @@ await page.waitForFunction(() => main_canvas.width === 200, null, { timeout: 100
 assert.equal(await page.evaluate(() => document.body.classList.contains("ai-mode")), false, "AI Mode ended");
 assert.equal(await page.evaluate(() => selected_colors.foreground instanceof CanvasPattern), false, "no AI ink on the opened picture");
 
-assert.ok(not_found.every((path) => /^\/images\/ai-\d+\.jpg$/.test(path)), `only painting probes 404: ${not_found.join(", ")}`);
+assert.ok(not_found.every((path) => /^\/images\/ai-\d+\.(jpg|png|webp)$/.test(path)), `only painting probes 404: ${not_found.join(", ")}`);
 const expected_404s = errors.filter((error) => /status of 404/.test(error));
 assert.ok(expected_404s.length <= not_found.length);
 errors.splice(0, errors.length, ...errors.filter((error) => !/status of 404/.test(error)));

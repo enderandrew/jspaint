@@ -9,14 +9,16 @@ const SAMPLE = 997; // a pixel to compare: (x * 4) of every 997th pixel is enoug
 async function setup({ no_paintings = false } = {}) {
 	const paint = await open_paint();
 	const { page } = paint;
-	// A stand-in for images/clippy.jpg (the real one isn't in the repo)
+	// A stand-in for images/clippy.jpg, so the test doesn't depend on that picture
 	await page.route("**/images/clippy.jpg", (route) => route.fulfill({
 		contentType: "image/svg+xml",
 		body: `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="100"><rect width="60" height="100" fill="#0f0"/></svg>`,
 	}));
-	if (no_paintings) {
-		await page.route(/\/images\/ai-\d+\.jpg$/, (route) => route.fulfill({ status: 404, body: "" }));
-	}
+	// Only painting 1 (or none), whatever else is in images/, so the result is predictable
+	await page.route(/\/images\/ai-(\d+)\.(jpg|png|webp)$/, (route, request) => {
+		const [, n, extension] = /ai-(\d+)\.(\w+)$/.exec(new URL(request.url()).pathname);
+		return !no_paintings && n === "1" && extension === "jpg" ? route.continue() : route.fulfill({ status: 404, body: "" });
+	});
 	await page.evaluate(async () => {
 		const { undoable } = await import("./src/functions.js");
 		undoable({ name: "Test picture" }, () => {
@@ -118,7 +120,7 @@ const expected = (page, url, prompt = "") => page.evaluate(async ([url, prompt, 
 	assert.equal(counts.outside_changed, 0, "outside the selection is untouched");
 	assert.ok(counts.inside_changed > box.width * box.height * 0.9, "the selection got the painting");
 
-	errors.splice(0, errors.length, ...errors.filter((error) => !/status of 404/.test(error))); // looking for images/ai-2.jpg
+	errors.splice(0, errors.length, ...errors.filter((error) => !/status of 404/.test(error))); // looking for images/ai-2.jpg and so on
 	await close();
 }
 
