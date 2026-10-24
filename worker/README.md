@@ -21,6 +21,8 @@ wrangler secret put SITE_EDIT_SECRET -c editor/wrangler.jsonc
 
 One-time: `wrangler r2 bucket create jspaint-sites`.
 
+`package.json` overrides `undici` to 7.30.1 or later: wrangler's local simulator (miniflare) pins 7.29.1, which has security advisories. Drop the override once a wrangler release includes a fixed undici (`npm audit` will be clean without it).
+
 ## Domain
 
 `coolpaint.world` is a zone on the account; both Workers use **Custom Domains** in their `wrangler.jsonc` `routes` (`coolpaint.world` + `www` + the former `sites.` → sites, `edit.coolpaint.world` → editor), so `wrangler deploy` creates the DNS records and certificates. **A hostname must never be listed in both configs**: wrangler treats the list as the Worker's complete set and, without a TTY, silently re-points a hostname listed for another Worker. Old hostnames (`*.workers.dev`, `www`, `sites.`) 301 to the domain; `coolpaint.world/?join=…` (old share links) 302 to the editor. Canonical URLs come from the `EDITOR_URL` / `SITES_URL` vars and `src/site-constants.js`; the pages must stay on a different origin from the editor (sandbox, docs/DESIGN.md §9).
