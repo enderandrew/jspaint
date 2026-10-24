@@ -1168,3 +1168,28 @@ summary {
 .menu-item:not(.highlight) .too-big-soon-gif {
 	transform: scale(0.6);
 }
+/* Buttons and History entries are never text to select (windows sit outside .jspaint, which already prevents it) */
+button,
+.history-entry,
+.menus {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+/* Touch screens: menus with taller rows and title-bar buttons with a bigger tap area (an invisible margin around
+them), so a finger can hit them without Extras › Enlarge UI, which makes everything twice as big. */
+@media (pointer: coarse) {
+	body:not(.enlarge-ui) .menu-item > td {
+		padding-top: 6px;
+		padding-bottom: 6px;
+	}
+	body:not(.enlarge-ui) .os-window .window-titlebar .window-button {
+		position: relative;
+	}
+	body:not(.enlarge-ui) .os-window .window-titlebar .window-button::before {
+		content: "";
+		position: absolute;
+		inset: -8px -4px;
+	}
+}
