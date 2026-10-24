@@ -48,9 +48,11 @@ I want to bring good old Paint into the modern era.
   * **Paste** supports loading from URLs.
   * You can create links that will open an image from the Web in JS Paint. For example, this link will start with an isometric grid as a template: <https://jspaint.app/#load:https://i.imgur.com/zJMrWwb.png>
   * Rudimentary **multi-user** collaboration support.
-    Start up a session at
-    [jspaint.app/#session:multi-user-test](https://jspaint.app/#session:multi-user-test)
+    Use **Extras > Multi-User > New Session From Document** (or start up a session at
+    [jspaint.app/#session:multi-user-test](https://jspaint.app/#session:multi-user-test))
     and send the link to your friends!
+    They can also use **Extras > Multi-User > Join Session** and type the session's name,
+    which works even where JS Paint is embedded in another page without an address bar.
     It isn't seamless; actions by other users interrupt what you're doing, and visa versa.
     Sessions are not private, and you may lose your work at any time.
     If you want better collaboration support, follow the development of [Mopaint](https://github.com/1j01/mopaint).
@@ -156,8 +158,10 @@ This doesn't undo saving the file, but allows you to then save in a different fo
 | .bmp, .dib                    | [16 Color Bitmap][BMP]        |  ✅  |  ✅   |      🔜      |      ✅       |
 | .bmp, .dib                    | [256 Color Bitmap][BMP]       |  ✅  |  ✅   |      🔜      |      ✅       |
 | .bmp, .dib                    | [24-bit Bitmap][BMP]          |  ✅  |  ✅   |      N/A     |      N/A      |
+| .bmp, .dib                    | [16-bit and 32-bit Bitmap][BMP], [RLE][]-compressed bitmaps |  ✅  |       |      N/A     |      N/A      |
 | .tif, .tiff, .dng, .cr2, .nef | [TIFF][] (loads first page)   |  ✅  |  ✅   |              |               |
 | .pdf                          | [PDF][] (loads first page)    |  ✅  |       |              |               |
+| .html, .htm                   | Web Page (the picture with its page elements) |  ✅  |  ✅   |              |               |
 | .webp                         | [WebP][]                      |  🌐  |  🌐   |              |               |
 | .gif                          | [GIF][]                       |  🌐  |  🌐   |              |               |
 | .jpeg, .jpg                   | [JPEG][]                      |  🌐  |  🌐   |      N/A     |      N/A      |
@@ -175,6 +179,7 @@ and "Write Palette" refers to writing an [indexed color][] image.
 
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
 [BMP]: https://en.wikipedia.org/wiki/BMP_file_format
+[RLE]: https://en.wikipedia.org/wiki/Run-length_encoding
 [TIFF]: https://en.wikipedia.org/wiki/TIFF
 [PDF]: https://en.wikipedia.org/wiki/PDF
 [WebP]: https://en.wikipedia.org/wiki/WebP
