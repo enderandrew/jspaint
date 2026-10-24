@@ -417,6 +417,10 @@
 			<param name="Local" value="paint_web_files.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Draw together with other people">
+			<param name="Local" value="paint_multi_user.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Change how Paint looks">
 			<param name="Local" value="paint_themes_language.html">
 			</OBJECT>

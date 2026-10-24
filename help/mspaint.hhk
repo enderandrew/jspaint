@@ -1142,6 +1142,11 @@
                  </OBJECT>
    </UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="multi-user sessions">
+              <param name="Name" value="To draw together with other people">
+              <param name="Local" value="paint_multi_user.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="multiple copies">
               <param name="Name" value="To copy and paste part of a picture">
               <param name="Local" value="paint_cutout_copy_move.html">
