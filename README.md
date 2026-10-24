@@ -370,13 +370,8 @@ Run `npm run format` to automatically fix formatting issues, or `npx eslint --fi
 
 The formatting rules are configured for compatibility with VS Code's built-in formatter.
 
-Run `npm test` to run browser-based tests with Cypress. (It's slow to start up and run tests, unfortunately.)
-
-Run `npm run accept` to accept any visual changes.
-This unfortunately re-runs all the tests, rather than accepting results of the previous test, so you could end up with different results than the previous test.
-If you use [GitHub Desktop](https://desktop.github.com/), you can view diffs of images, in four different modes.
-
-To open the Cypress UI, first run `npm run test:start-server`, then concurrently `npm run cy:open`
+Run `npm test` to run the browser-based tests with [Playwright](https://playwright.dev/) (`npx playwright install chromium` once first).
+They start a local server and drive the real app; see [test/site-builder/README.md](test/site-builder/README.md) for running some of them, or against a running server.
 
 ### Web App (https://jspaint.app)
 

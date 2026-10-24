@@ -65,8 +65,6 @@ module.exports = {
 		// TODO: assess filtering of files; I see eslint in node_modules, why? prune is true by default
 		ignore: [
 			".history", // VS Code "Local History" extension
-			"cypress", // Cypress tests
-			"cypress.json", // Cypress config
 			"browserconfig.xml", // Windows 8/10 start menu tile
 			"about.html", // homepage
 			"parse-rc-file.js", // localization

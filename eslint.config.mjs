@@ -269,7 +269,6 @@ export default [
 			"src/electron-main.js",
 			"sync-package.js",
 			"prune-globals.js",
-			"cypress/plugins/index.js",
 			"localization/*.js",
 			"scripts/**/*.js",
 			"jspaint-bin.js",
@@ -326,19 +325,6 @@ export default [
 				"R2Bucket": "readonly",
 				"DurableObjectNamespace": "readonly",
 				"Fetcher": "readonly",
-			},
-		},
-	},
-	{
-		"files": [
-			"cypress/**/*.js",
-		],
-		"languageOptions": {
-			"globals": {
-				...globals.mocha,
-				"expect": "readonly",
-				"cy": "readonly",
-				"Cypress": "readonly",
 			},
 		},
 	},
