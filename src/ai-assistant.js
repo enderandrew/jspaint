@@ -473,6 +473,33 @@ export function hide_assistant() {
 	}, 1800);
 }
 
+/**
+ * Image › Mental: the assistant has seen your mental imagery, and takes some time off to talk to someone.
+ * It leaves (without that counting as turning it off) and comes back later.
+ * @returns {boolean} whether it was there to go
+ */
+export function send_to_therapy(away_ms = 60 * 1000) {
+	if (!visible || !$root) { return false; }
+	say("I've seen your mental imagery. I'm going to need to talk to someone about it. Back in a minute.");
+	visible = false;
+	clearTimeout(idle_timer);
+	const root = $root;
+	setTimeout(() => {
+		if (!visible) {
+			root.hidden = true;
+			hide_bubble();
+		}
+	}, 3500);
+	setTimeout(() => {
+		let hidden_meanwhile = false;
+		try { hidden_meanwhile = localStorage.getItem(STORAGE_KEY) === "1"; } catch { /* fine */ }
+		if (visible || hidden_meanwhile) { return; }
+		show_assistant({ greet: false, remember: false });
+		say("I'm back from therapy. We mostly talked about your picture. I'm working through it.");
+	}, away_ms);
+	return true;
+}
+
 export function toggle_assistant() {
 	if (visible) {
 		hide_assistant();

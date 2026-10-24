@@ -18,6 +18,7 @@ import { show_defragment_dialog } from "./defragment.js";
 import { show_paint_plus } from "./paint-plus.js";
 import { show_terms_of_service } from "./terms-of-service.js";
 import { simulateRandomGesturesPeriodically, simulatingGestures, stopSimulatingGestures } from "./simulate-random-gestures.js";
+import { colors_of_the_wind, connect_mental_imagery, do_taxes, page_doctor, send_help, show_attitude_coach } from "./menu-jokes.js";
 import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
 	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_posterize, show_sharpen, show_threshold
@@ -279,6 +280,12 @@ const menus = {
 			],
 			action: () => { systemHooks.setWallpaperTiled(main_canvas); },
 			description: localize("Tiles this bitmap as the desktop background."),
+		},
+		{
+			label: "Tax&es...",
+			speech_recognition: ["taxes", "do my taxes", "file taxes", "file my taxes", "tax return", "do taxes"],
+			action: () => { do_taxes(); },
+			description: "Prepares and files your taxes. Refunds not included.",
 		},
 		{
 			label: localize("Set As Wallpaper (&Centered)"), // in mspaint it's Wa&llpaper
@@ -791,6 +798,12 @@ const menus = {
 			description: "Rearranges the picture's pixels so they're stored together, for faster access.",
 		},
 		{
+			label: "Men&tal...",
+			speech_recognition: ["mental", "mental image", "mental imagery", "connect with my mental imagery", "imagine"],
+			action: () => { connect_mental_imagery(); },
+			description: "Connects with your mental imagery.",
+		},
+		{
 			label: localize("Flip Sticker &Horizontal"),
 			speech_recognition: ["flip sticker", "flip sticker horizontal", "flip sticker horizontally", "mirror sticker"],
 			enabled: () => !!get_selected_sticker(),
@@ -986,6 +999,12 @@ const menus = {
 			description: "Makes the picture or selection pop. Results may vary.",
 		},
 		{
+			label: "Att&itude...",
+			speech_recognition: ["attitude", "adjust attitude", "adjust my attitude", "attitude adjustment", "cheer me up"],
+			action: () => { show_attitude_coach(); },
+			description: "Adjusts your attitude, with coaching from the Paint Assistant.",
+		},
+		{
 			label: "&Deep Fry",
 			speech_recognition: ["deep fry", "deep fried", "fry it"],
 			action: () => { apply_deep_fry(); },
@@ -1169,6 +1188,13 @@ const menus = {
 			action: () => { delete_selected_block(); },
 			description: localize("Removes the selected element from the page."),
 		},
+		MENU_DIVIDER,
+		{
+			label: "Do&ctor",
+			speech_recognition: ["doctor", "page doctor", "page a doctor", "call a doctor", "is there a doctor in the house"],
+			action: () => { page_doctor(); },
+			description: "Pages a doctor to the OR.",
+		},
 	],
 	// Everything about the site in one place (Jack, 2026-09-23: "multiple places the user could discover 'publish'")
 	[localize("My &Site")]: [
@@ -1276,6 +1302,12 @@ const menus = {
 				check: () => is_blue_screen_brush_active(),
 			},
 			description: "Paints with a fatal exception. May crash occasionally.",
+		},
+		{
+			label: "Of the &Wind",
+			speech_recognition: ["of the wind", "colors of the wind", "paint with all the colors of the wind", "wind colors"],
+			action: () => { colors_of_the_wind(); },
+			description: "Paints with all the colors of the wind (Paint+ Max only).",
 		},
 		{
 			label: localize("&Get Colors"),
@@ -1411,6 +1443,12 @@ const menus = {
 			],
 			action: () => { show_help(); },
 			description: localize("Displays Help for the current task or command."),
+		},
+		{
+			label: "&Send",
+			speech_recognition: ["send help", "send", "help me please", "i need help", "s o s", "mayday"],
+			action: () => { send_help(); },
+			description: "Sends help.",
 		},
 		MENU_DIVIDER,
 		{
