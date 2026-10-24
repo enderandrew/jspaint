@@ -29,9 +29,6 @@ jobs:
 
       - name: Install Node.js dependencies
         run: npm ci
-        env:
-          # The Cypress tests don't run here, so skip downloading its binary.
-          CYPRESS_INSTALL_BINARY: "0"
 
       - name: Build and upload binaries
         run: npm run electron:publish
