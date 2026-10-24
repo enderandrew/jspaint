@@ -4,6 +4,7 @@
 /* global $canvas, $canvas_area, $colorbox, $status_text, $toolbox, $Window, AccessKeys, applyCSSProperties, default_canvas_height, default_canvas_width, default_magnification, default_tool, enable_palette_loading_from_indexed_images, localize, main_canvas, main_ctx, monochrome_palette, my_canvas_height, my_canvas_width, new_local_session, parseThemeFileString, pointer_active, pointers, polychrome_palette, redos, systemHooks, text_tool_font, update_fill_and_stroke_colors_and_lineWidth, UPNG, UTIF */
 
 import { decodeBMP, encodeBMP } from "./bmp-format.js";
+import { install_history_image_storage } from "./history-storage.js";
 import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasHelperLayer } from "./OnCanvasHelperLayer.js";
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
@@ -738,12 +739,13 @@ function make_history_node({
 	name, // the name of the operation, shown in the history window, e.g. localize("Resize Canvas")
 	icon = null, // an Image representation of the operation type, shown in the history window, e.g. get_help_folder_icon("p_blank.png")
 }) {
-	return {
+	// (the picture is held by history-storage.js: packed when it hasn't been used lately)
+	return install_history_image_storage({
 		parent,
 		futures,
 		timestamp,
 		soft,
-		image_data,
+		image_data: /** @type {ImageData | null} */ (null),
 		selection_image_data,
 		selection_x,
 		selection_y,
@@ -763,7 +765,7 @@ function make_history_node({
 		ternary_color,
 		name,
 		icon,
-	};
+	}, image_data);
 }
 
 function update_title() {

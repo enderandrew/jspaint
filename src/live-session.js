@@ -12,6 +12,7 @@
 // The room keeps every change as a version (who, what, when — the label sent with each change is the undoable's
 // name); page-history.js shows that tree and can take everyone back to any version (`restore`).
 import { get_editing_block, get_selected_block, order_blocks, remove_block_by_id, set_remote_editor_lookup, snapshot_blocks, upsert_block_from_snapshot } from "./blocks.js";
+import { history_image_size, patch_history_image_data } from "./history-storage.js";
 import { get_tool_by_id, resize_canvas_without_saving_dimensions, update_helper_layer, update_title } from "./functions.js";
 import { $G, E, get_icon_for_tool, make_canvas, to_canvas_coords } from "./helpers.js";
 import { upload_asset } from "./my-site.js";
@@ -521,11 +522,9 @@ async function draw_patch(patch, notify = true) {
 	// Rebase every history node's picture: the patch is the truth for that rectangle now.
 	const patch_data = main_ctx.getImageData(x, y, width, height).data;
 	for (const node of all_history_nodes()) {
-		const data = node.image_data;
-		if (!data || data.width !== main_canvas.width || data.height !== main_canvas.height) { continue; }
-		for (let row = 0; row < height; row++) {
-			data.data.set(patch_data.subarray(row * width * 4, (row + 1) * width * 4), ((y + row) * data.width + x) * 4);
-		}
+		const size = history_image_size(node);
+		if (!size || size.width !== main_canvas.width || size.height !== main_canvas.height) { continue; }
+		patch_history_image_data(node, x, y, width, height, patch_data); // (without unpacking steps that are packed)
 	}
 	if (last && last.pixels && last.width === main_canvas.width && last.height === main_canvas.height) {
 		for (let row = 0; row < height; row++) {
