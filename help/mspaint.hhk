@@ -296,10 +296,8 @@
 <param name="Local" value="paint_brush.html">
 <param name="Name" value="To type and format text">
 <param name="Local" value="paint_text.html">
+              </OBJECT>
    <UL>
-                 <param name="Name" value="To use black and white instead of color">
-                 <param name="Local" value="paint_blackwhite.html">
-                 </OBJECT>
    <LI><OBJECT type="Text/sitemap">
                  <param name="Name" value="black and white">
                  <param name="Name" value="To use black and white instead of color">
@@ -453,6 +451,11 @@
               <param name="Name" value="creating custom colors">
               <param name="Name" value="To create custom colors">
               <param name="Local" value="paint_custom_colors.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="cropping">
+              <param name="Name" value="To crop a picture to a selection">
+              <param name="Local" value="paint_crop.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="cropping pictures">
@@ -978,6 +981,11 @@
               <param name="Local" value="paint_flip_picture.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="keyboard shortcuts">
+              <param name="Name" value="Mouse and keyboard tricks">
+              <param name="Local" value="paint_shortcuts.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="landscape orientation">
               <param name="Name" value="To print a picture">
               <param name="Local" value="paint_print.html">
@@ -1272,6 +1280,11 @@
               <param name="Local" value="paint_freeform_lines.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="perfect circles and squares">
+              <param name="Name" value="Mouse and keyboard tricks">
+              <param name="Local" value="paint_shortcuts.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="phones">
               <param name="Name" value="To use Paint on a phone or tablet">
               <param name="Local" value="paint_touch.html">
@@ -1387,6 +1400,11 @@
               <param name="Name" value="prompt">
               <param name="Name" value="To generate a picture from a description">
               <param name="Local" value="paint_ai_prompt.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="proportions">
+              <param name="Name" value="Mouse and keyboard tricks">
+              <param name="Local" value="paint_shortcuts.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="Publish">
@@ -1959,6 +1977,13 @@
                  </OBJECT>
    </UL>
 <LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="transparency">
+              <param name="Name" value="To make part of a picture transparent">
+              <param name="Local" value="paint_transparency.html">
+              <param name="Name" value="To specify transparent or opaque drawing">
+              <param name="Local" value="paint_trans_opaque.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
               <param name="Name" value="transparent">
               <param name="Name" value="To copy and paste part of a picture">
               <param name="Local" value="paint_cutout_copy_move.html">
@@ -1968,6 +1993,11 @@
               <param name="Local" value="paint_trans_opaque.html">
               <param name="Name" value="To stretch or skew an item">
               <param name="Local" value="paint_skew_picture.html">
+              </OBJECT>
+<LI><OBJECT type="Text/sitemap">
+              <param name="Name" value="transparent pictures">
+              <param name="Name" value="To make part of a picture transparent">
+              <param name="Local" value="paint_transparency.html">
               </OBJECT>
 <LI><OBJECT type="Text/sitemap">
               <param name="Name" value="triangles">

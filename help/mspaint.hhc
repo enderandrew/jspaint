@@ -124,6 +124,10 @@
 			<param name="Name" value="Save part of a picture into a bitmap file ">
 			<param name="Local" value="paint_cutout_save.html">
 			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Crop a picture to a selection">
+			<param name="Local" value="paint_crop.html">
+			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Changing How Your Picture Looks on the Screen">
@@ -183,6 +187,14 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Display the tool box">
 			<param name="Local" value="paint_toolbox.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Mouse and keyboard tricks">
+			<param name="Local" value="paint_shortcuts.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Make part of a picture transparent">
+			<param name="Local" value="paint_transparency.html">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
