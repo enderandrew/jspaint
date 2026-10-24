@@ -35,6 +35,7 @@ html, body, .jspaint {
 	flex-flow: column;
 }
 .choose-eraser,
+.choose-fill-tolerance,
 .choose-magnification,
 .choose-stroke-size,
 .choose-transparent-mode {
