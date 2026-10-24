@@ -17,7 +17,8 @@ import { are_you_sure, cancel, deselect, reset_canvas_and_history, reset_file, s
 import { $G, make_canvas } from "./helpers.js";
 import { showMessageBox } from "./msgbox.js";
 
-const SOURCE_PATH = (/** @type {number} */ n) => `images/ai-${n}.jpg`;
+const SOURCE_EXTENSIONS = ["jpg", "png", "webp"]; // tried in this order for each number
+const SOURCE_PATH = (/** @type {number} */ n, extension = "jpg") => `images/ai-${n}.${extension}`;
 const MAX_SOURCES = 99;
 const MAX_CANVAS_SIZE = 1600;
 
@@ -57,15 +58,21 @@ $G.on("history-update", () => {
 export async function find_sources() {
 	if (source_urls) { return source_urls; }
 	const found = [];
+	const loads = (/** @type {string} */ url) => new Promise((resolve) => {
+		const img = new Image();
+		img.onload = () => resolve(true);
+		img.onerror = () => resolve(false);
+		img.src = url;
+	});
 	for (let n = 1; n <= MAX_SOURCES; n++) {
-		const url = SOURCE_PATH(n);
-		const exists = await new Promise((resolve) => {
-			const img = new Image();
-			img.onload = () => resolve(true);
-			img.onerror = () => resolve(false);
-			img.src = url;
-		});
-		if (!exists) { break; }
+		let url = null;
+		for (const extension of SOURCE_EXTENSIONS) {
+			if (await loads(SOURCE_PATH(n, extension))) {
+				url = SOURCE_PATH(n, extension);
+				break;
+			}
+		}
+		if (!url) { break; } // the numbers stop at the first one with no picture
 		found.push(url);
 	}
 	source_urls = found;
@@ -178,7 +185,7 @@ function show_progress(fraction) {
 export async function start_ai_mode({ different = false } = {}) {
 	const urls = await find_sources();
 	if (urls.length === 0) {
-		show_error_message(`AI Mode couldn't find any paintings to "generate". Add images named ${SOURCE_PATH(1)}, ${SOURCE_PATH(2)}, and so on.`);
+		show_error_message(`AI Mode couldn't find any paintings to "generate". Add images named ${SOURCE_PATH(1)}, ${SOURCE_PATH(2)}, and so on (JPEG, PNG, or WebP).`);
 		return;
 	}
 	const choices = different && urls.length > 1 ? urls.filter((url) => url !== current_source_url) : urls;
