@@ -15,6 +15,12 @@ import { show_prompt_box } from "./ai-prompt.js";
 import { is_assistant_visible, toggle_assistant } from "./ai-assistant.js";
 import { is_blue_screen_brush_active, toggle_blue_screen_brush } from "./blue-screen-brush.js";
 import { show_defragment_dialog } from "./defragment.js";
+import { show_paint_plus } from "./paint-plus.js";
+import { show_terms_of_service } from "./terms-of-service.js";
+import {
+	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
+	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_posterize, show_sharpen, show_threshold
+} from "./adjustments.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
@@ -895,6 +901,114 @@ const menus = {
 			description: localize("Makes the current selection either opaque or transparent."),
 		},
 	],
+	// Adjustments and filters (adjustments.js), with some parody ones at the end
+	["A&djustments"]: [
+		{
+			label: "&Brightness/Contrast...",
+			speech_recognition: ["brightness", "contrast", "brightness contrast", "brighten", "darken", "make it brighter", "make it darker"],
+			action: () => { show_brightness_contrast(); },
+			description: "Adjusts the brightness and contrast of the picture or selection.",
+		},
+		{
+			label: "&Hue/Saturation...",
+			speech_recognition: ["hue", "saturation", "hue saturation", "shift hue", "change hue", "saturate", "desaturate", "lightness"],
+			action: () => { show_hue_saturation(); },
+			description: "Adjusts the hue, saturation, and lightness of the picture or selection.",
+		},
+		{
+			label: "&Posterize...",
+			speech_recognition: ["posterize", "reduce colors", "fewer colors"],
+			action: () => { show_posterize(); },
+			description: "Reduces the number of color levels in the picture or selection.",
+		},
+		{
+			label: "&Threshold...",
+			speech_recognition: ["threshold", "black and white", "make black and white"],
+			action: () => { show_threshold(); },
+			description: "Turns the picture or selection into black and white at a chosen level.",
+		},
+		MENU_DIVIDER,
+		{
+			label: "&Auto Contrast",
+			speech_recognition: ["auto contrast", "automatic contrast", "auto levels", "fix contrast"],
+			action: () => { apply_auto_contrast(); },
+			description: "Stretches the colors of the picture or selection to use the full range.",
+		},
+		{
+			label: "&Grayscale",
+			speech_recognition: ["grayscale", "greyscale", "gray scale", "grey scale", "remove color", "remove colors"],
+			action: () => { apply_grayscale(); },
+			description: "Removes the color from the picture or selection.",
+		},
+		{
+			label: "S&epia",
+			speech_recognition: ["sepia", "sepia tone", "old photo", "old fashioned"],
+			action: () => { apply_sepia(); },
+			description: "Gives the picture or selection an old-photo brown tint.",
+		},
+		MENU_DIVIDER,
+		{
+			label: "B&lur...",
+			speech_recognition: ["blur", "gaussian blur", "soften", "make it blurry"],
+			action: () => { show_blur(); },
+			description: "Blurs the picture or selection.",
+		},
+		{
+			label: "&Sharpen...",
+			speech_recognition: ["sharpen", "unsharp mask", "make it sharper"],
+			action: () => { show_sharpen(); },
+			description: "Sharpens the picture or selection.",
+		},
+		{
+			label: "Add &Noise...",
+			speech_recognition: ["add noise", "noise", "grain", "add grain", "film grain"],
+			action: () => { show_add_noise(); },
+			description: "Adds random noise to the picture or selection.",
+		},
+		{
+			label: "E&mboss",
+			speech_recognition: ["emboss", "relief"],
+			action: () => { apply_emboss(); },
+			description: "Makes the picture or selection look raised, like an embossed surface.",
+		},
+		{
+			label: "&Find Edges",
+			speech_recognition: ["find edges", "edge detect", "edge detection", "outline", "edges"],
+			action: () => { apply_find_edges(); },
+			description: "Turns the picture or selection into outlines of its edges.",
+		},
+		MENU_DIVIDER,
+		{
+			label: "Make It P&op...",
+			speech_recognition: ["make it pop", "pop", "more pop", "make it pop more"],
+			action: () => { show_make_it_pop(); },
+			description: "Makes the picture or selection pop. Results may vary.",
+		},
+		{
+			label: "&Deep Fry",
+			speech_recognition: ["deep fry", "deep fried", "fry it"],
+			action: () => { apply_deep_fry(); },
+			description: "Deep fries the picture or selection, at 375 degrees.",
+		},
+		{
+			label: "&1998 Film Filter",
+			speech_recognition: ["1998 film filter", "film filter", "disposable camera", "date stamp", "vintage", "retro filter"],
+			action: () => { apply_film_1998(); },
+			description: "Makes the picture look like it came back from the one-hour photo lab in 1998.",
+		},
+		{
+			label: "Add Lens Fla&re",
+			speech_recognition: ["add lens flare", "lens flare", "flare", "make it cinematic"],
+			action: () => { apply_lens_flare(); },
+			description: "Adds a lens flare, as was the law in the late '90s.",
+		},
+		{
+			label: "Fi&x Everything",
+			speech_recognition: ["fix everything", "fix it", "fix my picture", "make it good", "magic fix"],
+			action: () => { fix_everything(); },
+			description: "Fixes everything wrong with the picture or selection.",
+		},
+	],
 	[localize("&Page")]: [
 		{
 			label: localize("Page &Properties..."),
@@ -1299,6 +1413,23 @@ const menus = {
 		},
 		MENU_DIVIDER,
 		{
+			label: "Upgrade to &Paint+...",
+			speech_recognition: [
+				"upgrade", "upgrade to paint plus", "paint plus", "subscribe", "subscription", "manage subscription", "go premium", "buy paint plus",
+			],
+			action: () => { show_paint_plus(); },
+			description: "Unlocks premium features, such as a badge.",
+		},
+		{
+			label: "&Terms of Service",
+			speech_recognition: [
+				"terms of service", "terms", "terms and conditions", "legal", "show terms of service", "read the terms",
+			],
+			action: () => { show_terms_of_service(); },
+			description: "Shows the Terms of Service you already agreed to.",
+		},
+		MENU_DIVIDER,
+		{
 			label: localize("&About Paint"),
 			speech_recognition: [
 				"about paint", "about js paint", "about jspaint", "show about window", "open about window", "about window",
@@ -1632,7 +1763,7 @@ const menus = {
 			speech_recognition: [
 				"repo on github", "project on github", "show the source code", "show source code",
 			],
-			action: () => { window.open("https://github.com/1j01/jspaint"); },
+			action: () => { window.open("https://github.com/enderandrew/jspaint"); },
 			description: localize("Shows the project on GitHub."),
 		},
 		{
