@@ -264,12 +264,14 @@ user.color_desaturated = `hsla(${user.hue}, ${~~(user.saturation * 0.4)}%, ${use
 // own (free) Firebase project, with a Realtime Database, and put its web app config here. The database URL also
 // has to be allowed by the Content-Security-Policy in index.html (script-src, for the SDK's long-polling fallback).
 const FIREBASE_CONFIG = {
-	apiKey: "AIzaSyBgau8Vu9ZE8u_j0rp-Lc044gYTX5O3X9k",
-	authDomain: "jspaint.firebaseapp.com",
-	databaseURL: "https://jspaint.firebaseio.com",
-	projectId: "firebase-jspaint",
-	storageBucket: "",
-	messagingSenderId: "63395010995",
+    databaseURL: "https://paintjs-d1db9-default-rtdb.firebaseio.com",
+    apiKey: "AIzaSyBDEIkCJ4Z61HXRrC26uq2d8qBH-BUitRY",
+    authDomain: "paintjs-d1db9.firebaseapp.com",
+    projectId: "paintjs-d1db9",
+    storageBucket: "paintjs-d1db9.firebasestorage.app",
+    messagingSenderId: "1050791728126",
+    appId: "1:1050791728126:web:d3d90f7fa44867ad89e6af",
+    measurementId: "G-4XF7KPW21Q"
 };
 
 // The image used for other people's cursors

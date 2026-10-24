@@ -1,4 +1,6 @@
 // @ts-check
+// eslint-disable-next-line no-unused-vars
+/* global transparency:writable */
 /* global $status_text, main_canvas, main_ctx, selection */
 
 // The Adjustments menu: common image adjustments and filters, plus a few parody ones.
@@ -124,6 +126,14 @@ export function threshold(image_data, { level = 128 } = {}) {
 }
 
 /** @type {Adjust} */
+/** Makes the picture (or selection) see-through: every pixel's alpha times `opacity` percent. */
+export function opacity(image_data, { opacity = 100 } = {}) {
+	const d = image_data.data;
+	const factor = Math.max(0, Math.min(100, opacity)) / 100;
+	for (let i = 3; i < d.length; i += 4) { d[i] = Math.round(d[i] * factor); }
+	return image_data;
+}
+
 export function grayscale(image_data) {
 	const d = image_data.data;
 	for (let i = 0; i < d.length; i += 4) {
@@ -535,6 +545,20 @@ export function show_hue_saturation() {
 			{ id: "lightness", label: "Lightness:", min: -100, max: 100, value: 0, format: signed },
 		],
 		adjust: hue_saturation,
+	});
+}
+
+export function show_opacity() {
+	const whole_picture = !selection;
+	show_adjustment_dialog({
+		title: "Opacity",
+		sliders: [{ id: "opacity", label: "Opacity:", min: 0, max: 100, value: 100, format: (v) => `${v}%` }],
+		adjust: opacity,
+		describe: ({ opacity }) => (opacity === 100 ? "" : opacity === 0 ? "Completely invisible. Bold." : whole_picture ? "The picture will be see-through where it's lighter than 100%." : "The selection will show what's under it when you put it down."),
+		done: ({ opacity }) => {
+			// A see-through picture is a transparent document now (Image › Attributes), so it's saved that way
+			if (whole_picture && opacity < 100) { transparency = true; }
+		},
 	});
 }
 

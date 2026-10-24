@@ -23,7 +23,7 @@ import { crop_to_selection } from "./crop.js";
 import { colors_of_the_wind, connect_mental_imagery, do_taxes, page_doctor, send_help, show_attitude_coach } from "./menu-jokes.js";
 import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
-	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_posterize, show_sharpen, show_threshold
+	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_opacity, show_posterize, show_sharpen, show_threshold
 } from "./adjustments.js";
 import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
@@ -943,6 +943,12 @@ const menus = {
 			speech_recognition: ["hue", "saturation", "hue saturation", "shift hue", "change hue", "saturate", "desaturate", "lightness"],
 			action: () => { show_hue_saturation(); },
 			description: "Adjusts the hue, saturation, and lightness of the picture or selection.",
+		},
+		{
+			label: "Opa&city...",
+			speech_recognition: ["opacity", "transparency", "make it transparent", "make it see-through", "see through", "fade", "fade out", "translucent"],
+			action: () => { show_opacity(); },
+			description: "Makes the picture or selection partly see-through.",
 		},
 		{
 			label: "&Posterize...",

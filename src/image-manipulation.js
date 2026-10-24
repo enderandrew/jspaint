@@ -8,6 +8,22 @@ import { $G, TAU, get_help_folder_icon, get_rgba_from_color, make_canvas, memoiz
 
 const fill_threshold = 1; // 1 is just enough for a workaround for Brave browser's farbling: https://github.com/enderandrew/jspaint/issues/184
 
+// Fill With Color's tolerance (its tool options): how different a color can be from the one clicked and still be
+// filled, as a percentage. 0 fills just that color, like MS Paint; 100 fills everything.
+let fill_tolerance = 0;
+/** @returns {number} */
+function get_fill_tolerance() {
+	return fill_tolerance;
+}
+/** @param {number} percent */
+function set_fill_tolerance(percent) {
+	fill_tolerance = Math.max(0, Math.min(100, percent));
+}
+/** The per-channel difference (0-255) the fill tool allows. */
+function fill_tolerance_threshold() {
+	return Math.max(fill_threshold, Math.round(fill_tolerance / 100 * 255));
+}
+
 /**
  * Calculates the canvas size required for a brush based on the brush size and shape.
  *
@@ -403,12 +419,13 @@ function draw_fill_without_pattern_support(ctx, start_x, start_y, fill_r, fill_g
 	const start_g = id.data[pixel_pos + 1];
 	const start_b = id.data[pixel_pos + 2];
 	const start_a = id.data[pixel_pos + 3];
+	const threshold = fill_tolerance_threshold();
+	// Pixels already filled; with a tolerance, a filled pixel can still look like the region, so they're tracked.
+	const visited = new Uint8Array(c_width * c_height);
 
-	// @TODO: Allow flood-filling colors similar within fill threshold.
-	// Right now it will cause an infinite loop if we don't stop early in this case.
-	// As of writing, the fill threshold is very low, so this problem is unlikely to be noticed,
-	// but it would be nice as a user-configurable option.
+	// Filling with the color that's already there does nothing (unless a tolerance takes in other colors around it)
 	if (
+		threshold <= fill_threshold &&
 		Math.abs(fill_r - start_r) <= fill_threshold &&
 		Math.abs(fill_g - start_g) <= fill_threshold &&
 		Math.abs(fill_b - start_b) <= fill_threshold &&
@@ -474,15 +491,19 @@ function draw_fill_without_pattern_support(ctx, start_x, start_y, fill_r, fill_g
 
 	function should_fill_at(pixel_pos) {
 		return (
+			pixel_pos >= 0 && pixel_pos < id.data.length &&
+			// not filled yet
+			!visited[pixel_pos >> 2] &&
 			// matches start color (i.e. region to fill)
-			Math.abs(id.data[pixel_pos + 0] - start_r) <= fill_threshold &&
-			Math.abs(id.data[pixel_pos + 1] - start_g) <= fill_threshold &&
-			Math.abs(id.data[pixel_pos + 2] - start_b) <= fill_threshold &&
-			Math.abs(id.data[pixel_pos + 3] - start_a) <= fill_threshold
+			Math.abs(id.data[pixel_pos + 0] - start_r) <= threshold &&
+			Math.abs(id.data[pixel_pos + 1] - start_g) <= threshold &&
+			Math.abs(id.data[pixel_pos + 2] - start_b) <= threshold &&
+			Math.abs(id.data[pixel_pos + 3] - start_a) <= threshold
 		);
 	}
 
 	function do_fill_at(pixel_pos) {
+		visited[pixel_pos >> 2] = 1;
 		id.data[pixel_pos + 0] = fill_r;
 		id.data[pixel_pos + 1] = fill_g;
 		id.data[pixel_pos + 2] = fill_b;
@@ -540,6 +561,7 @@ function draw_fill_separately(source_ctx, dest_ctx, start_x, start_y, fill_r, fi
 	const start_g = source_id.data[pixel_pos + 1];
 	const start_b = source_id.data[pixel_pos + 2];
 	const start_a = source_id.data[pixel_pos + 3];
+	const threshold = fill_tolerance_threshold();
 
 	while (stack.length) {
 		let new_pos;
@@ -602,10 +624,10 @@ function draw_fill_separately(source_ctx, dest_ctx, start_x, start_y, fill_r, fi
 			dest_id.data[pixel_pos + 3] === 0 &&
 			// and matches start color (i.e. region to fill)
 			(
-				Math.abs(source_id.data[pixel_pos + 0] - start_r) <= fill_threshold &&
-				Math.abs(source_id.data[pixel_pos + 1] - start_g) <= fill_threshold &&
-				Math.abs(source_id.data[pixel_pos + 2] - start_b) <= fill_threshold &&
-				Math.abs(source_id.data[pixel_pos + 3] - start_a) <= fill_threshold
+				Math.abs(source_id.data[pixel_pos + 0] - start_r) <= threshold &&
+				Math.abs(source_id.data[pixel_pos + 1] - start_g) <= threshold &&
+				Math.abs(source_id.data[pixel_pos + 2] - start_b) <= threshold &&
+				Math.abs(source_id.data[pixel_pos + 3] - start_a) <= threshold
 			)
 		);
 	}
@@ -630,9 +652,11 @@ function draw_fill_separately(source_ctx, dest_ctx, start_x, start_y, fill_r, fi
  * @param {number} to_g - The green component of the new color.
  * @param {number} to_b - The blue component of the new color.
  * @param {number} to_a - The alpha component of the new color.
+ * @param {number} [threshold] - How different (per channel, 0-255) a color can be and still be replaced.
  */
-function replace_color_globally(image_data, from_r, from_g, from_b, from_a, to_r, to_g, to_b, to_a) {
+function replace_color_globally(image_data, from_r, from_g, from_b, from_a, to_r, to_g, to_b, to_a, threshold = fill_threshold) {
 	if (
+		threshold <= fill_threshold &&
 		from_r === to_r &&
 		from_g === to_g &&
 		from_b === to_b &&
@@ -643,10 +667,10 @@ function replace_color_globally(image_data, from_r, from_g, from_b, from_a, to_r
 	const { data } = image_data;
 	for (let i = 0; i < data.length; i += 4) {
 		if (
-			Math.abs(data[i + 0] - from_r) <= fill_threshold &&
-			Math.abs(data[i + 1] - from_g) <= fill_threshold &&
-			Math.abs(data[i + 2] - from_b) <= fill_threshold &&
-			Math.abs(data[i + 3] - from_a) <= fill_threshold
+			Math.abs(data[i + 0] - from_r) <= threshold &&
+			Math.abs(data[i + 1] - from_g) <= threshold &&
+			Math.abs(data[i + 2] - from_b) <= threshold &&
+			Math.abs(data[i + 3] - from_a) <= threshold
 		) {
 			data[i + 0] = to_r;
 			data[i + 1] = to_g;
@@ -665,16 +689,17 @@ function replace_color_globally(image_data, from_r, from_g, from_b, from_a, to_r
  * @param {number} find_g - The green component of the color to be found.
  * @param {number} find_b - The blue component of the color to be found.
  * @param {number} find_a - The alpha component of the color to be found.
+ * @param {number} [threshold] - How different (per channel, 0-255) a color can be and still be found.
  */
-function find_color_globally(source_image_data, dest_image_data, find_r, find_g, find_b, find_a) {
+function find_color_globally(source_image_data, dest_image_data, find_r, find_g, find_b, find_a, threshold = fill_threshold) {
 	const source_data = source_image_data.data;
 	const dest_data = dest_image_data.data;
 	for (let i = 0; i < source_data.length; i += 4) {
 		if (
-			Math.abs(source_data[i + 0] - find_r) <= fill_threshold &&
-			Math.abs(source_data[i + 1] - find_g) <= fill_threshold &&
-			Math.abs(source_data[i + 2] - find_b) <= fill_threshold &&
-			Math.abs(source_data[i + 3] - find_a) <= fill_threshold
+			Math.abs(source_data[i + 0] - find_r) <= threshold &&
+			Math.abs(source_data[i + 1] - find_g) <= threshold &&
+			Math.abs(source_data[i + 2] - find_b) <= threshold &&
+			Math.abs(source_data[i + 3] - find_a) <= threshold
 		) {
 			dest_data[i + 0] = 255;
 			dest_data[i + 1] = 255;
@@ -705,7 +730,7 @@ function draw_noncontiguous_fill_without_pattern_support(ctx, x, y, fill_r, fill
 	const start_b = image_data.data[start_index + 2];
 	const start_a = image_data.data[start_index + 3];
 
-	replace_color_globally(image_data, start_r, start_g, start_b, start_a, fill_r, fill_g, fill_b, fill_a);
+	replace_color_globally(image_data, start_r, start_g, start_b, start_a, fill_r, fill_g, fill_b, fill_a, fill_tolerance_threshold());
 
 	ctx.putImageData(image_data, 0, 0);
 }
@@ -750,7 +775,7 @@ function draw_noncontiguous_fill_separately(source_ctx, dest_ctx, x, y) {
 	const start_b = source_image_data.data[start_index + 2];
 	const start_a = source_image_data.data[start_index + 3];
 
-	find_color_globally(source_image_data, dest_image_data, start_r, start_g, start_b, start_a);
+	find_color_globally(source_image_data, dest_image_data, start_r, start_g, start_b, start_a, fill_tolerance_threshold());
 
 	dest_ctx.putImageData(dest_image_data, 0, 0);
 }
@@ -1784,6 +1809,6 @@ export {
 	apply_image_transformation, bresenham_dense_line, bresenham_line, compute_bezier, draw_bezier_curve, draw_bezier_curve_without_pattern_support, draw_ellipse, draw_fill,
 	draw_fill_separately, draw_fill_without_pattern_support, draw_grid, draw_line, draw_line_without_pattern_support, draw_noncontiguous_fill,
 	draw_noncontiguous_fill_separately, draw_noncontiguous_fill_without_pattern_support, draw_quadratic_curve, draw_rounded_rectangle, find_color_globally, flip_horizontal,
-	flip_vertical, get_brush_canvas_size, get_circumference_points_for_brush, invert_monochrome, invert_rgb, render_brush, replace_color_globally, replace_colors_with_swatch, rotate, stamp_brush_canvas, stretch_and_skew, threshold_black_and_white, update_brush_for_drawing_lines
+	flip_vertical, get_brush_canvas_size, get_fill_tolerance, set_fill_tolerance, get_circumference_points_for_brush, invert_monochrome, invert_rgb, render_brush, replace_color_globally, replace_colors_with_swatch, rotate, stamp_brush_canvas, stretch_and_skew, threshold_black_and_white, update_brush_for_drawing_lines
 };
 

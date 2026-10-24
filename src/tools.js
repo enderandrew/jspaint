@@ -7,7 +7,7 @@ import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 import { deselect, get_tool_by_id, meld_selection_into_canvas, meld_textbox_into_canvas, set_magnification, show_error_message, undoable, update_helper_layer } from "./functions.js";
 import { $G, E, get_icon_for_tool, get_icon_for_tools, get_rgba_from_color, make_canvas, make_css_cursor } from "./helpers.js";
 import { bresenham_dense_line, bresenham_line, copy_contents_within_polygon, draw_bezier_curve, draw_ellipse, draw_fill, draw_line, draw_line_strip, draw_noncontiguous_fill, draw_polygon, draw_quadratic_curve, draw_rounded_rectangle, draw_selection_box, get_circumference_points_for_brush, replace_colors_with_swatch, stamp_brush_canvas, update_brush_for_drawing_lines } from "./image-manipulation.js";
-import { $ChooseShapeStyle, $choose_airbrush_size, $choose_brush, $choose_eraser_size, $choose_magnification, $choose_stroke_size, $choose_transparent_mode } from "./tool-options.js";
+import { $ChooseShapeStyle, $choose_airbrush_size, $choose_brush, $choose_eraser_size, $choose_fill_tolerance, $choose_magnification, $choose_stroke_size, $choose_transparent_mode } from "./tool-options.js";
 import { TOOL_GIF_PICKER, TOOL_IMAGE_UPLOAD, TOOL_POINTER, block_tool_id, page_tools } from "./page-tools.js";
 
 // This is for linting stuff at the bottom.
@@ -572,6 +572,7 @@ const tools = [{
 			});
 		}
 	},
+	$options: $choose_fill_tolerance,
 }, {
 	id: TOOL_PICK_COLOR,
 	name: localize("Pick Color"),

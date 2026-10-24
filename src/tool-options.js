@@ -2,7 +2,7 @@
 /* global stroke_size:writable, airbrush_size:writable, brush_shape:writable, brush_size:writable, eraser_size:writable, magnification:writable, tool_transparent_mode:writable */
 import { set_magnification } from "./functions.js";
 import { $G, E, make_canvas } from "./helpers.js";
-import { render_brush, replace_colors_with_swatch, stamp_brush_canvas } from "./image-manipulation.js";
+import { get_fill_tolerance, render_brush, replace_colors_with_swatch, set_fill_tolerance, stamp_brush_canvas } from "./image-manipulation.js";
 import { get_theme } from "./theme.js";
 
 const ChooserCanvas = (
@@ -415,9 +415,29 @@ const $choose_transparent_mode = $Choose(
 	true,
 ).addClass("choose-transparent-mode");
 
+// Fill With Color's tolerance: how different a color can be from the one clicked and still be filled.
+// (MS Paint only has 0%. Later Paints and every other paint program have this, usually hidden in a menu.)
+const FILL_TOLERANCES = [0, 10, 25, 50, 75];
+const $choose_fill_tolerance = $Choose(
+	FILL_TOLERANCES,
+	(percent, is_chosen, _reuse_canvas, reuse_div) => {
+		const div = reuse_div(39, 12);
+		div.textContent = `${percent}%`;
+		Object.assign(div.style, {
+			color: is_chosen ? "var(--HilightText)" : "var(--WindowText)",
+			font: "9px/12px Tahoma, Verdana, sans-serif",
+			textAlign: "center",
+		});
+		return div;
+	},
+	(percent) => {
+		set_fill_tolerance(percent);
+	},
+	(percent) => get_fill_tolerance() === percent,
+).addClass("choose-fill-tolerance").attr("title", "Tolerance: how different a color can be and still be filled");
 
 export {
 	$ChooseShapeStyle, $choose_airbrush_size, $choose_brush,
-	$choose_eraser_size, $choose_magnification, $choose_stroke_size, $choose_transparent_mode
+	$choose_eraser_size, $choose_fill_tolerance, $choose_magnification, $choose_stroke_size, $choose_transparent_mode
 };
 
