@@ -186,6 +186,92 @@
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Building Web Pages">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="About making web pages in Paint">
+			<param name="Local" value="paint_web_pages.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="The page tools">
+			<param name="Local" value="paint_page_tools.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Select, move, and resize page elements">
+			<param name="Local" value="paint_pointer.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Put text on a page">
+			<param name="Local" value="paint_text_box.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Write in sections">
+			<param name="Local" value="paint_sections.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add a link">
+			<param name="Local" value="paint_links.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add animated GIFs">
+			<param name="Local" value="paint_gifs.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add pictures and photos">
+			<param name="Local" value="paint_pictures.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add a table or a divider">
+			<param name="Local" value="paint_tables_dividers.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Add a guestbook, counter, or other site element">
+			<param name="Local" value="paint_site_elements.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Change an element's settings">
+			<param name="Local" value="paint_element_properties.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="See and arrange layers">
+			<param name="Local" value="paint_layers.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Set the page's background, size, and column">
+			<param name="Local" value="paint_page_style.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Publishing Your Site">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Put a page on the web">
+			<param name="Local" value="paint_publish.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Sign in, or make another site">
+			<param name="Local" value="paint_sign_in.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Manage your site's pages and files">
+			<param name="Local" value="paint_my_site.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Write blog posts">
+			<param name="Local" value="paint_posts.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Edit a page with other people">
+			<param name="Local" value="paint_share.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Go back to an earlier version of a page">
+			<param name="Local" value="paint_page_history.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Using the AI Menu">
 		</OBJECT>
 	<UL>
@@ -272,6 +358,18 @@
 			<param name="Name" value="Arrange the color box vertically">
 			<param name="Local" value="paint_vertical_color_box.html">
 			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Make buttons and menus bigger">
+			<param name="Local" value="paint_enlarge_ui.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Control Paint with your voice">
+			<param name="Local" value="paint_speech.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Use Paint on a phone or tablet">
+			<param name="Local" value="paint_touch.html">
+			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Subscriptions and Other Paperwork">
@@ -288,6 +386,27 @@
 		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="Other commands">
 			<param name="Local" value="paint_other_commands.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Saving, Sharing, and Customizing">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="See the history of your picture">
+			<param name="Local" value="paint_history.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Save as an animated GIF or a web page">
+			<param name="Local" value="paint_save_gif_html.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Open a picture from the web, or manage stored pictures">
+			<param name="Local" value="paint_web_files.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Change how Paint looks">
+			<param name="Local" value="paint_themes_language.html">
 			</OBJECT>
 	</UL>
 </UL>
