@@ -163,7 +163,7 @@ Functionality:
 * Anything marked `@TODO` or `@FIXME` in the source code
 
 
-* See [Issues on GitHub](https://github.com/1j01/jspaint/issues)
+* See [Issues on GitHub](https://github.com/enderandrew/jspaint/issues)
 
 
 * CSS

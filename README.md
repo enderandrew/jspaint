@@ -293,7 +293,7 @@ PWA features:
 Missing features:
 
 - <details><summary>Directly saving to files is implemented but not enabled currently.</summary>I was concerned about data loss for two reasons: 1. the change in behavior of File > Save / Ctrl+S from effectively acting as Save As to overwriting files directly, although I made a warning dialog for this, with a don't show again option; 2. there was a bad bug with saved files ending up completely empty (zero bytes), which I don't know if was a bug in my code or in Chrome.</details>
-- <details><summary>Offline support is not implemented.</summary>I've taken a few stabs at this, and <a href="https://github.com/1j01/jspaint/pull/144">I'm not the only one</a>, but there are some huge caveats, such as the development server not being able to live-reload without disabling the service worker.</details>
+- <details><summary>Offline support is not implemented.</summary>I've taken a few stabs at this, and <a href="https://github.com/enderandrew/jspaint/pull/144">I'm not the only one</a>, but there are some huge caveats, such as the development server not being able to live-reload without disabling the service worker.</details>
 
 ### Electron
 
@@ -348,7 +348,7 @@ Electron app features:
 
 [Electron]: https://electronjs.org/
 [Electron Forge]: https://electronforge.io/
-[releases page]: https://github.com/1j01/jspaint/releases/
+[releases page]: https://github.com/enderandrew/jspaint/releases/
 
 
 ## Development Setup
@@ -837,6 +837,6 @@ For general project news, click **Extras > Project News** in the app.
 JS Paint is free and open source software, licensed under the permissive [MIT license](https://opensource.org/licenses/MIT).
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Repo stars](https://img.shields.io/github/stars/1j01/jspaint?label=GitHub%20Stars&style=social)](https://github.com/1j01/jspaint/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/1j01/jspaint?style=social)](https://github.com/1j01/jspaint/network/members)
+[![GitHub Repo stars](https://img.shields.io/github/stars/1j01/jspaint?label=GitHub%20Stars&style=social)](https://github.com/enderandrew/jspaint/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/1j01/jspaint?style=social)](https://github.com/enderandrew/jspaint/network/members)
 

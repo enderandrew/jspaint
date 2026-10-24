@@ -153,10 +153,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/1j01/jspaint.git"
+    "url": "https://github.com/enderandrew/jspaint.git"
   },
   "bugs": {
-    "url": "https://github.com/1j01/jspaint/issues",
+    "url": "https://github.com/enderandrew/jspaint/issues",
     "email": "isaiahodhner@gmail.com"
   }
 }

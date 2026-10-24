@@ -10,7 +10,7 @@
 	<!-- Lax img-src is needed for speech recognition, e.g. interpret_command("draw a cat")[0].exec(); -->
 	<!-- connect-src needs data:/blob: for loading images via fetch, including from local storage. -->
 	<!-- script⁂-src needs blob: for the Web Worker used by clmtrackr for Tracky Mouse head tracking feature -->
-	<!-- ⁂: working around bug in @1j01/live-server, my fork of live-server meant to handle CSP (https://github.com/1j01/live-server)
+	<!-- ⁂: working around bug in @1j01/live-server, my fork of live-server meant to handle CSP (https://github.com/enderandrew/live-server)
 	where the directive (that shall not be named) is replaced even if it's outside the CSP in a comment. -->
 	<meta http-equiv="Content-Security-Policy" content="
 		default-src 'self';
@@ -84,7 +84,7 @@
 			<img src="images/icons/128x128.png" width="128" height="128" id="about-paint-icon" alt="" />
 			<div id="about-paint-beside-icon">
 				<h1 id="jspaint-project-name">JS Paint</h1>
-				<div id="jspaint-version">Version 1.1.0</div>
+				<div id="jspaint-version">Version 3.11</div>
 				<div id="jspaint-update-status-area" hidden>
 					<!-- perhaps this can be merged with the container now that it's the only child -->
 					<div id="maybe-outdated-line">
@@ -120,12 +120,13 @@
 		<!-- <p>JS Paint is a web-based MS Paint remake by <a href="https://isaiahodhner.io/">Isaiah Odhner</a>.</p> -->
 		<!-- @#: Isaiah Odhner -->
 		<p>MS Paint remake by <a href="https://isaiahodhner.io/" target="_blank">Isaiah&nbsp;Odhner</a></p>
-		<!-- <p>Read about the project and extra features on <a href="https://github.com/1j01/jspaint#readme">the readme</a>.</p> -->
-		<!-- <p>Request features and report bugs <a href="https://github.com/1j01/jspaint/issues">on GitHub</a>
+		<p>Forked poorly by <a href="https://enderandrew.com/" target="_blank">T. J.&nbsp;Brumfield</a></p>
+		<!-- <p>Read about the project and extra features on <a href="https://github.com/enderandrew/jspaint#readme">the readme</a>.</p> -->
+		<!-- <p>Request features and report bugs <a href="https://github.com/enderandrew/jspaint/issues">on GitHub</a>
 			or <a href="mailto:isaiahodhner@gmail.com?subject=JS%20Paint">by email</a>.</p> -->
 		<p>
 			Feedback:
-			<a href="https://github.com/1j01/jspaint/issues" target="_blank">GitHub</a>
+			<a href="https://github.com/enderandrew/jspaint/issues" target="_blank">GitHub</a>
 			or <a href="mailto:isaiahodhner@gmail.com?subject=JS%20Paint">E-mail</a>
 			or <a href="https://discord.gg/jxQBK3k8tx" target="_blank">Discord</a>
 		</p>
@@ -135,7 +136,7 @@
 		<p>
 			<a href="about.html" target="_blank">Homepage</a>
 			&middot;
-			<a href="https://github.com/1j01/jspaint/blob/master/LICENSE.txt" target="_blank">MIT License</a>
+			<a href="https://github.com/enderandrew/jspaint/blob/master/LICENSE.txt" target="_blank">MIT License</a>
 			&middot;
 			<a href="privacy.html" target="_blank">Privacy Policy</a>
 		</p>
@@ -161,7 +162,7 @@
 			<time datetime=""></time>
 			<img width="" height="" style="max-width: 100%; height: auto; image-rendering: auto;" alt="" src="" />
 			<p>
-				I have created an entirely new MS Paint clone, called <a target="_blank" href="https://github.com/1j01/textual-paint">Textual Paint</a>.
+				I have created an entirely new MS Paint clone, called <a target="_blank" href="https://github.com/enderandrew/textual-paint">Textual Paint</a>.
 			</p>
 			<p>
 				JS Paint runs in the browser, bringing nostalgia to the web, but if it's not retro enough for you,
@@ -351,49 +352,49 @@
 			<h2>Improved About window</h2>
 			<p>I managed to make the <b>Help > About Paint</b> window much more compact while including more
 				information.</p>
-			<p>See a <a href="https://github.com/1j01/jspaint/commit/da994966ec2231743867f232d8e1fb334071b512"
+			<p>See a <a href="https://github.com/enderandrew/jspaint/commit/da994966ec2231743867f232d8e1fb334071b512"
 					target="_blank">visual
 					comparison here</a>.
 				You can switch to swipe or onion skin modes and move the slider to compare before and after images.</p>
 			<p>Here's what's new:</p>
 			<ul>
 				<li>Reworded everything to be terser, using short labels instead of full sentences.
-					(<a href="https://github.com/1j01/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
+					(<a href="https://github.com/enderandrew/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
 						target="_blank">⟜</a>)
 				</li>
-				<li>Replaced <a href="https://github.com/1j01/jspaint#readme" target="_blank">readme</a> link
+				<li>Replaced <a href="https://github.com/enderandrew/jspaint#readme" target="_blank">readme</a> link
 					with a link to the <a href="https://jspaint.app/about.html" target="_blank">homepage</a>.
-					(<a href="https://github.com/1j01/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
+					(<a href="https://github.com/enderandrew/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Added a link to the Discord server.
-					(<a href="https://github.com/1j01/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
+					(<a href="https://github.com/enderandrew/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Made sure all links open in a new tab.
-					(<a href="https://github.com/1j01/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
+					(<a href="https://github.com/enderandrew/jspaint/commit/7bc134226f9994cd68fd69d78fb0343f5c873d53"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Made it use a bigger app icon
-					(<a href="https://github.com/1j01/jspaint/commit/3dd5ee94ba123a053c7fee64a112914902d825ae"
+					(<a href="https://github.com/enderandrew/jspaint/commit/3dd5ee94ba123a053c7fee64a112914902d825ae"
 						target="_blank">⟜</a>);
 					also created a bigger version of the gay pride icon variant for pride month
-					(<a href="https://github.com/1j01/jspaint/commit/be03638fad35a51cacef5c4f524c81581c2be587"
+					(<a href="https://github.com/enderandrew/jspaint/commit/be03638fad35a51cacef5c4f524c81581c2be587"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Added a version number back into the About window
-					(<a href="https://github.com/1j01/jspaint/commit/224cc37bfa022b912c9b48e70d0e7a412c0f3ec6"
+					(<a href="https://github.com/enderandrew/jspaint/commit/224cc37bfa022b912c9b48e70d0e7a412c0f3ec6"
 						target="_blank">⟜</a>)
 					and moved it to a new line
-					(<a href="https://github.com/1j01/jspaint/commit/aaed9a78945aeec13b15d74dca0502474e268c1e"
+					(<a href="https://github.com/enderandrew/jspaint/commit/aaed9a78945aeec13b15d74dca0502474e268c1e"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Moved the update check status indicator beside the icon
-					(<a href="https://github.com/1j01/jspaint/commit/c1b407d9134af75533adb3fd3938a82d3a2d71dd"
+					(<a href="https://github.com/enderandrew/jspaint/commit/c1b407d9134af75533adb3fd3938a82d3a2d71dd"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed centering of the About window on small screens
-					(<a href="https://github.com/1j01/jspaint/commit/2aa2e66b8ba5927ee833b68480342f1d62477940"
+					(<a href="https://github.com/enderandrew/jspaint/commit/2aa2e66b8ba5927ee833b68480342f1d62477940"
 						target="_blank">⟜</a>)
 				</li>
 			</ul>
@@ -404,73 +405,73 @@
 				</li>
 				<li>If an image is dropped on the Project News window, it will no longer try to open it as a document.
 					It was easy to do this accidentally by idly clicking and dragging while reading the news.
-					(<a href="https://github.com/1j01/jspaint/commit/77d341378f9a8d84f0f922ab6545e4cab5fca038"
+					(<a href="https://github.com/enderandrew/jspaint/commit/77d341378f9a8d84f0f922ab6545e4cab5fca038"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed checkbox menu items showing a grid of small checkmarks instead of a single checkmark
 					in the Electron app with Enlarge UI mode enabled.
-					(<a href="https://github.com/1j01/jspaint/commit/f367ce043a81c7fdea2c506fcf5aee1ac18b56e3"
+					(<a href="https://github.com/enderandrew/jspaint/commit/f367ce043a81c7fdea2c506fcf5aee1ac18b56e3"
 						target="_blank">⟜</a>)
 				</li>
 				<li>The Dwell Clicker can now toggle collapsed details in error dialogs.
-					(<a href="https://github.com/1j01/jspaint/commit/2637467762753234af4d40d097af7f1c2b6aea35"
+					(<a href="https://github.com/enderandrew/jspaint/commit/2637467762753234af4d40d097af7f1c2b6aea35"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Enabled dragging toolbars with the mouse in Dwell Clicker
 					(but not with dwell clicker itself).
-					(<a href="https://github.com/1j01/jspaint/commit/7094171b1644391f4ea3b3467865952c39427a4e"
+					(<a href="https://github.com/enderandrew/jspaint/commit/7094171b1644391f4ea3b3467865952c39427a4e"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed the titlebar size for tool windows in Enlarge UI mode.
-					(<a href="https://github.com/1j01/jspaint/commit/a2691ec7c953c3eca7b56f4831c47855044fff6d"
+					(<a href="https://github.com/enderandrew/jspaint/commit/a2691ec7c953c3eca7b56f4831c47855044fff6d"
 						target="_blank">⟜</a>)
 				</li>
 				<li>All themed tool icons now work in Enlarge UI mode.
-					(<a href="https://github.com/1j01/jspaint/commit/068c61d20c907925a140677eecd5513e03397fbc"
+					(<a href="https://github.com/enderandrew/jspaint/commit/068c61d20c907925a140677eecd5513e03397fbc"
 						target="_blank">⟜</a> +
-					<a href="https://github.com/1j01/jspaint/commit/9e6a19c9aa6434a354f067357487946ea92a1670"
+					<a href="https://github.com/enderandrew/jspaint/commit/9e6a19c9aa6434a354f067357487946ea92a1670"
 						target="_blank">⟜</a> +
-					<a href="https://github.com/1j01/jspaint/commit/8dc1286dd0d4dc219f043b7e2199e47b8cb52f48"
+					<a href="https://github.com/enderandrew/jspaint/commit/8dc1286dd0d4dc219f043b7e2199e47b8cb52f48"
 						target="_blank">⟜</a>)
 				</li>
 				<li>I've implemented the size status indicator for all tools.
-					(<a href="https://github.com/1j01/jspaint/commit/3500496b0801a52e05d5ae69f6f98bb09e477e86"
+					(<a href="https://github.com/enderandrew/jspaint/commit/3500496b0801a52e05d5ae69f6f98bb09e477e86"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed missing width/height labels in <b>Image > Attributes</b> dialog.
-					(<a href="https://github.com/1j01/jspaint/commit/af94876a4ffef95c2d00c0022d89a452034793b7"
+					(<a href="https://github.com/enderandrew/jspaint/commit/af94876a4ffef95c2d00c0022d89a452034793b7"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed default file name when saving a wallpaper with <b>File > Set As Wallpaper
 						(Tiled/Centered)</b>.
-					(<a href="https://github.com/1j01/jspaint/commit/8f89d874a77cc8cf00e4731e3979ceaac070aad7"
+					(<a href="https://github.com/enderandrew/jspaint/commit/8f89d874a77cc8cf00e4731e3979ceaac070aad7"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed default file name when saving selection with <b>Edit > Copy To</b>,
 					and an error that occurred with <b>Edit > Copy To</b> in the Electron app.
-					(<a href="https://github.com/1j01/jspaint/commit/fc59a369fd306bedc31611e6729f4fc2ae9e2cc0"
+					(<a href="https://github.com/enderandrew/jspaint/commit/fc59a369fd306bedc31611e6729f4fc2ae9e2cc0"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed ignoring of file format choice when saving a palette with <b>Colors > Save Colors</b>
 					in the Electron app
-					(<a href="https://github.com/1j01/jspaint/commit/2f8f4e7c51a0c1b2d2d26828855d888e8ed641f9"
+					(<a href="https://github.com/enderandrew/jspaint/commit/2f8f4e7c51a0c1b2d2d26828855d888e8ed641f9"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed error handling for clipboard access
-					(<a href="https://github.com/1j01/jspaint/commit/193404199b384532a945f382a56fa2deca679950"
+					(<a href="https://github.com/enderandrew/jspaint/commit/193404199b384532a945f382a56fa2deca679950"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed <kbd>Shift+Insert</kbd>, <kbd>Ctrl+Insert</kbd>, and <kbd>Ctrl+Delete</kbd> shortcuts
-					(<a href="https://github.com/1j01/jspaint/commit/e3ef424d61e0621e36adeeaa37070d07cf7f5d29"
+					(<a href="https://github.com/enderandrew/jspaint/commit/e3ef424d61e0621e36adeeaa37070d07cf7f5d29"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Improved error message dialogs for Imgur upload failures
-					(<a href="https://github.com/1j01/jspaint/commit/cbfc9cad47b3aa3c6a8acc6ce525b2b426608dca"
+					(<a href="https://github.com/enderandrew/jspaint/commit/cbfc9cad47b3aa3c6a8acc6ce525b2b426608dca"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Added a <a href="https://jspaint.app/privacy" target="_blank">Privacy Policy</a>
 					(<b>tl;dr</b>: jspaint doesn't try to track you, unlike most of the internet)
-					(<a href="https://github.com/1j01/jspaint/commit/9d2d4040c0b20532e3819aa662e39b9fd8f3f543"
+					(<a href="https://github.com/enderandrew/jspaint/commit/9d2d4040c0b20532e3819aa662e39b9fd8f3f543"
 						target="_blank">⟜</a>)
 				</li>
 			</ul>
@@ -479,13 +480,13 @@
 				<li>Updated <a href="https://os-gui.js.org/" target="_blank">OS-GUI.js</a> from ~0.6.0 to 0.7.3
 					<ul>
 						<li>Made use of OS-GUI's new <code>AccessKeys</code> API
-							(<a href="https://github.com/1j01/jspaint/commit/e6ad042195ce70470f401c400d62575d6c09ea6f"
+							(<a href="https://github.com/enderandrew/jspaint/commit/e6ad042195ce70470f401c400d62575d6c09ea6f"
 								target="_blank">⟜</a>
 							+
-							<a href="https://github.com/1j01/jspaint/commit/52b7b7632046b578b721a84bf0ceaca6ae3e1a8d"
+							<a href="https://github.com/enderandrew/jspaint/commit/52b7b7632046b578b721a84bf0ceaca6ae3e1a8d"
 								target="_blank">⟜</a>
 							+
-							<a href="https://github.com/1j01/jspaint/commit/a9fe9d3f8d1d1ff176b7fd91fd9463e66c08cf73"
+							<a href="https://github.com/enderandrew/jspaint/commit/a9fe9d3f8d1d1ff176b7fd91fd9463e66c08cf73"
 								target="_blank">⟜</a>)
 						</li>
 						<li>
@@ -493,43 +494,43 @@
 								href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-keyshortcuts"
 								target="_blank"><code>aria-keyshortcuts</code></a>
 							values to tell screen reader software about keyboard shortcuts
-							(<a href="https://github.com/1j01/jspaint/commit/be233d07e918703b122c415369be5679f588e0c3"
+							(<a href="https://github.com/enderandrew/jspaint/commit/be233d07e918703b122c415369be5679f588e0c3"
 								target="_blank">⟜</a>)
 						</li>
 					</ul>
 				</li>
 				<li>
 					Dwell Clicker is now powered by Tracky Mouse.
-					(<a href="https://github.com/1j01/jspaint/commit/1598f42d309ad878b762c5a411476617b16c22f2"
+					(<a href="https://github.com/enderandrew/jspaint/commit/1598f42d309ad878b762c5a411476617b16c22f2"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Migrated to ESLint v9 and its flat config, and improved code uniformity.
-					(<a href="https://github.com/1j01/jspaint/compare/a140810a897afa9dd6111cffb065e5d8f71f1ed8...bddaaffd2837b9696e8e6e159f742b05391067c7"
+					(<a href="https://github.com/enderandrew/jspaint/compare/a140810a897afa9dd6111cffb065e5d8f71f1ed8...bddaaffd2837b9696e8e6e159f742b05391067c7"
 						target="_blank">⟜⧟...⊸</a>)
 				</li>
 				<li>Simplified code quality checking workflow by bundling different checks into one script
 					(<code>npm run lint</code>)
-					(<a href="https://github.com/1j01/jspaint/commit/991b1cceaa12a40701d251f5dcd109d23903e614"
+					(<a href="https://github.com/enderandrew/jspaint/commit/991b1cceaa12a40701d251f5dcd109d23903e614"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Improved handling of errors with no stack trace, like <code>SyntaxError</code>.
 					It will now show the URL and line/column numbers for errors with no call stack.
-					(<a href="https://github.com/1j01/jspaint/commit/dafef7b1b4f2d33c32c434b1e1fe0ffbc271600d"
+					(<a href="https://github.com/enderandrew/jspaint/commit/dafef7b1b4f2d33c32c434b1e1fe0ffbc271600d"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Fixed an error that occurred when embedded in 98.js.org due to looking for menus
 					inside the app frame when they're actually outside
-					(<a href="https://github.com/1j01/jspaint/commit/421fad7dc25c4d27caa46535a2641b12e49a9b18"
+					(<a href="https://github.com/enderandrew/jspaint/commit/421fad7dc25c4d27caa46535a2641b12e49a9b18"
 						target="_blank">⟜</a> +
-					<a href="https://github.com/1j01/jspaint/commit/04804396e187b1bf4af9cc31ca449d18661f97ed"
+					<a href="https://github.com/enderandrew/jspaint/commit/04804396e187b1bf4af9cc31ca449d18661f97ed"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Marked more parts of the JS Paint <code>systemHooks</code> API as optional
-					(<a href="https://github.com/1j01/jspaint/commit/2fe8c35ca6500cc32584dae30f8c3d4ffe989aa3"
+					(<a href="https://github.com/enderandrew/jspaint/commit/2fe8c35ca6500cc32584dae30f8c3d4ffe989aa3"
 						target="_blank">⟜</a>)
 				</li>
 				<li>Defined TypeScript types for the JS Paint <code>systemHooks</code> API
-					(<a href="https://github.com/1j01/jspaint/commit/cb8bc8893d3c9c049916ac5873a15edc7262ac73"
+					(<a href="https://github.com/enderandrew/jspaint/commit/cb8bc8893d3c9c049916ac5873a15edc7262ac73"
 						target="_blank">⟜</a>)
 				</li>
 				<li style="color: transparent;">Worked on secret features which should be really fun in the future.</li>
@@ -658,13 +659,13 @@
 				style="background: #c0c0c0; padding: 1em; padding-bottom: 0.1em; border-radius: .5em; border: 1px inset;">
 				Modern Light before (tool icons from Windows Vista):<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/master/images/modern/vista-tools-spaced-like-svg.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/master/images/modern/vista-tools-spaced-like-svg.png?raw=true">
 				<div style="line-height:50%;"><br></div>
 				Modern Light after (custom SVG icons):<br>
 				<!-- TODO: custom pixel-fine-tuned PNG; SVG is designed to align with the pixel grid but it's not perfect -->
 				<!-- <img alt="" src="images/modern/modern-light-tools.png"> -->
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/master/images/modern/modern-light-tools.svg?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/master/images/modern/modern-light-tools.svg?raw=true">
 			</div>
 			<p>
 				I designed a custom icon set, inspired by Windows Vista's icons.
@@ -677,7 +678,7 @@
 				Modern Dark before (tool icons from Windows Vista, with aliasing artifacts when viewed against a dark
 				background):<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/master/images/modern/vista-tools-spaced-like-svg.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/master/images/modern/vista-tools-spaced-like-svg.png?raw=true">
 				<div style="line-height:50%;"><br></div>
 				Modern Dark after (custom SVG icons):<br>
 				<!-- <img alt="" src="images/modern/modern-dark-tools.png"> -->
@@ -685,7 +686,7 @@
 				<!-- Though I'd prefer a nice magnifier effect like https://lenadesign.org/2021/06/30/css-javascript-image-magnifier-glass/ -->
 				<!-- Onion skin / swipe would be nice for comparison as well. -->
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/modern/modern-dark-tools.svg?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/modern/modern-dark-tools.svg?raw=true">
 			</div>
 			<p>
 				When adapting the Vista icons to scalable vector graphics,
@@ -703,16 +704,16 @@
 			<div style="background: #c0c0c0; padding: 1em; border-radius: .5em; border: 1px inset;">
 				Classic Light (still using tool icons from Windows 98):<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/classic/tools.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/classic/tools.png?raw=true">
 			</div>
 			<div style="background: #222222; color: #aaaaaa; padding: 1em; border-radius: .5em; border: 1px inset;">
 				Classic Dark before:<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/43d68cf8eee4cf8aa30e3047955c2bb8315c92f2/images/dark/tools.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/43d68cf8eee4cf8aa30e3047955c2bb8315c92f2/images/dark/tools.png?raw=true">
 				<div style="line-height:50%;"><br></div>
 				Classic Dark after:<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/dark/tools.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/dark/tools.png?raw=true">
 			</div>
 			<p>
 				I wasn't happy with the Classic Dark theme's icons, especially my use of color;
@@ -739,11 +740,11 @@
 			<div style="background: #660c08; color: #aaaaaa; padding: 1em; border-radius: .5em; border: 1px inset;">
 				Occult before:<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/43d68cf8eee4cf8aa30e3047955c2bb8315c92f2/images/occult/tools.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/43d68cf8eee4cf8aa30e3047955c2bb8315c92f2/images/occult/tools.png?raw=true">
 				<div style="line-height:50%;"><br></div>
 				Occult after:<br>
 				<img alt=""
-					src="https://github.com/1j01/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/occult/tools.png?raw=true">
+					src="https://github.com/enderandrew/jspaint/blob/03f934eab98f450d3e527ef8e152cc5aa003fe07/images/occult/tools.png?raw=true">
 				<div style="line-height:50%;"><br></div>
 				(Still needs more ideas.)
 			</div>
@@ -777,7 +778,7 @@
 				PNG, GIF, and BMP are supported, including indexed color BMPs.
 			</p>
 			<p>
-				See the <a href="https://github.com/1j01/jspaint?tab=readme-ov-file#supported-file-formats"
+				See the <a href="https://github.com/enderandrew/jspaint?tab=readme-ov-file#supported-file-formats"
 					target="_blank">Supported File Formats</a> table for details.
 			</p>
 			<p>
@@ -817,7 +818,7 @@
 			<p>
 				<b>Colors > Save Colors</b> also now asks for a file name and format.
 				An absurd number of file formats are <a
-					href="https://github.com/1j01/jspaint?tab=readme-ov-file#color-palette-formats"
+					href="https://github.com/enderandrew/jspaint?tab=readme-ov-file#color-palette-formats"
 					target="_blank">supported</a>.
 				You can even export CSS variables for use in a web design project.
 			</p>
@@ -845,7 +846,7 @@
 			</p>
 			<p>
 				If you want to embed JS Paint in your own project, you can take a look at the
-				<a href="https://github.com/1j01/jspaint?tab=readme-ov-file#embed-in-your-website" target="_blank">
+				<a href="https://github.com/enderandrew/jspaint?tab=readme-ov-file#embed-in-your-website" target="_blank">
 					Embed in your website</a> section of the readme.
 				<!-- Hm, I might want to move that to a separate markdown file... but maybe keep that heading around so the link stays valid. -->
 			</p>
@@ -870,7 +871,7 @@
 			<!-- <img width="" height="" style="max-width: 100%; height: auto; image-rendering: auto;" alt="" src="" /> -->
 			<p>
 				JS Paint is now finally open source, licensed under the
-				<a href="https://github.com/1j01/jspaint/blob/master/LICENSE.txt" target="_blank">MIT License</a>.
+				<a href="https://github.com/enderandrew/jspaint/blob/master/LICENSE.txt" target="_blank">MIT License</a>.
 			</p>
 			<p>
 				The project has been
@@ -1116,7 +1117,7 @@
 				src="https://i.postimg.cc/NFX2TTp1/untitled-45.png" />
 			<p>
 				If you want to contribute translations, <a target="_blank"
-					href="https://github.com/1j01/jspaint/issues/80">get in touch!</a>
+					href="https://github.com/enderandrew/jspaint/issues/80">get in touch!</a>
 				I need to do some technical work to set up for community translations on a public platform,
 				but I'm glad people have already expressed interest in helping translate!
 				(I also want to simplify the language in various parts of the UI before asking people to translate
@@ -1296,7 +1297,7 @@
 			</p>
 			<p>
 				Resizing things while zoomed in is <a target="_blank"
-					href="https://github.com/1j01/jspaint/issues/13#issuecomment-562247085">finally fixed</a>!
+					href="https://github.com/enderandrew/jspaint/issues/13#issuecomment-562247085">finally fixed</a>!
 			</p>
 			<p>
 				The Text tool now perfectly previews the pixels that will be placed on the canvas.
@@ -1480,6 +1481,11 @@
 	<script type="module" src="src/ai-prompt.js"></script>
 	<script type="module" src="src/ai-content-aware-fill.js"></script>
 	<script type="module" src="src/ai-assistant.js"></script>
+	<script type="module" src="src/defragment.js"></script>
+	<script type="module" src="src/blue-screen-brush.js"></script>
+	<script type="module" src="src/terms-of-service.js"></script>
+	<script type="module" src="src/paint-plus.js"></script>
+	<script type="module" src="src/adjustments.js"></script>
 	<script type="module" src="src/OnCanvasHelperLayer.js"></script>
 	<script type="module" src="src/image-manipulation.js"></script>
 	<script type="module" src="src/tool-options.js"></script>
@@ -1512,7 +1518,7 @@
 			you can safely enable JavaScript.
 		</p>
 
-		<p>You can also check out <a href="https://github.com/1j01/jspaint">the source code and project info</a>.</p>
+		<p>You can also check out <a href="https://github.com/enderandrew/jspaint">the source code and project info</a>.</p>
 	</noscript>
 
 	<svg style="position: absolute; pointer-events: none; bottom: 100%;">
