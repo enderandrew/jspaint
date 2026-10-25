@@ -289,7 +289,9 @@
 			<p>I recorded a short demonstration video, drawing the Tracky&nbsp;Mouse logo using Tracky&nbsp;Mouse:
 			</p>
 			<figure>
-				<video style="width: 100%; height: auto;" controls loop muted playsinline autoplay>
+				<!-- (no autoplay or preload: this News entry is hidden on every page load, and the video is 1.2 MB;
+				show_news() starts it when the News window opens) -->
+				<video style="width: 100%; height: auto;" controls loop muted playsinline preload="none">
 					<source src="images/tracky-mouse-jspaint-demo.mp4" type="video/mp4">
 					Your browser does not support the video tag.
 				</video>
@@ -1409,19 +1411,17 @@
 	<!-- Note: no CDNs, even with fallback, as the fallback is too complicated to handle with CSP. -->
 	<script src="lib/jquery-4.0.0.min.js"></script>
 	<script src="lib/gif.js/gif.js"></script>
-	<!-- pako is used by UPNG.js and UTIF.js -->
+	<!-- pako is used by UPNG.js and UTIF.js (and undo history, history-storage.js).
+	Loaded when first needed instead (load_script in helpers.js): UTIF.js (TIFF), anypalette (palette files),
+	Tracky Mouse (Extras › Head Tracker / Dwell Clicker), imagetracer (Speech Recognition sketching). -->
 	<script src="lib/pako-3.0.2.min.js"></script>
 	<script src="lib/UPNG.js"></script>
-	<script src="lib/UTIF.js"></script>
-	<script src="lib/anypalette-0.6.0.js"></script>
 	<script src="lib/FileSaver.js"></script>
 	<script src="lib/font-detective.js"></script>
 	<script src="lib/libtess.min.js"></script>
-	<script src="lib/tracky-mouse/core/tracky-mouse.js"></script>
 	<script src="lib/os-gui/parse-theme.js"></script>
 	<script src="lib/os-gui/$Window.js"></script>
 	<script src="lib/os-gui/MenuBar.js"></script>
-	<script src="lib/imagetracer_v1.2.6.js"></script>
 
 	<!-- must not be async/deferred, as it uses document.write(); and must come before other app code which uses localization functions -->
 	<!-- (also depends on msgbox.js and thus os-gui.js, but not initially) -->
