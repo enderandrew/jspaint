@@ -11,6 +11,8 @@ npm run test:site-builder         # starts a static server on :11822 and runs ev
 ```
 
 - `node test/site-builder/run.mjs blocks` runs only files whose name contains "blocks".
+- CI (`.github/workflows/ci.yml`) runs `npm run lint` and these tests on every push to master and every pull request; the ones that need the Workers or the network skip themselves there.
+- `offline.test.mjs` turns the service worker on (it's off under automation, via localStorage `jspaint test service worker` = `on`), then reloads with the network off.
 - `JSPAINT_URL=http://localhost:1999/ node test/site-builder/run.mjs` runs against an already-running server (e.g. `npm run serve`).
 - `publish.test.mjs` and `my-site.test.mjs` need both Workers running locally (`cd worker && npm run dev:sites` / `npm run dev:editor`, master key `SITE_EDIT_SECRET` in `worker/editor/.dev.vars`; `worker/sites/.dev.vars` has `EDITOR_URL=http://localhost:8787`): `JSPAINT_URL=http://localhost:8787/ SITE_BUILDER_EDITOR_URL=http://localhost:8787 SITE_BUILDER_SITES_URL=http://localhost:8788 SITE_BUILDER_SECRET=<secret> node test/site-builder/run.mjs publish my-site`; skipped otherwise.
 - `page-scroll.test.mjs` covers the make-page-longer button, Page menu longer/shorter and width presets, Pointer-tool panning, and the pan joystick (forced on via localStorage `jspaint pan joystick` = `on`). For phone behavior, Playwright's `devices["iPhone 13"]` on WebKit (`npx playwright install webkit`) reproduces iOS Safari focus and tap quirks well.
