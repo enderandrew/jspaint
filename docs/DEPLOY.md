@@ -19,12 +19,13 @@ From the repo root:
 npm run lint                                   # eslint + tsc + cspell
 # run the site-builder tests against local Workers (see "Testing" below)
 cd worker
-npm run deploy                                 # = deploy:sites, then deploy:editor
+npm run deploy                                 # = deploy:editor, then deploy:sites
 ```
 
 - `deploy:sites` = `wrangler deploy -c sites/wrangler.jsonc`.
 - `deploy:editor` = `node build-editor.mjs` (copies Paint's files into `editor/dist` — the `DEFAULT_*` URLs in `src/site-constants.js` are baked in, so always rebuild) then `wrangler deploy -c editor/wrangler.jsonc`. Assets are content-hashed; only changed files upload.
 - Deploy only what changed: a client-only change needs `npm run deploy:editor`; a change under `worker/shared/` needs both.
+- The editor goes first: the sites Worker binds to its `Reports` entrypoint (visitors' page reports, over RPC; `services` in `sites/wrangler.jsonc`). Locally, `wrangler dev` connects the two when both are running.
 - Wrangler prints the version id and the hostnames it attached. A transient `fetch failed` from wrangler means retry that one script.
 - Secrets never go through git: `SITE_EDIT_SECRET` (the master key) is a Worker secret on `jspaint-editor` (`npx wrangler secret put SITE_EDIT_SECRET -c editor/wrangler.jsonc`; the value is kept in the gitignored `worker/editor/.secret.txt`); locally it lives in the gitignored `worker/editor/.dev.vars`. Site passwords are minted with `npm run site-password <site>` and written to the gitignored `worker/editor/.passwords/<site>.txt` — never printed.
 - Optional: `SESSION_SIGNING_KEY` signs the hour-long claims cookie that spares the Accounts object a lookup per request (docs/DESIGN.md §9). Without it the key is derived from `SITE_EDIT_SECRET`, so nothing needs setting; set one (`npx wrangler secret put SESSION_SIGNING_KEY -c editor/wrangler.jsonc`, any long random string) to be able to rotate it on its own — a rotation only costs every signed-in browser one session lookup.
