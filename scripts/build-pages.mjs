@@ -18,7 +18,7 @@ const dist = path.resolve(root, process.argv[2] || "pages-dist");
 
 // Top-level files the site serves. (CNAME is left out: it's upstream's jspaint.app domain.
 // A custom domain for Pages is set in the repository's Pages settings instead.)
-const files = ["index.html", "about.html", "privacy.html", "favicon.ico", "manifest.webmanifest", "browserconfig.xml"];
+const files = ["index.html", "about.html", "privacy.html", "favicon.ico", "manifest.webmanifest", "browserconfig.xml", "sw.js"];
 
 // Folders and which of their files the browser uses. Paths are relative to the repository root, with "/".
 /** @type {Record<string, (file: string) => boolean>} */
