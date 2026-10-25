@@ -69,6 +69,22 @@ const prependDot = (extension) => `.${extension}`;
  */
 const getMimeType = (format) => "mimeType" in format ? format.mimeType : `application/x-${format.formatID}`;
 
+/**
+ * A plain-words hint about why writing a file failed, from the File System Access API's error.
+ * @param {any} error
+ * @returns {string}
+ */
+function save_failure_hint(error) {
+	switch (error?.name) {
+		case "QuotaExceededError": return "The disk may be full.";
+		case "NoModificationAllowedError": return "The file may be read-only, or open in another program.";
+		case "InvalidStateError": return "The file may be open in another program.";
+		case "NotFoundError": return "The file or its folder may have been moved or deleted. Try Save As.";
+		case "NotReadableError": return "The file couldn't be reached. Try Save As.";
+		default: return "";
+	}
+}
+
 // Note: JSDoc type annotations don't seem to actually work on window.*
 /**
  * @type {SystemHooks}
@@ -258,12 +274,15 @@ window.systemHookDefaults = {
 			if (!acknowledged) {
 				return false;
 			}
+			let writableStream;
 			try {
-				const writableStream = await save_file_handle.createWritable();
+				writableStream = await save_file_handle.createWritable();
 				await writableStream.write(blob);
 				await writableStream.close();
 				return true;
 			} catch (error) {
+				// Throw away the partly written copy (the file itself is only replaced when the stream closes)
+				writableStream?.abort().catch(() => { });
 				if (error.name === "AbortError") {
 					// user canceled save (this might not be a real error code that can occur here)
 					return false;
@@ -279,6 +298,10 @@ window.systemHookDefaults = {
 					saveAs(blob, file_name);
 					return undefined;
 				}
+				// Anything else (the disk is full, the file is read-only or in use, it was moved or deleted...)
+				// used to fall through here and give up without a word.
+				show_error_message(`${localize("Failed to save document.")} ${save_failure_hint(error)}`.trim(), error);
+				return false;
 			}
 		} else {
 			saveAs(blob, file_name);

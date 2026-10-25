@@ -102,9 +102,14 @@ function show_save_error_message(responseCode, error) {
 	// return show_save_error_message(localize("No error occurred."));
 }
 async function write_blob_to_file_path(filePath, blob) {
-	const arrayBuffer = await blob.arrayBuffer();
-	const { responseCode, error } = await ipcRenderer.invoke("write-file", filePath, arrayBuffer);
-	return { responseCode, error };
+	try {
+		const arrayBuffer = await blob.arrayBuffer();
+		const { responseCode, error } = await ipcRenderer.invoke("write-file", filePath, arrayBuffer);
+		return { responseCode, error };
+	} catch (error) {
+		// (reading the picture's data, or reaching the main process, failed: a failed save, not a silent one)
+		return { responseCode: "WRITE_FAILED", error };
+	}
 }
 
 window.systemHooks = window.systemHooks || {};

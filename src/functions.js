@@ -1239,7 +1239,14 @@ function file_save(maybe_saved_callback = () => { }, update_from_saved = true) {
 		// An error may be shown by `systemHooks.writeBlobToHandle`,
 		// or it may be unknown whether the save will succeed,
 		// so for now: true means definite success, false means failure or cancelation, and undefined means it's unknown.
-		const success = await systemHooks.writeBlobToHandle(save_file_handle, blob);
+		let success;
+		try {
+			success = await systemHooks.writeBlobToHandle(save_file_handle, blob);
+		} catch (error) {
+			// (a host page's writeBlobToHandle, or a failure the default one didn't expect)
+			show_error_message(localize("Failed to save document."), error);
+			success = false;
+		}
 		// When using a file download, where it's unknown whether the save will succeed,
 		// we don't want to mark the file as saved, as it would prevent the user from retrying the save.
 		// So only mark the file as saved if it's definite.
@@ -1628,7 +1635,7 @@ function show_about_paint() {
 	if (is_pride_month) {
 		$("#about-paint-icon").attr("src", "./images/icons/gay-es-paint-128x128.png");
 	}
-	
+
 	update_about_paint_icon();
 
 	$about_paint_window.$content.append($about_paint_content.show()).css({ padding: "15px" });
