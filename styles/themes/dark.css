@@ -1,18 +1,50 @@
 @import "./classic.css";
-@import "./vista-esque-midnight-green.css";
 
 :root {
 	--theme-loaded: "dark.css";
+
+	/* Dark Slate Chrome & Windows 93 Magenta Accents */
+	--ActiveTitle: #b400b4;
+	--GradientActiveTitle: #1e242d;
+	--TitleText: #ffffff;
+
+	--InactiveTitle: #423d49;
+	--GradientInactiveTitle: #161a22;
+	--InactiveTitleText: #98a0b0;
+
+	--ButtonFace: #272c37;
+	--ButtonLight: #3c4354;
+	--ButtonHilight: #515a70;
+	--ButtonShadow: #161920;
+	--ButtonDkShadow: #0b0d11;
+
+	--Background: #14171e;
+	--AppWorkspace: #1c222b;
+
+	--Hilight: #b400b4;
+	--HilightText: #ffffff;
+
+	--Window: #161920;
+	--WindowText: #e6e9ef;
+	--ButtonText: #e6e9ef;
+	--GrayText: #7a8291;
+	--HotTrackingColor: #d600d6;
+
+	--checker: repeating-conic-gradient(
+		#272c37 0% 25%,
+		#161920 0% 50%
+	) 0 0 / 4px 4px;
 }
 
+/* Tool & UI Icon Adjustments for Dark Backgrounds */
 .tool-icon {
 	background-image: url("../../images/dark/tools.png");
 	background-repeat: no-repeat;
-	background-position: calc(-16px * var(--icon-index)) 0; /* same as classic theme, but couldn't hurt */
+	background-position: calc(-16px * var(--icon-index)) 0;
 }
 .tool-icon.use-svg {
 	background-image: url("../../images/dark/tools.svg");
-	background-position: calc(-16px * (var(--icon-index) * 2 + 1)) -16px; /* same as classic theme, but couldn't hurt */
+	background-position: calc(-16px * (var(--icon-index) * 2 + 1)) -16px;
 }
 
 .toggle-dwell-clicking .button-icon {
@@ -20,4 +52,28 @@
 }
 .dwell-clicker-mode.dwell-clicker-paused .toggle-dwell-clicking .button-icon {
 	background: url(../../images/dark/eye-gaze-unpause.svg);
+}
+
+/* Contrast Inversion Tweaks for Dark Slate Canvas */
+.help-window iframe {
+	background: var(--Window);
+	color: var(--WindowText);
+}
+
+input[type=text]:not(.inset-deep),
+input[type=url]:not(.inset-deep),
+input[type=number]:not(.inset-deep) {
+	border-color: var(--ButtonShadow);
+}
+
+select.inset-deep {
+	background-color: var(--ButtonFace);
+	color: var(--ButtonText);
+	border: 1px solid var(--ButtonShadow);
+}
+
+.selection:after,
+.textbox:after {
+	outline: 1px dashed #ffffff;
+	box-shadow: 0 0 0 1px #000000;
 }

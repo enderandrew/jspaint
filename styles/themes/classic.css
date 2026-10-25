@@ -1,9 +1,39 @@
 @import "../../lib/os-gui/build/windows-98.css";
-/* @import "../../lib/os-gui/build/windows-default.css"; */
-/* @import "../../lib/os-gui/build/peggys-pastels.css"; */
 
 :root {
 	--theme-loaded: "classic.css";
+
+	/* Windows 93 Magenta-to-Slate Palette Tokens */
+	--ActiveTitle: rgb(180, 0, 180);
+	--GradientActiveTitle: rgb(48, 54, 65);
+	--TitleText: rgb(255, 255, 255);
+
+	--InactiveTitle: rgb(88, 84, 94);
+	--GradientInactiveTitle: rgb(138, 144, 155);
+	--InactiveTitleText: rgb(215, 220, 228);
+
+	--ButtonFace: rgb(214, 211, 204);
+	--ButtonLight: rgb(236, 234, 229);
+	--ButtonHilight: rgb(255, 255, 255);
+	--ButtonShadow: rgb(135, 132, 124);
+	--ButtonDkShadow: rgb(50, 49, 45);
+
+	--Background: rgb(180, 0, 180);
+	--AppWorkspace: rgb(75, 80, 92);
+
+	--Hilight: rgb(180, 0, 180);
+	--HilightText: rgb(255, 255, 255);
+
+	--Window: rgb(255, 255, 255);
+	--WindowText: rgb(10, 10, 10);
+	--ButtonText: rgb(10, 10, 10);
+	--GrayText: rgb(126, 123, 117);
+	--HotTrackingColor: rgb(180, 0, 180);
+
+	--checker: repeating-conic-gradient(
+		rgb(214, 211, 204) 0% 25%,
+		rgb(255, 255, 255) 0% 50%
+	) 0 0 / 4px 4px;
 }
 
 /* .compare-reference is added to <body> when "compare-reference" is in the URL hash. */
@@ -14,7 +44,6 @@
 	left: -4px;
 	z-index: 10000;
 	opacity: 0.5;
-	/* opacity: attr(data-reference-opacity); not supported */
 	transition: opacity 0.5s;
 }
 .compare-reference[data-reference-opacity="0"]::after { opacity: 0; }
@@ -41,19 +70,21 @@
 .jspaint {
 	background: var(--ButtonFace);
 }
-body,
+body {
+	background: transparent;
+}
+.help-window iframe {
+	background: #fff;
+}
 .canvas-area {
 	background: var(--AppWorkspace);
 }
 .canvas-area > canvas {
 	background: var(--checker);
-	/* 16px is a common grid size, but that gives 8px grid cells, and our max zoom is 8x */
-	/*background-size: 16px;*/
 	background-size: 8px;
 }
 
 /* Show images as pixelated if at pixel-perfect scales. */
-/* WET for vendor prefixes (for Safari) */
 @media (resolution: 1x), (resolution: 2x), (min-resolution: 3x) {
 	* {
 		image-rendering: -moz-crisp-edges;
@@ -76,7 +107,6 @@ body,
 	image-rendering: pixelated;
 }
 .thumbnail-img {
-	/* these scale down, so nearest neighbor scaling looks bad */
 	image-rendering: auto;
 }
 
@@ -95,13 +125,10 @@ body,
 	background: var(--Hilight);
 }
 .canvas-area .useless-handle {
-	background: var(--HilightText); /* @TODO: --ButtonHilight? --Window? */
+	background: var(--HilightText);
 	box-shadow: 1px 1px 0 var(--Hilight) inset;
 }
 .resize-ghost {
-	/* this isn't quite the right inversion effect, but I think it's the best I can do;
-	white makes it invisible over the classic theme's dark gray background;
-	it's supposed to be lighter over the dark gray background, but I can only make it darker */
 	outline: 1px dotted #ccc;
 	mix-blend-mode: difference;
 }
@@ -202,7 +229,6 @@ body,
 	width: 50px;
 }
 
-
 .current-colors {
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -222,17 +248,14 @@ body,
 	top: 0px;
 	right: 0px;
 	bottom: 0px;
-	/* @TODO: ButtonAlternateFace? */
 	border: 1px solid var(--ButtonFace);
 }
 .current-colors,
 .color-button {
 	border-top: 1px solid var(--ButtonShadow);
 	border-left: 1px solid var(--ButtonShadow);
-	/* @TODO: var(--ButtonAlternateFace)? */
 	border-right: 1px solid var(--ButtonFace);
 	border-bottom: 1px solid var(--ButtonFace);
-	/*box-shadow: 1px 1px 0px var(--ButtonDkShadow) inset;*/
 }
 .swatch:before {
 	content: "";
@@ -288,16 +311,13 @@ body,
 	bottom: 0;
 }
 .vertical > .top.component-area::before {
-	top: -1px; /* hm, this is a one pixel change, and the tool buttons are supposed to be tucked in by 1px... may be related? */
+	top: -1px;
 }
 .canvas-area {
 	z-index: 1;
 }
 
 .component-ghost.dock {
-	/* this isn't quite the right inversion effect, but I think it's the best I can do;
-	white makes it invisible over the classic theme's dark gray background;
-	it's supposed to be lighter over the dark gray background, but I can only make it darker */
 	outline: 1px solid #ccc;
 	mix-blend-mode: difference;
 }
@@ -307,7 +327,6 @@ body,
 }
 .component-ghost:not(.dock):after,
 .component-ghost:not(.dock):before,
-/* @TODO: thicker resize ghost (4px instead of 3px) */
 .resize-ghost.thick:after,
 .resize-ghost.thick:before {
 	content: "";
@@ -345,7 +364,7 @@ body,
 .font-box .toggle:disabled > .icon::after {
 	background-image: url("../../images/text-tools-mask.png");
 	background-position: calc(-16px * var(--icon-index)) 0;
-	filter: saturate(0%) opacity(50%); /* fallback */
+	filter: saturate(0%) opacity(50%);
 	filter: url("#disabled-inset-filter-2");
 }
 .font-box .toggle:enabled > .icon::before {
@@ -361,6 +380,7 @@ body,
 .tool-window .window-titlebar {
 	font-size: 12px;
 	height: 15px;
+	background: linear-gradient(to right, var(--ActiveTitle), var(--GradientActiveTitle));
 }
 .tool-window .window-title {
 	padding-left: 2px;
@@ -386,11 +406,11 @@ body,
 	font-family: "Segoe UI", sans-serif;
 	font-size: 12px;
 	padding: 0 2px;
-	position: relative; /* for ::after */
+	position: relative;
 }
 .help-window .item:hover {
 	text-decoration: underline;
-	color: #0000FF;
+	color: var(--Hilight);
 	cursor: pointer;
 }
 .help-window li:before {
@@ -398,26 +418,14 @@ body,
 }
 .help-window:not(.focused) .item.selected {
 	background-color: var(--ButtonFace);
-	color: var(--ButtonText); /* ?? */
+	color: var(--ButtonText);
 }
 .help-window.focused .item.selected {
 	background-color: var(--Hilight);
 	color: var(--HilightText);
-	/* @TODO: separate focus state of the item */
 	outline: 1px dotted black;
 	outline-offset: -1px;
 }
-/* @TODO: separate focus state of the item; while mouse down, the main highlight does not move with the arrow keys but this does, among other differences */
-/* .help-window.focused .item.selected::after {
-	content: "";
-	position: absolute;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	border: 1px dotted white;
-	mix-blend-mode: difference;
-} */
 
 .history-view {
 	background: var(--Window);
@@ -447,8 +455,6 @@ body,
 	background: url(../../images/classic/eye-gaze-unpause.svg);
 }
 
-/* Remove hover effect (and specify non-hover style just to be sure) */
-/* The hover effect is way too dramatic when it goes from classic theme-overridden gray to non-overridden red, where it's meant to be only a tweaked shade of red. */
 .tracky-mouse-use-camera-button,
 .tracky-mouse-use-camera-button:hover {
 	background-color: var(--ButtonFace);
@@ -463,18 +469,15 @@ input[type=text],
 input[type=url],
 input[type=search],
 input[type=number],
-input[type=text].inset-deep, /* overriding background */
+input[type=text].inset-deep,
 input[type=url].inset-deep,
 input[type=search].inset-deep,
 input[type=number].inset-deep,
 select.inset-deep {
 	background-color: var(--Window);
 	color: var(--WindowText);
-	/* @TODO: should controls be styled by default, or need .inset-deep or similar? */
-	/* border-image: var(--inset-deep-border-image); */
 }
 
-/* @XXX: using inset-deep to mean "thematic" */
 input[type=text].inset-deep,
 input[type=url].inset-deep,
 input[type=search].inset-deep,
@@ -504,20 +507,11 @@ input:disabled + label {
 	color: var(--GrayText);
 }
 
-/*
-Will need a wrapper element or ideally an accessible stylable replacement for the select element for further styling.
-Can't use option:hover, or option::after, or select::after, among other things.
-*/
-/* @XXX: using inset-deep to mean "thematic" */
 select.inset-deep {
-	/* taken from 98.css: https://jdan.github.io/98.css/ */
-	/* padding-right and background-position are in layout.css for RTL support (@TODO: RTL theme CSS too) */
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
-	/* spell-checker: disable */
 	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg width='16' height='17' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M15 0H0v16h1V1h14V0z' fill='%23DFDFDF'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 1H1v14h1V2h12V1H2z' fill='%23fff'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M16 17H0v-1h15V0h1v17z' fill='%23000'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M15 1h-1v14H1v1h14V1z' fill='gray'/%3E%3Cpath fill='silver' d='M2 2h12v13H2z'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11 6H4v1h1v1h1v1h1v1h1V9h1V8h1V7h1V6z' fill='%23000'/%3E%3C/svg%3E");
-	/* spell-checker: enable */
 	background-repeat: no-repeat;
 	border-radius: 0;
 	box-sizing: border-box;
@@ -533,15 +527,10 @@ select.inset-deep option {
 	color: var(--WindowText);
 }
 
-/* input:invalid {
-	box-shadow: 0 0 0 2px red;
-} */
 .partial-url-label {
 	opacity: 0.6;
 }
 
-/* @XXX: using .inset-deep to mean "thematic" */
-/* @TODO: show percentage on progress bar, white (HilightText) where it overlaps the Hilight */
 progress[value].inset-deep {
 	display: block;
 	appearance: none;
@@ -565,7 +554,7 @@ summary:focus {
 }
 summary:hover > span {
 	text-decoration: underline;
-	color: #0000FF;
+	color: var(--Hilight);
 }
 summary::marker {
 	color: var(--ButtonText);
@@ -578,8 +567,6 @@ details[open] > summary::marker {
 	text-decoration: none;
 }
 
-/* For Safari on iPad, Fullscreen mode overlays the system bar, completely obscuring our menu bar. */
-/* Code in layout.css adds a spacer to the top of the page, and this styles it with the title bar gradient. */
 .jspaint::before {
-	background: linear-gradient(to left, var(--ActiveTitle), var(--GradientActiveTitle));
+	background: linear-gradient(to right, var(--ActiveTitle), var(--GradientActiveTitle));
 }
