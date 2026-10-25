@@ -171,6 +171,37 @@ const save_window_state = (window) => {
 	}
 };
 
+const app_root = path.resolve(__dirname, "..");
+/**
+ * Whether a URL is one of the app's own files (index.html, the help pages...), which may load in the app's window.
+ * (This used to check whether the URL contained "file://" anywhere, so https://example.com/?file:// passed.)
+ * @param {string} url
+ */
+const is_app_url = (url) => {
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "file:") { return false; }
+		const file_path = path.resolve(decodeURIComponent(parsed.pathname.replace(/^\/([a-zA-Z]:)/, "$1"))); // (Windows: /C:/... is C:/...)
+		return file_path === app_root || file_path.startsWith(app_root + path.sep);
+	} catch {
+		return false;
+	}
+};
+/**
+ * Opens a link in the default browser or mail program. Only web and mail links: shell.openExternal would also
+ * run local files and other programs' URL schemes.
+ * @param {string} url
+ */
+const open_externally = (url) => {
+	try {
+		if (["http:", "https:", "mailto:"].includes(new URL(url).protocol)) {
+			shell.openExternal(url);
+		}
+	} catch {
+		// not a URL
+	}
+};
+
 const createWindow = () => {
 	const window_state = load_window_state();
 	// Create the browser window.
@@ -241,7 +272,7 @@ const createWindow = () => {
 	let is_quitting_app_mac = false;
 
 	// Handle app-level quit (from menu Quit or Cmd+Q, only on Mac)
-	app.on("before-quit", (event) => {
+	app.on("before-quit", (_event) => {
 		if (process.platform === "darwin") {
 			// Mark that we're quitting so that when the window's "close" event is triggered,
 			// We know to quit the entire app after the save prompt (vs just closing the window).
@@ -298,17 +329,16 @@ const createWindow = () => {
 
 	// Open links without target=_blank externally.
 	editor_window.webContents.on("will-navigate", (e, url) => {
-		// check that the URL is not part of the app
-		if (!url.includes("file://")) {
+		// Stay in the app only for the app's own files; anything else opens in the browser (if it's a web link)
+		if (!is_app_url(url)) {
 			e.preventDefault();
-			shell.openExternal(url);
+			open_externally(url);
 		}
 	});
 	// Open links with target=_blank externally.
 	editor_window.webContents.setWindowOpenHandler(({ url }) => {
-		// check that the URL is not part of the app
-		if (!url.includes("file://")) {
-			shell.openExternal(url);
+		if (!is_app_url(url)) {
+			open_externally(url);
 		}
 		return { action: "deny" };
 	});

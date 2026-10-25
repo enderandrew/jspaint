@@ -112,7 +112,7 @@ function showMessageBox_implementation({
 			}
 		}
 		$("<div>").append(
-			$("<img width='32' height='32'>").attr("src", `images/${iconID}-32x32-8bpp.png`).css({
+			$("<img width='32' height='32'>").attr("src", icon_src).css({
 				margin: "16px",
 				display: "block",
 			}),

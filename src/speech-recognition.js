@@ -4,7 +4,7 @@
 /* global $canvas_area, $status_text, button, localize, main_canvas, main_ctx, MENU_DIVIDER, selected_colors, selected_tool, selected_tools, tool_go */
 // import { localize } from "./app-localization.js";
 import { deselect, get_tool_by_id, resize_canvas_without_saving_dimensions, select_tool, show_error_message, update_helper_layer } from "./functions.js";
-import { $G, make_canvas } from "./helpers.js";
+import { $G, E, make_canvas } from "./helpers.js";
 import { menus } from "./menus.js";
 import { stopSimulatingGestures } from "./simulate-random-gestures.js";
 import { TOOL_AIRBRUSH, TOOL_BRUSH, TOOL_CURVE, TOOL_ELLIPSE, TOOL_ERASER, TOOL_FILL, TOOL_FREE_FORM_SELECT, TOOL_LINE, TOOL_PENCIL, TOOL_POLYGON, TOOL_RECTANGLE, TOOL_ROUNDED_RECTANGLE, TOOL_SELECT, TOOL_TEXT, tools } from "./tools.js";
@@ -1433,12 +1433,19 @@ if (speech_recognition_available) {
 		const interpretations = interpret_command(command, true);
 		if (interpretations.length) {
 			const interpretation = choose_interpretation(interpretations);
-			// @TODO: escape HTML around and inside the <b> tag
-			const speech_html = command.replace(
-				new RegExp(escapeRegExp(interpretation.match_text), "i"),
-				(important_text) => `<b>${important_text}</b>`
-			);
-			$status_text.html(`Speech:&nbsp;<span style="white-space: pre;">${speech_html}</span>`);
+			// What was heard, with the part that was understood in bold (as text: speech can contain "<")
+			const $speech = $(E("span")).css({ whiteSpace: "pre" });
+			const match = new RegExp(escapeRegExp(interpretation.match_text), "i").exec(command);
+			if (match) {
+				$speech.append(
+					document.createTextNode(command.slice(0, match.index)),
+					$(E("b")).text(match[0]),
+					document.createTextNode(command.slice(match.index + match[0].length)),
+				);
+			} else {
+				$speech.text(command);
+			}
+			$status_text.empty().append(document.createTextNode("Speech:\u00a0"), $speech);
 			console.log(`Interpreting command "${command}" as`, interpretation);
 			interpretation.exec();
 		} else {
