@@ -1,6 +1,7 @@
-// Undo history memory (history-storage.js): steps that haven't been used lately are packed, so the history no
-// longer grows by a whole uncompressed picture per step; undo, redo, branches, and reading every step still
-// give back exactly the right pictures.
+// Undo history memory (history-storage.js): steps that haven't been used lately are packed down to just the
+// rectangle they changed, so the history no longer grows by a whole picture per step (not even for a photo);
+// undo, redo, branches, replacing a step's picture, and reading every step still give back exactly the right
+// pictures.
 import { assert, open_paint } from "./helpers.mjs";
 
 const { page, close } = await open_paint();
@@ -44,7 +45,9 @@ assert.ok(s.packed >= 36, `the rest packed: ${JSON.stringify(s)}`);
 const total_mb = (s.packed_bytes + s.unpacked_bytes) / 1048576;
 const before_mb = (41 * step_bytes) / 1048576;
 assert.ok(total_mb < before_mb / 5, `history is ${total_mb.toFixed(1)} MB (was ${before_mb.toFixed(1)} MB)`);
-console.log(`undo-memory: 41 steps hold ${total_mb.toFixed(1)} MB instead of ${before_mb.toFixed(1)} MB`);
+assert.ok(s.deltas >= 30, `packed steps hold only what they changed: ${JSON.stringify(s)}`);
+assert.ok(s.packed_bytes / s.packed < 4096, `a packed step is a few kilobytes at most: ${JSON.stringify(s)}`);
+console.log(`undo-memory: 41 steps hold ${total_mb.toFixed(1)} MB instead of ${before_mb.toFixed(1)} MB (${(s.packed_bytes / 1024).toFixed(0)} KB of it packed)`);
 
 // Undo all the way back, checking every picture; then redo all the way forward
 for (let i = 39; i >= 0; i--) {
@@ -114,5 +117,61 @@ const rebased = await page.evaluate(async () => {
 assert.equal(rebased.after, rebased.before, "patching didn't unpack anything");
 assert.deepEqual(rebased.pixel, [255, 0, 0, 255], "an old packed step has the patch");
 
+// Replacing a step's picture outright (as fixing a change made outside of undoable does) leaves the steps
+// built on it as they were
+await page.evaluate(async () => { (await import("./src/functions.js")).go_to_history_node(root_history_node); });
+const later = await page.evaluate(async () => {
+	const nodes = [];
+	const stack = [root_history_node];
+	while (stack.length) { const node = stack.pop(); nodes.push(node); stack.push(...node.futures); }
+	const step = (name) => nodes.find((node) => node.name === name);
+	const sum = (image_data) => {
+		let h = 0;
+		for (let i = 0; i < image_data.data.length; i += 7) { h = (h * 31 + image_data.data[i]) | 0; }
+		return h;
+	};
+	const before = [sum(step("Step 6").image_data), sum(step("Step 7").image_data)];
+	// (read other steps, then give it a moment, so Step 6 and 7 are packed again, built on Step 5)
+	for (let i = 20; i < 36; i++) { void step(`Step ${i}`).image_data; }
+	await new Promise((resolve) => { setTimeout(resolve, 1500); });
+	const { history_storage_stats } = await import("./src/history-storage.js");
+	if (history_storage_stats([step("Step 6"), step("Step 7")]).deltas !== 2) { throw new Error("Step 6 and 7 should be packed as changes"); }
+	const blank = new ImageData(main_canvas.width, main_canvas.height);
+	step("Step 5").image_data = blank;
+	return { before, after: [sum(step("Step 6").image_data), sum(step("Step 7").image_data)], replaced: sum(step("Step 5").image_data) === sum(blank) };
+});
+assert.deepEqual(later.after, later.before, "the later steps kept their pictures");
+assert.ok(later.replaced);
+
 await close();
+
+// A photo (noise doesn't compress at all): a stroke still costs only the rectangle it touched
+const photo = await open_paint();
+await photo.page.evaluate(async () => {
+	const { undoable } = await import("./src/functions.js");
+	undoable({ name: "Photo" }, () => {
+		const noise = main_ctx.createImageData(main_canvas.width, main_canvas.height);
+		for (let i = 0; i < noise.data.length; i++) { noise.data[i] = (i % 4 === 3) ? 255 : Math.random() * 256; }
+		main_ctx.putImageData(noise, 0, 0);
+	});
+	for (let i = 0; i < 30; i++) {
+		undoable({ name: `Dab ${i}` }, () => { main_ctx.fillStyle = "#000"; main_ctx.fillRect(20 + i * 10, 40, 8, 8); });
+	}
+});
+await photo.page.waitForTimeout(1500);
+const photo_stats = await photo.page.evaluate(async () => {
+	const { history_storage_stats } = await import("./src/history-storage.js");
+	const nodes = [];
+	const stack = [root_history_node];
+	while (stack.length) { const node = stack.pop(); nodes.push(node); stack.push(...node.futures); }
+	return history_storage_stats(nodes);
+});
+const photo_step_bytes = await photo.page.evaluate(() => main_canvas.width * main_canvas.height * 4);
+assert.ok(photo_stats.packed >= 25, JSON.stringify(photo_stats));
+assert.ok(photo_stats.packed_bytes < photo_step_bytes * 2, `30 dabs on a photo pack to ${(photo_stats.packed_bytes / 1048576).toFixed(2)} MB (the photo itself is ${(photo_step_bytes / 1048576).toFixed(1)} MB a step)`);
+for (let i = 0; i < 31; i++) { await photo.page.evaluate(async () => { (await import("./src/functions.js")).undo(); }); }
+assert.equal(await photo.page.evaluate(() => current_history_node === root_history_node), true);
+for (let i = 0; i < 31; i++) { await photo.page.evaluate(async () => { (await import("./src/functions.js")).redo(); }); }
+assert.deepEqual(await photo.page.evaluate(() => [...main_ctx.getImageData(20 + 29 * 10 + 2, 42, 1, 1).data]), [0, 0, 0, 255], "the last dab, after undoing and redoing everything");
+await photo.close();
 console.log("undo-memory: ok");

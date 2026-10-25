@@ -1,6 +1,7 @@
 // Extras › Multi-User (sessions.js): start a session from the picture, join it from another copy of Paint (by
 // pasting its link, as you would inside a page that embeds Paint and has no address bar), see each other's
-// drawing and cursor, and leave. Firebase is replaced by a small in-page stand-in whose database lives here in
+// drawing and cursor, and leave. The picture is kept as tiles (tile-sync.js), and a change sends only the tiles it
+// touched; a session saved the old way (one PNG of the whole picture) still opens, and moves to tiles. Firebase is replaced by a small in-page stand-in whose database lives here in
 // the test (so two browsers share it); the real SDK in lib/firebase/ is checked separately to load and set up.
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -12,6 +13,8 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 // ---- the shared database ----
 let store = {};
 const pages = [];
+/** Every write sessions.js made, in order. */
+const writes = [];
 const set_at = (parts, value) => {
 	if (parts.length === 0) { store = value ?? {}; return; }
 	let node = store;
@@ -23,9 +26,10 @@ const set_at = (parts, value) => {
 	if (value == null) { delete node[last]; } else { node[last] = value; }
 };
 const write = async ({ path: at, op, value }) => {
+	writes.push({ path: at, op, value });
 	const parts = at.split("/").filter(Boolean);
 	if (op === "update") {
-		for (const [key, v] of Object.entries(value)) { set_at([...parts, key], v); }
+		for (const [key, v] of Object.entries(value)) { set_at([...parts, ...key.split("/").filter(Boolean)], v); }
 	} else {
 		set_at(parts, value);
 	}
@@ -62,6 +66,7 @@ const FAKE_FIREBASE = `
 			update: (value) => window.__fb_write({ path, op: "update", value }),
 			remove: () => window.__fb_write({ path, op: "set", value: null }),
 			onDisconnect: () => ({ remove: () => { window.__fb_disconnect.push(path); } }),
+			once: () => Promise.resolve(snapshot(path)),
 			on: (type, cb) => { const listener = { path, type, cb, last: undefined, seen: new Set() }; listeners.push(listener); setTimeout(() => fire(listener)); },
 			off: (type, cb) => { const i = listeners.findIndex((l) => l.path === path && l.type === type && l.cb === cb); if (i !== -1) listeners.splice(i, 1); },
 			toString: () => "fake-firebase:/" + path,
@@ -72,10 +77,13 @@ const FAKE_FIREBASE = `
 })();
 `;
 
+// (served with the database as it is right now, as the real SDK would have it once connected)
+const fake_firebase = () => FAKE_FIREBASE.replace("let store = {};", `let store = ${JSON.stringify(store)};`);
+
 const open_copy = async () => {
 	const copy = await open_paint();
 	await copy.page.exposeFunction("__fb_write", write);
-	await copy.page.route("**/lib/firebase/firebase-app-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_FIREBASE }));
+	await copy.page.route("**/lib/firebase/firebase-app-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: fake_firebase() }));
 	await copy.page.route("**/lib/firebase/firebase-database-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
 	pages.push(copy.page);
 	return copy;
@@ -122,7 +130,13 @@ assert.match(link, /^http:\/\/localhost:11822\/#session:paint-party$/);
 await press_button(a.page, "OK");
 await a.page.waitForFunction(() => window.__fb_config?.databaseURL, null, { timeout: 5000 });
 await new Promise((resolve) => { setTimeout(resolve, 600); });
-assert.match(String(store["paint-party"]?.data), /^data:image\/png;base64,/, "the picture is in the database");
+const picture = store["paint-party"]?.picture;
+assert.ok(picture, "the picture is in the database");
+const canvas_size = await a.page.evaluate(() => [main_canvas.width, main_canvas.height]);
+assert.deepEqual([picture.width, picture.height], canvas_size);
+assert.equal(Object.keys(picture.tiles).length, Math.ceil(canvas_size[0] / 64) * Math.ceil(canvas_size[1] / 64), "as 64×64 tiles");
+assert.ok(Object.values(picture.tiles).every((uri) => /^data:image\/png;base64,/.test(uri)), "each a PNG");
+assert.equal(store["paint-party"].data, undefined, "not as one big PNG");
 assert.equal(Object.keys(store["paint-party"].users).length, 1, "A is there");
 assert.equal(await menu_enabled(a.page, "Leave Session"), true);
 
@@ -138,11 +152,34 @@ assert.deepEqual(await pixel(b.page, 30, 30), [255, 0, 0, 255], "B sees A's red 
 await press_button(b.page, "OK");
 assert.equal(Object.keys(store["paint-party"].users).length, 2, "both are there");
 
-// B draws; A sees it
+// B draws; A sees it. Only the tiles the rectangle touched are sent: (200, 100)–(240, 130) is in tiles 3_1 and 3_2.
+const writes_before = writes.length;
 await paint_rect(b.page, "#00f", 200, 100);
 await a.page.waitForFunction(() => main_ctx.getImageData(210, 110, 1, 1).data[0] === 0, null, { timeout: 10000 });
 assert.deepEqual(await pixel(a.page, 210, 110), [0, 0, 255, 255], "A sees B's blue rectangle");
 assert.equal(await a.page.evaluate(() => current_history_node.name), "Sync Session");
+const picture_writes = writes.slice(writes_before).filter((w) => /picture/.test(w.path));
+assert.equal(picture_writes.length, 1, `one write for the change: ${JSON.stringify(picture_writes.map((w) => [w.path, w.op]))}`);
+assert.equal(picture_writes[0].op, "update");
+assert.deepEqual(Object.keys(picture_writes[0].value).sort(), ["tiles/3_1", "tiles/3_2"], "just the tiles it touched");
+const bytes_sent = JSON.stringify(picture_writes[0].value).length;
+const whole_bytes = await b.page.evaluate(() => main_canvas.toDataURL().length);
+assert.ok(bytes_sent < whole_bytes / 5, `sent ${bytes_sent} bytes, not the whole picture's ${whole_bytes}`);
+// (and A, receiving it, didn't send it back)
+await a.page.waitForTimeout(400);
+assert.equal(writes.slice(writes_before).filter((w) => /picture/.test(w.path)).length, 1, "no echo");
+
+// Transparency comes across too: B erases part of A's red rectangle to transparent
+await b.page.evaluate(async () => {
+	const { undoable } = await import("./src/functions.js");
+	undoable({ name: "Clear" }, () => { main_ctx.clearRect(25, 25, 10, 10); });
+});
+await a.page.waitForFunction(() => main_ctx.getImageData(30, 30, 1, 1).data[3] === 0, null, { timeout: 10000 });
+await b.page.evaluate(async () => {
+	const { undoable } = await import("./src/functions.js");
+	undoable({ name: "Refill" }, () => { main_ctx.fillStyle = "#f00"; main_ctx.fillRect(25, 25, 10, 10); });
+});
+await a.page.waitForFunction(() => main_ctx.getImageData(30, 30, 1, 1).data[3] === 255, null, { timeout: 10000 });
 
 // B's cursor shows up for A
 const canvas = await b.page.$eval(".main-canvas", (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top }; });
@@ -171,7 +208,7 @@ assert.equal(Object.keys(store["paint-party"].users).length, 1, "only A is left"
 // Paint embedded in another site (an <iframe>, like a web desktop's window) joins too
 const host = await a.browser.newPage();
 await host.exposeFunction("__fb_write", write);
-await host.route("**/lib/firebase/firebase-app-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_FIREBASE }));
+await host.route("**/lib/firebase/firebase-app-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: fake_firebase() }));
 await host.route("**/lib/firebase/firebase-database-compat.js", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
 // (the host is another origin: 127.0.0.1 rather than localhost; any plain page of the server will do)
 await host.goto("http://127.0.0.1:11822/lib/pdf.js/README.txt", { waitUntil: "domcontentloaded" });
@@ -206,6 +243,28 @@ assert.equal(sdk.version, "13.1.0");
 assert.equal(sdk.url, "https://example-test.firebaseio.com/paint-party/users");
 assert.equal(sdk.has_api, true);
 await sdk_page.close();
+
+// A session saved the old way (one PNG at <session>/data) opens from it, and moves to tiles
+const old_png = await a.page.evaluate(() => {
+	const canvas = document.createElement("canvas");
+	canvas.width = 300;
+	canvas.height = 200;
+	const ctx = canvas.getContext("2d");
+	ctx.fillStyle = "#0f0";
+	ctx.fillRect(50, 50, 100, 60);
+	return canvas.toDataURL("image/png");
+});
+await write({ path: "old-party/data", op: "set", value: old_png });
+await click_menu_item(b.page, "Join Session...");
+await b.page.waitForSelector("#session-name");
+await b.page.fill("#session-name", "old-party");
+await press_button(b.page, "Join");
+await b.page.waitForFunction(() => main_canvas.width === 300 && main_ctx.getImageData(60, 60, 1, 1).data[1] === 255, null, { timeout: 10000 });
+await press_button(b.page, "OK");
+await b.page.waitForTimeout(500);
+assert.equal(store["old-party"].data, undefined, "the old PNG is gone");
+assert.deepEqual([store["old-party"].picture?.width, store["old-party"].picture?.height], [300, 200]);
+assert.equal(Object.keys(store["old-party"].picture.tiles).length, 5 * 4);
 
 await b.close();
 await a.close();
