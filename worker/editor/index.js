@@ -30,6 +30,7 @@
 // The token is either the master key (SITE_EDIT_SECRET: every site, plus minting passwords) or one site's password
 // (random, minted by the master, stored only as a keyed hash in the Accounts Durable Object — accounts.js). role_of()
 // says which. Reads of site files are public. Open sign-up / Google OAuth come later (docs/PLAN.md phase 5).
+import { WorkerEntrypoint } from "cloudflare:workers";
 import { inject_analytics } from "../shared/analytics.js";
 import { capture_exception } from "../shared/exceptions.js";
 import { PAGE_HEADERS } from "../shared/headers.js";
@@ -843,21 +844,8 @@ const editor = {
 				return new Response(upstream.body, { headers: { ...CORS_HEADERS, "Content-Type": "image/gif", "Cache-Control": "public, max-age=86400" } });
 			}
 			// GIF usage: which GifCities GIFs people use (GifStats Durable Object), for "top GIFs" per site and overall.
-			if (url.pathname === "/api/reports" && request.method === "POST") {
-				// A visitor's report of a page, forwarded by the sites Worker's form (worker/sites/index.js handle_report):
-				// kept for the admin (three a day per visitor — accounts.js add_report), and a `site_reported` event
-				const body = await request.json().catch(() => ({}));
-				const site = String(body.site || "");
-				const page = String(body.page || "");
-				const reason = String(body.reason || "").trim().slice(0, 500);
-				const ip_hash = String(body.ip_hash || "");
-				if (!valid_site_name(site) || !valid_path(page) || !is_html_path(page) || reason.length < 3 || !/^[0-9a-f]{64}$/.test(ip_hash)) { return json({ error: "site, page, reason, and ip_hash are needed" }, 400); }
-				if (await limited(env.LIMIT_IP_60S, `report:${ip_hash}`)) { return too_many(60, CORS_HEADERS); }
-				const result = await accounts_of(env).add_report({ site, page, reason, ip_hash });
-				if (!result.ok) { return json({ error: "You've reported enough for today.", code: "rate-limited" }, 429); }
-				capture_event(env, ctx, "site_reported", "visitor", { site, page });
-				return json({ ok: true, id: result.id });
-			}
+			// (Visitors' reports of pages come from the sites Worker through the Reports entrypoint below, not over HTTP:
+			// a public POST /api/reports trusted the visitor id it was sent, so anyone could file unlimited reports.)
 			if (url.pathname === "/api/gifs/used" && request.method === "POST") {
 				// Someone signed in, or holding a site's password or the master key: a stranger's click counts for nothing
 				// (each one used to be a row written by anyone who cared to POST)
@@ -1029,6 +1017,33 @@ function with_dev_cors(request, response, env) {
 	headers.set("Access-Control-Allow-Credentials", "true");
 	headers.append("Vary", "Origin");
 	return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/**
+ * Visitors' reports of pages, for the admin. Only the sites Worker can call this: it's an RPC entrypoint reached
+ * through the service binding in worker/sites/wrangler.jsonc ("REPORTS"), never an HTTP route, so the visitor id
+ * (a hash of the address Cloudflare saw) can't be made up. Three a day per visitor (accounts.js add_report).
+ */
+export class Reports extends WorkerEntrypoint {
+	/**
+	 * @param {{ site: string, page: string, reason: string, ip_hash: string }} report
+	 * @returns {Promise<{ ok: true, id: number } | { ok: false, code: "invalid" | "rate-limited" }>}
+	 */
+	async add(report) {
+		const env = /** @type {any} */ (this.env);
+		const site = String(report?.site || "");
+		const page = String(report?.page || "");
+		const reason = String(report?.reason || "").trim().slice(0, 500);
+		const ip_hash = String(report?.ip_hash || "");
+		if (!valid_site_name(site) || !valid_path(page) || !is_html_path(page) || reason.length < 3 || !/^[0-9a-f]{64}$/.test(ip_hash)) {
+			return { ok: false, code: "invalid" };
+		}
+		if (await limited(env.LIMIT_IP_60S, `report:${ip_hash}`)) { return { ok: false, code: "rate-limited" }; }
+		const result = await accounts_of(env).add_report({ site, page, reason, ip_hash });
+		if (!result.ok) { return { ok: false, code: "rate-limited" }; }
+		capture_event(env, this.ctx, "site_reported", "visitor", { site, page });
+		return { ok: true, id: result.id };
+	}
 }
 
 export default {

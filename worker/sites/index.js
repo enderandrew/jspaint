@@ -325,9 +325,10 @@ function with_report_link(html, site, page) {
 }
 
 /**
- * GET /~name/x/report?page=… shows the form; POST takes it, and forwards the report to the editor Worker (POST
- * /api/reports, which keeps three a day per visitor and shows them to the admin). Plain pages, in the 404's style.
- * @param {Request} request @param {URL} url @param {{ SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, VISITOR_PEPPER?: string }} env @param {ExecutionContext} ctx @param {string} site
+ * GET /~name/x/report?page=… shows the form; POST takes it, and hands the report to the editor Worker's Reports
+ * entrypoint (the REPORTS service binding; it keeps three a day per visitor and shows them to the admin). Plain
+ * pages, in the 404's style.
+ * @param {Request} request @param {URL} url @param {{ SITE_STATE: DurableObjectNamespace, EDITOR_URL?: string, VISITOR_PEPPER?: string, REPORTS?: any }} env @param {ExecutionContext} ctx @param {string} site
  */
 async function handle_report(request, url, env, ctx, site) {
 	const page_of = (/** @type {string} */ value) => (valid_path(value) && is_html_path(value) ? value : "index.html");
@@ -361,11 +362,12 @@ async function handle_report(request, url, env, ctx, site) {
 	if (String(form.get("website") || "")) { return shell("Thank you", "<p>Your report was sent.</p>"); } // (the honeypot: pretend)
 	if (reason.length < 3) { return refusal(400, "<p>Say a little about what's wrong with the page.</p>"); }
 	const ip_hash = await visitor_hash("view", request.headers.get("CF-Connecting-IP") || "unknown", env.VISITOR_PEPPER);
-	let outcome = "sent";
-	if (env.EDITOR_URL) {
+	// To the editor Worker's Reports entrypoint, over the service binding (RPC, not HTTP: nobody else can reach it)
+	let outcome = "failed";
+	if (env.REPORTS) {
 		try {
-			const response = await fetch(`${env.EDITOR_URL}/api/reports`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ site, page, reason, ip_hash }), signal: AbortSignal.timeout(5000) });
-			outcome = response.ok ? "sent" : response.status === 429 ? "enough" : "failed";
+			const result = await env.REPORTS.add({ site, page, reason, ip_hash });
+			outcome = result.ok ? "sent" : result.code === "rate-limited" ? "enough" : "failed";
 		} catch (_error) {
 			outcome = "failed";
 		}

@@ -1,6 +1,7 @@
 {
 	// jspaint-sites: the sandbox. Serves ~name pages from R2 and nothing else (docs/DESIGN.md §9).
-	// Deliberately weak: read-only bucket access, one Durable Object for <x-*> state, no secrets.
+	// Deliberately weak: read-only bucket access, one Durable Object for <x-*> state, no secrets, and one service
+	// binding that can only file a visitor's report.
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"name": "jspaint-sites",
 	"main": "index.js",
@@ -17,6 +18,11 @@
 	],
 	"r2_buckets": [
 		{ "binding": "SITES", "bucket_name": "jspaint-sites" }
+	],
+	// The editor Worker's Reports entrypoint (worker/editor/index.js): visitors' reports of pages go there over RPC,
+	// so they can't be filed by anyone else. Deploy the editor first, so the entrypoint exists.
+	"services": [
+		{ "binding": "REPORTS", "service": "jspaint-editor", "entrypoint": "Reports" }
 	],
 	"durable_objects": {
 		"bindings": [
