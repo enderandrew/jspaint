@@ -87,12 +87,13 @@ if (editor && master) {
 {
 	const { page, errors, close } = await open_paint({
 		init: () => {
-			// Which documents report a blocked inline handler: Chromium 156 reports one whenever an inert parser
-			// (DOMParser, a <template>) reads an on… attribute, though nothing there can run; the page itself must not
+			// Blocked inline handlers on elements of the page: a handler that got onto a live element and tried to
+			// run is reported against that element. (Chromium 156 also reports one whenever an inert parser —
+			// DOMParser, a <template> — reads an on… attribute, though nothing there can run; those are reported
+			// against the document, and don't count.)
 			window.__live_csp_violations = 0;
 			document.addEventListener("securitypolicyviolation", (event) => {
-				const target = /** @type {any} */ (event.target);
-				if (target === document || target?.ownerDocument === document) { window.__live_csp_violations++; }
+				if (event.target instanceof Element) { window.__live_csp_violations++; }
 			}, true);
 		},
 	});
@@ -129,7 +130,11 @@ if (editor && master) {
 	});
 	assert.deepEqual(paragraph, { onclick: null, img_onerror: null, img_src: null }, "handlers and the javascript: URL are gone from the rendered element");
 	assert.equal(await page.evaluate(() => current_history_node.blocks[0].tag), "div", "the model holds the safe tag too");
-	assert.equal(await page.evaluate(() => window.__live_csp_violations), 0, "no handler was ever attached in the page itself");
+	// (and clicking the rendered paragraph, where the crafted onclick was, does nothing)
+	await page.evaluate(() => { document.querySelector(".block-layer[data-tag='p'] .block-el").click(); });
+	await page.waitForTimeout(200);
+	assert.equal(await page.evaluate(() => window.__xss), undefined, "clicking ran nothing");
+	assert.equal(await page.evaluate(() => window.__live_csp_violations), 0, "no handler ever got onto an element of the page");
 	// (Chromium 156+ logs the inert parsers' reports as console errors; those are the crafted handlers being read, not run)
 	errors.splice(0, errors.length, ...errors.filter((e) => !/Executing inline event handler violates the following Content Security Policy/.test(e)));
 	await close();
