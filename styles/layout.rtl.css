@@ -133,6 +133,41 @@ html, body, .jspaint {
 .helper-layer {
 	z-index: 3;
 }
+/* View > Reference Image (src/reference-image.js): over the bitmap (.main-canvas is z-index 2, and this comes
+   after it), under the helper layer, page elements, stickers and text layers (3) and the selection (4).
+   Clicks go through it to the canvas; only its grip and handles take them. */
+.reference-image {
+	z-index: 2;
+	display: block !important;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+.reference-image.hidden {
+	display: none !important;
+}
+.reference-image > canvas {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+.reference-image .grab-region,
+.reference-image-grip {
+	pointer-events: all;
+}
+.reference-image-grip {
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	width: 14px;
+	height: 14px;
+	box-sizing: border-box;
+	background: #c0c0c0;
+	border: 2px outset #dfdfdf;
+	touch-action: none;
+	z-index: 1;
+}
 .selection,
 .textbox {
 	display: block !important; /* @TODO: reduce overzealous display: flex; */
