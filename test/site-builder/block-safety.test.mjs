@@ -85,7 +85,17 @@ if (editor && master) {
 
 // --- the browser: a crafted local page opens with its script element as an inert div ---
 {
-	const { page, close } = await open_paint();
+	const { page, errors, close } = await open_paint({
+		init: () => {
+			// Which documents report a blocked inline handler: Chromium 156 reports one whenever an inert parser
+			// (DOMParser, a <template>) reads an on… attribute, though nothing there can run; the page itself must not
+			window.__live_csp_violations = 0;
+			document.addEventListener("securitypolicyviolation", (event) => {
+				const target = /** @type {any} */ (event.target);
+				if (target === document || target?.ownerDocument === document) { window.__live_csp_violations++; }
+			}, true);
+		},
+	});
 	await page.evaluate(() => { window.__xss = undefined; saved = true; });
 	// The page is built in the browser so its bitmap is a real PNG (the canvas makes one)
 	await page.evaluate(() => {
@@ -119,6 +129,9 @@ if (editor && master) {
 	});
 	assert.deepEqual(paragraph, { onclick: null, img_onerror: null, img_src: null }, "handlers and the javascript: URL are gone from the rendered element");
 	assert.equal(await page.evaluate(() => current_history_node.blocks[0].tag), "div", "the model holds the safe tag too");
+	assert.equal(await page.evaluate(() => window.__live_csp_violations), 0, "no handler was ever attached in the page itself");
+	// (Chromium 156+ logs the inert parsers' reports as console errors; those are the crafted handlers being read, not run)
+	errors.splice(0, errors.length, ...errors.filter((e) => !/Executing inline event handler violates the following Content Security Policy/.test(e)));
 	await close();
 	console.log("block-safety (browser): ok");
 }

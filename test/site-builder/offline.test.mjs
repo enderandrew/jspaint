@@ -10,11 +10,18 @@ const { page, errors, close } = await open_paint({
 
 // Online: it takes charge, and keeps what the page loaded
 await page.waitForFunction(() => navigator.serviceWorker.controller, null, { timeout: 20000 });
-const kept = await page.waitForFunction(async () => {
+// (polled from here: waitForFunction doesn't wait for an async check to finish, and a promise counts as done)
+const kept_paths = () => page.evaluate(async () => {
 	const cache = await caches.open("jspaint-offline");
-	const paths = (await cache.keys()).map((request) => new URL(request.url).pathname);
-	return paths.includes("/") && paths.includes("/src/app.js") && paths.includes("/styles/layout.css") && paths.length > 100 && paths;
-}, null, { timeout: 30000, polling: 500 }).then((handle) => handle.jsonValue());
+	return (await cache.keys()).map((request) => new URL(request.url).pathname);
+});
+let kept = [];
+for (const started = Date.now(); Date.now() - started < 30000; await page.waitForTimeout(500)) {
+	kept = await kept_paths();
+	if (kept.includes("/") && kept.includes("/src/app.js") && kept.includes("/styles/layout.css") && kept.length > 100) { break; }
+}
+assert.ok(kept.includes("/") && kept.includes("/src/app.js") && kept.includes("/styles/layout.css"), `the app's page and files are kept: ${kept.length} files`);
+assert.ok(kept.length > 100, `…all it loaded: ${kept.length} files`);
 assert.ok(kept.some((path) => path.startsWith("/lib/")), "libraries too");
 assert.ok(!kept.some((path) => path.startsWith("/api/")), "nothing from the API");
 
