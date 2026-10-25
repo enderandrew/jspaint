@@ -80,11 +80,20 @@ async function sha256_hex(text) {
 	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Constant-time string comparison (no early exit on the first differing character). @param {string} a @param {string} b */
-function same_string(a, b) {
-	const x = new TextEncoder().encode(a), y = new TextEncoder().encode(b);
-	let diff = x.length ^ y.length;
-	for (let i = 0; i < Math.max(x.length, y.length); i++) { diff |= (x[i] || 0) ^ (y[i] || 0); }
+/**
+ * Compares a secret with what was offered, taking the same time whatever either holds — even how long each is.
+ * Both are hashed first and the two 32-byte digests compared without an early exit, so neither the first
+ * differing character nor the secret's length shows in how long the answer takes.
+ * @param {string} a @param {string} b @returns {Promise<boolean>}
+ */
+export async function same_secret(a, b) {
+	const encoder = new TextEncoder();
+	const [x, y] = (await Promise.all([a, b].map((text) => crypto.subtle.digest("SHA-256", encoder.encode(text))))).map((digest) => new Uint8Array(digest));
+	// (Workers have crypto.subtle.timingSafeEqual; the loop is the same thing anywhere else)
+	const subtle = /** @type {SubtleCrypto & { timingSafeEqual?: (a: ArrayBufferView, b: ArrayBufferView) => boolean }} */ (crypto.subtle);
+	if (typeof subtle.timingSafeEqual === "function") { return subtle.timingSafeEqual(x, y); }
+	let diff = 0;
+	for (let i = 0; i < x.length; i++) { diff |= x[i] ^ y[i]; }
 	return diff === 0;
 }
 
@@ -127,7 +136,7 @@ async function verify_claims(env, cookie) {
 	const match = /^v1\.([A-Za-z0-9_-]{1,2000})\.([A-Za-z0-9_-]{43})$/.exec(cookie);
 	const secret = signing_secret(env);
 	if (!match || !secret) { return null; }
-	if (!same_string(await hmac_b64url(secret, `v1.${match[1]}`), match[2])) { return null; }
+	if (!(await same_secret(await hmac_b64url(secret, `v1.${match[1]}`), match[2]))) { return null; }
 	try {
 		const claims = JSON.parse(b64url_decode(match[1]));
 		if (typeof claims.u !== "string" || typeof claims.h !== "string" || !Array.isArray(claims.s) || typeof claims.e !== "number") { return null; }

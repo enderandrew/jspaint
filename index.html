@@ -20,6 +20,7 @@
 		img-src 'self' data: blob: http: https:;
 		font-src 'self' https://fonts.gstatic.com;
 		connect-src * data: blob: wss://*.firebaseio.com wss://*.firebasedatabase.app;
+		base-uri 'self';
 	">
 
 	<link href="styles/normalize.css" rel="stylesheet" type="text/css">
@@ -1492,6 +1493,7 @@
 	<script type="module" src="src/OnCanvasHelperLayer.js"></script>
 	<script type="module" src="src/image-manipulation.js"></script>
 	<script type="module" src="src/tool-options.js"></script>
+	<script type="module" src="src/offline.js"></script>
 	<script type="module" src="src/tools.js"></script>
 	<!--<script type="module" src="src/extra-tools.js"></script>-->
 	<script type="module" src="src/color-data.js"></script>

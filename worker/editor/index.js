@@ -36,7 +36,7 @@ import { capture_exception } from "../shared/exceptions.js";
 import { PAGE_HEADERS } from "../shared/headers.js";
 import { ShortCache, client_ip, limited, report_limited, too_many } from "../shared/limits.js";
 import { ROOT_SITE, content_type_for, is_html_path, publicly_servable, site_base, sniff_type, valid_path, valid_site_name } from "../shared/names.js";
-import { accounts_of, capture_event, editor_origin, handle_auth, session_of, with_refreshed_claims } from "./auth.js";
+import { accounts_of, capture_event, editor_origin, handle_auth, same_secret, session_of, with_refreshed_claims } from "./auth.js";
 import { handle_admin } from "./admin.js";
 import { notify_published, page_hidden, read_moderation } from "./moderation.js";
 import { sanitize_html } from "../shared/sanitize.js";
@@ -67,19 +67,6 @@ const CORS_HEADERS = {
 /** @param {any} data @param {number} [status] @param {Record<string, string>} [headers] */
 function json(data, status = 200, headers = {}) {
 	return new Response(JSON.stringify(data), { status, headers: { ...CORS_HEADERS, "Content-Type": "application/json; charset=utf-8", ...headers } });
-}
-
-/**
- * Constant-time string comparison (length first — a mismatch there leaks nothing useful).
- * @param {string} a @param {string} b
- */
-function same_string(a, b) {
-	if (a.length !== b.length) { return false; }
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) {
-		diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-	}
-	return diff === 0;
 }
 
 /** The bearer a request carries: the Authorization header, or ?token= on a WebSocket upgrade (browsers can't set headers there; TLS covers it). @param {Request} request */
@@ -167,7 +154,7 @@ async function role_of(request, env, site = "") {
 	// An address that keeps offering wrong keys or passwords is refused for a minute without a look at anything
 	const ip = token ? client_ip(request) : "";
 	if (token && (auth_blocked.get(ip) || 0) > Date.now()) { return null; }
-	if (token && same_string(token, secret)) { return "master"; }
+	if (token && await same_secret(token, secret)) { return "master"; }
 	if (!site || !valid_site_name(site)) {
 		if (token) { return bad_token(env, ip); }
 		const session = await session_of(request, env);
@@ -176,9 +163,9 @@ async function role_of(request, env, site = "") {
 	if (token) {
 		const given = await password_hash(secret, site, token);
 		let stored = await site_hash(env, site);
-		if (stored && same_string(given, stored)) { return "site"; }
+		if (stored && await same_secret(given, stored)) { return "site"; }
 		stored = await site_hash(env, site, { fresh: true });
-		if (stored && same_string(given, stored)) { return "site"; }
+		if (stored && await same_secret(given, stored)) { return "site"; }
 		await bad_token(env, ip);
 	}
 	// No (good) bearer: a signed-in account (auth.js cookies) that owns the site edits it like the site's password does.
@@ -265,7 +252,7 @@ async function invite_valid(key, secret, site, page, nonce = "") {
 	if (!match) { return false; }
 	const expiry_day = Number(match[1]);
 	if (expiry_day * 86400000 < Date.now()) { return false; }
-	return same_string(await invite_signature(secret, site, page, expiry_day, nonce), match[2]);
+	return same_secret(await invite_signature(secret, site, page, expiry_day, nonce), match[2]);
 }
 
 /** The invite key a request carries (Authorization: Invite <key>, or ?invite= on a WebSocket upgrade). @param {Request} request */
@@ -714,7 +701,7 @@ export function canonical_redirect(url, canonical_url) {
 const SITE_ENTRY = /^\/~([^/]+)(?:\/(.*))?$/;
 // Paint's own files, served as they are; everything else on the editor host is a page address.
 const APP_DIRECTORIES = /^\/(src|lib|images|styles|help|audio|localization)\//;
-const APP_FILES = new Set(["/", "/index.html", "/favicon.ico", "/manifest.webmanifest", "/browserconfig.xml"]);
+const APP_FILES = new Set(["/", "/index.html", "/favicon.ico", "/manifest.webmanifest", "/browserconfig.xml", "/sw.js"]);
 // edit.<domain>/new: a fresh site's first page (the starter page and the Welcome window, src/my-site.js), for anyone
 const NEW_SITE_PATH = "/new";
 /**

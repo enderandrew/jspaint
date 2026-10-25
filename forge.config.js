@@ -67,6 +67,7 @@ module.exports = {
 			".history", // VS Code "Local History" extension
 			"browserconfig.xml", // Windows 8/10 start menu tile
 			"about.html", // homepage
+			/^\/sw\.js$/, // service worker for the web version (the desktop app's files are on disk)
 			"parse-rc-file.js", // localization
 			"preprocess.js", // localization
 			/\.rc$/, // localization

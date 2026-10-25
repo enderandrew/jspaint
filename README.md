@@ -284,12 +284,13 @@ If you want to add extensive palette support to another application, I've made t
 
 ### PWA
 
-JS Paint can be installed as a Progressive Web App (PWA), although it doesn't work offline yet.
+JS Paint can be installed as a Progressive Web App (PWA), and it works offline: after one visit, a service worker (`sw.js`) keeps the app's files, so it opens without a connection. Online, files still come straight from the server, so there's no update to wait for. Features that use the network (publishing, multi-user, GIF search) need a connection, and a library or help page you've never used is only there once you've used it online.
 Look for the install prompt in the address bar.
 
 PWA features:
 - No address bar; middle-ground between web and native
 - Cross-platform (macOS, Windows, Linux, Android, iOS)
+- Works offline
 - Basic file integration:
 	- File > Open
 	- File > Save downloads the file after asking for a filename and format
@@ -298,7 +299,6 @@ PWA features:
 Missing features:
 
 - <details><summary>Directly saving to files is implemented but not enabled currently.</summary>I was concerned about data loss for two reasons: 1. the change in behavior of File > Save / Ctrl+S from effectively acting as Save As to overwriting files directly, although I made a warning dialog for this, with a don't show again option; 2. there was a bad bug with saved files ending up completely empty (zero bytes), which I don't know if was a bug in my code or in Chrome.</details>
-- <details><summary>Offline support is not implemented.</summary>I've taken a few stabs at this, and <a href="https://github.com/enderandrew/jspaint/pull/144">I'm not the only one</a>, but there are some huge caveats, such as the development server not being able to live-reload without disabling the service worker.</details>
 
 ### Electron
 

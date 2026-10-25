@@ -255,11 +255,19 @@ export default [
 			"src/app-state.js",
 			"src/copy-inkscape-labels.js",
 			"src/error-handling-basic.js",
-			"svg-paint/svg-paint.js",
 			"localization/**/*.js",
 		],
 		"languageOptions": {
 			"sourceType": "script",
+		},
+	},
+	{
+		"files": ["sw.js"],
+		"languageOptions": {
+			"sourceType": "script",
+			"globals": {
+				...globals.serviceworker,
+			},
 		},
 	},
 	{
@@ -268,7 +276,6 @@ export default [
 			"src/electron-injected.js",
 			"src/electron-main.js",
 			"sync-package.js",
-			"prune-globals.js",
 			"localization/*.js",
 			"scripts/**/*.js",
 			"jspaint-bin.js",

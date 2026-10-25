@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "worker", "editor", "dist");
-const files = ["index.html", "about.html", "privacy.html", "favicon.ico", "manifest.webmanifest", "browserconfig.xml"];
+const files = ["index.html", "about.html", "privacy.html", "favicon.ico", "manifest.webmanifest", "browserconfig.xml", "sw.js"];
 const directories = ["src", "lib", "images", "styles", "help", "audio", "localization"];
 const skip = (/** @type {string} */ file) => /\.(map|psd|md)$/i.test(file) || /(^|\/)\.[^/]+$/.test(file);
 
