@@ -142,6 +142,10 @@ try {
 	response = await report({ page: "blog/p.html", reason: "fourth report" });
 	assert.equal(response.status, 429, "three a day per visitor");
 	assert.match(await response.text(), /reported enough for today/);
+	// Reports only come through the sites Worker (an RPC entrypoint): the editor has no public route that files one
+	response = await fetch(`${editor}/api/reports`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ site, page: "index.html", reason: "forged report", ip_hash: "f".repeat(64) }) });
+	assert.equal(response.status, 404, "no public report route");
+	assert.ok(!(await overview()).reports.some((r) => r.reason === "forged report"));
 	response = await fetch(`${editor}/api/admin/reports/${reports[0].id}/resolve`, { method: "POST", headers: { ...master, "Content-Type": "application/json" }, body: JSON.stringify({ resolved: true }) });
 	assert.equal(response.status, 200);
 	assert.equal((await overview()).reports.find((r) => r.id === reports[0].id).resolved, true);
