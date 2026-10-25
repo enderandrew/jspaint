@@ -8,6 +8,7 @@ import { palette_formats } from "./file-format-data.js";
 import { show_multi_user_setup_dialog } from "./functions.js";
 import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_page_history } from "./page-history.js";
+import { has_reference_image, is_reference_image_visible, load_reference_image, remove_reference_image, show_reference_image_opacity_window, toggle_reference_image } from "./reference-image.js";
 import { show_help } from "./help.js";
 import { is_ai_mode_active, start_ai_mode, toggle_ai_mode } from "./ai-mode.js";
 import { show_enhance_dialog } from "./ai-enhance.js";
@@ -707,6 +708,56 @@ const menus = {
 						check: () => show_thumbnail,
 					},
 					description: localize("Shows or hides the thumbnail view of the picture."),
+				},
+			],
+		},
+		{
+			emoji_icon: "📷",
+			label: localize("&Reference Image"),
+			submenu: [
+				{
+					label: localize("&Load Reference Image") + "...",
+					speech_recognition: [
+						"load reference image", "load reference", "load a reference image",
+						"open reference image", "open reference", "import reference image",
+						"load tracing image", "trace an image", "trace over an image",
+					],
+					action: () => { load_reference_image(); },
+					description: localize("Shows a picture over the canvas to trace over. It isn't part of your picture."),
+				},
+				{
+					label: localize("&Show Reference Image"),
+					speech_recognition: [
+						"toggle reference image", "toggle reference",
+						"show reference image", "show reference",
+						"hide reference image", "hide reference",
+					],
+					enabled: () => has_reference_image(),
+					checkbox: {
+						toggle: () => { toggle_reference_image(); },
+						check: () => is_reference_image_visible(),
+					},
+					description: localize("Shows or hides the reference image."),
+				},
+				{
+					label: localize("Reference Image &Opacity") + "...",
+					speech_recognition: [
+						"reference image opacity", "reference opacity", "change reference image opacity",
+						"reference image transparency", "fade reference image",
+					],
+					enabled: () => has_reference_image(),
+					action: () => { show_reference_image_opacity_window(); },
+					description: localize("Changes how faded the reference image is."),
+				},
+				{
+					label: localize("Re&move Reference Image"),
+					speech_recognition: [
+						"remove reference image", "remove reference",
+						"delete reference image", "clear reference image",
+					],
+					enabled: () => has_reference_image(),
+					action: () => { remove_reference_image(); },
+					description: localize("Removes the reference image."),
 				},
 			],
 		},
