@@ -5,11 +5,11 @@ name: Deploy web app to GitHub Pages
 # docs, localization sources, source maps, or vendored libraries' own tooling.
 #
 # One-time setup: Settings > Pages > Build and deployment > Source: "GitHub Actions".
+#
+# Runs only when started by hand: Actions > Deploy web app to GitHub Pages > Run workflow
+# (it deploys the branch you pick there, master by default).
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 permissions:
