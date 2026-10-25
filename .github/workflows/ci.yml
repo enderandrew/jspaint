@@ -1,0 +1,72 @@
+name: CI
+
+# Checks every push to master and every pull request: lint (spelling, types, style) and the UI tests,
+# plus a dry run of both Workers' builds. Nothing is deployed (deploying stays by hand: deploy-pages.yml,
+# release-desktop-app.yml, and `npm run deploy` in worker/).
+# Tests that need the Workers running, or the network, skip themselves here (test/site-builder/README.md).
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request replaces a check still running on the old one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1" # (the desktop app isn't built here)
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+
+      - name: UI tests
+        run: npm test
+
+  workers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - run: npm ci
+
+      - name: Build the editor Worker's copy of Paint
+        run: npm run build:editor
+
+      # (bundles each Worker and checks its config, without uploading anything or needing a Cloudflare login)
+      - name: Dry-run the editor Worker
+        run: npx wrangler deploy --dry-run -c editor/wrangler.jsonc
+
+      - name: Dry-run the sites Worker
+        run: npx wrangler deploy --dry-run -c sites/wrangler.jsonc
