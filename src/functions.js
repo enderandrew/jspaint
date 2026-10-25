@@ -1703,7 +1703,6 @@ function show_about_paint() {
 	// as long as it doesn't have the same problem as images, of loading in the background.
 	const url =
 		// ".";
-		// "test-news-newer.html";
 		"https://jspaint.app/?news";
 	fetch(url)
 		.then((response) => response.text())

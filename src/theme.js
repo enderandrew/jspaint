@@ -4,20 +4,25 @@ const theme_storage_key = "jspaint theme";
 const disable_seasonal_theme_key = "jspaint disable seasonal theme";
 const href_for = (theme) => `styles/themes/${theme}`;
 
-let iid;
+const theme_link = document.createElement("link");
+theme_link.rel = "stylesheet";
+theme_link.type = "text/css";
+theme_link.id = "theme-link";
+
+// What to do once the theme stylesheet being loaded has loaded: the link's load event says so (this used to
+// poll getComputedStyle every 15 ms until the theme's --theme-loaded marker showed). A newer theme replaces it.
+/** @type {{ theme: string, callback: () => void } | null} */
+let waiting_for_theme = null;
 function wait_for_theme_loaded(theme, callback) {
-	clearInterval(iid);
-	iid = setInterval(() => {
-		const theme_loaded =
-			getComputedStyle(document.documentElement)
-				.getPropertyValue("--theme-loaded")
-				.replace(/['"]+/g, "").trim();
-		if (theme_loaded === theme) {
-			clearInterval(iid);
-			callback();
-		}
-	}, 15);
+	waiting_for_theme = { theme, callback };
 }
+theme_link.addEventListener("load", () => {
+	// (the sheet that loaded is the one asked for, not one a newer theme replaced on the way)
+	if (!waiting_for_theme || theme_link.sheet?.href !== new URL(href_for(waiting_for_theme.theme), document.baseURI).href) { return; }
+	const { callback } = waiting_for_theme;
+	waiting_for_theme = null;
+	callback();
+});
 
 let grinch_button;
 let current_theme;
@@ -38,11 +43,7 @@ try {
 	current_theme = default_theme;
 }
 
-const theme_link = document.createElement("link");
-theme_link.rel = "stylesheet";
-theme_link.type = "text/css";
 theme_link.href = href_for(current_theme);
-theme_link.id = "theme-link";
 document.head.appendChild(theme_link);
 
 /** @type {any} */

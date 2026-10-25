@@ -358,6 +358,7 @@ const createWindow = () => {
 					img-src 'self' data: blob: http: https:;
 					font-src 'self' https://fonts.gstatic.com;
 					connect-src * data: blob:;
+					base-uri 'self';
 				`],
 			},
 		});

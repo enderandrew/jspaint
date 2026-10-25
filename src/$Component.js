@@ -151,14 +151,37 @@ function $Component(title, className, orientation, $el) {
 			}
 		}
 	};
-	let iid;
-	const update_auto_scaling = () => {
-		clearInterval(iid);
-		if ($("body").hasClass("enlarge-ui")) {
-			// @TODO: don't use an interval for this!
-			iid = setInterval(apply_scale, 200);
+	// While the UI is enlarged, the scale follows the component's own size (its tool options, the theme) and the
+	// size of the area it's docked in: a ResizeObserver watches both (this used to re-measure every 200 ms).
+	// (The scale's transform doesn't change the size it observes, and setting the same scale changes nothing,
+	// so it settles instead of looping.)
+	let observed_parent = null;
+	let scale_frame;
+	const rescale = () => {
+		const parent = $c[0].parentElement; // (docking moves the component to another area)
+		if (parent !== observed_parent) {
+			if (observed_parent) { resize_observer.unobserve(observed_parent); }
+			if (parent) { resize_observer.observe(parent); }
+			observed_parent = parent;
 		}
 		apply_scale();
+	};
+	const rescale_next_frame = () => {
+		cancelAnimationFrame(scale_frame);
+		scale_frame = requestAnimationFrame(rescale);
+	};
+	const resize_observer = new ResizeObserver(rescale_next_frame);
+	const update_auto_scaling = () => {
+		resize_observer.disconnect();
+		observed_parent = null;
+		$G.off("resize theme-load", rescale_next_frame);
+		if ($("body").hasClass("enlarge-ui")) {
+			resize_observer.observe($c[0]);
+			$G.on("resize theme-load", rescale_next_frame);
+			rescale();
+		} else {
+			apply_scale();
+		}
 	};
 	$G.on("enlarge-ui-toggled", update_auto_scaling);
 	update_auto_scaling();
@@ -465,7 +488,10 @@ function $Component(title, className, orientation, $el) {
 	$c.destroy = () => {
 		$w.close();
 		$c.remove();
-		clearInterval(iid);
+		resize_observer.disconnect();
+		cancelAnimationFrame(scale_frame);
+		$G.off("resize theme-load", rescale_next_frame);
+		$G.off("enlarge-ui-toggled", update_auto_scaling);
 	};
 
 	$w.on("close", (e) => {
