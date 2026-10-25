@@ -73,7 +73,11 @@ assert.equal(await checksum(), expected[40], "the old branch's last step");
 await page.evaluate(async () => {
 	const { go_to_history_node } = await import("./src/functions.js");
 	const stack = [root_history_node];
-	while (stack.length) { const node = stack.pop(); if (node.name === "Step 99") { go_to_history_node(node); } stack.push(...node.futures); }
+	while (stack.length) {
+		const node = stack.pop();
+		if (node.name === "Step 99") { go_to_history_node(node); }
+		stack.push(...node.futures);
+	}
 });
 assert.equal(await checksum(), branch_sum, "and back to the new branch");
 
