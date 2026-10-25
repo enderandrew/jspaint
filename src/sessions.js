@@ -288,6 +288,136 @@ const cursor_image = new Image();
 cursor_image.src = "images/cursors/default.png";
 
 
+/**
+ * The picture as tiles, shared by the online sessions (tile-sync.js): works out which tiles changed since they
+ * were last sent or received, and puts tiles someone else sent on the canvas as one "Sync Session" step.
+ * Each session only moves the tiles: FirebaseSession through its database, RESTSession through the Discord
+ * activity's server (discord-activity/packages/server/src/rooms.ts).
+ */
+function make_tiled_picture() {
+	/** The picture as it was last sent or received, to find what changed. @type {ImageData | null} */
+	let synced = null;
+	/** Each tile's PNG as last sent or received, so the echo of our own change isn't taken for someone else's. @type {Record<string, string>} */
+	let known_tiles = {};
+	const canvas_image_data = () => main_ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
+	const picture = {
+		/** Whether the session's picture has arrived (until then, the canvas isn't it, and nothing is sent). */
+		loaded: false,
+		/** Set while a "Sync Session" step is being made, so it isn't sent back. */
+		applying: false,
+		/** The whole picture, to send: a new session, or a new size. @returns {{ width: number, height: number, tiles: Record<string, string> }} */
+		whole() {
+			const image_data = canvas_image_data();
+			known_tiles = {};
+			for (const tile of tiles_of(image_data.width, image_data.height)) {
+				known_tiles[tile.key] = encode_tile(image_data, tile);
+			}
+			synced = image_data;
+			return { width: image_data.width, height: image_data.height, tiles: { ...known_tiles } };
+		},
+		/**
+		 * What to send since last time: the whole picture (when its size changed), the tiles that changed, or null.
+		 * @returns {{ whole: boolean, width: number, height: number, tiles: Record<string, string> } | null}
+		 */
+		changes() {
+			if (!picture.loaded) { return null; }
+			if (!synced || synced.width !== main_canvas.width || synced.height !== main_canvas.height) {
+				return { whole: true, ...picture.whole() };
+			}
+			const image_data = canvas_image_data();
+			/** @type {Record<string, string>} */
+			const tiles = {};
+			for (const tile of changed_tiles(synced, image_data)) {
+				const uri = encode_tile(image_data, tile);
+				if (known_tiles[tile.key] === uri) { continue; }
+				known_tiles[tile.key] = uri;
+				tiles[tile.key] = uri;
+			}
+			synced = image_data;
+			return Object.keys(tiles).length ? { whole: false, width: image_data.width, height: image_data.height, tiles } : null;
+		},
+		/** Forget what was sent, so the next changes() sends the whole picture (the other end lost it). */
+		resend_whole() {
+			synced = null;
+		},
+		/**
+		 * Puts what someone else sent on the canvas, as one "Sync Session" step.
+		 * @param {(ctx: CanvasRenderingContext2D) => void} draw
+		 */
+		apply(draw) {
+			picture.applying = true;
+			try {
+				undoable({
+					name: "Sync Session",
+					icon: get_help_folder_icon("p_database.png"),
+				}, () => {
+					draw(main_ctx);
+					$canvas_area.trigger("resize");
+				});
+			} finally {
+				picture.applying = false;
+			}
+		},
+		/**
+		 * Takes tiles that arrived. `whole`: these are all of the picture's tiles (a missing one is transparent);
+		 * otherwise just tiles that may have changed. Tiles that are what we last sent or received are skipped.
+		 * @param {{ width: number, height: number, tiles: Record<string, string> }} received
+		 * @param {boolean} whole
+		 */
+		async receive({ width, height, tiles }, whole) {
+			const resized = width !== main_canvas.width || height !== main_canvas.height || !synced;
+			const replace = whole || resized;
+			const incoming = Object.entries(tiles)
+				.map(([key, uri]) => ({ tile: tile_for_key(key, width, height), uri }))
+				.filter(({ tile, uri }) => tile && typeof uri === "string" && (replace || known_tiles[tile.key] !== uri));
+			if (!incoming.length && !replace) { picture.loaded = true; return; }
+			const images = await Promise.all(incoming.map(({ uri }) => decode_tile(uri)));
+			const before = canvas_image_data();
+			if (replace) {
+				// The whole picture: start from a blank one this size
+				const all = make_canvas(width, height);
+				incoming.forEach(({ tile }, i) => { all.ctx.drawImage(images[i], tile.x, tile.y); });
+				const after = all.ctx.getImageData(0, 0, width, height);
+				if (before.width !== width || before.height !== height || !image_data_match(before, after, 0)) {
+					picture.apply((ctx) => { /** @type {any} */ (ctx).copy(all); });
+				}
+				synced = after;
+				known_tiles = {};
+			} else {
+				// Just the tiles that changed (each replaces what was there, transparency included)
+				const scratch = make_canvas(width, height);
+				scratch.ctx.putImageData(before, 0, 0);
+				incoming.forEach(({ tile }, i) => {
+					scratch.ctx.clearRect(tile.x, tile.y, tile.width, tile.height);
+					scratch.ctx.drawImage(images[i], tile.x, tile.y);
+				});
+				const after = scratch.ctx.getImageData(0, 0, width, height);
+				if (changed_tiles(before, after).length) {
+					picture.apply((ctx) => {
+						for (const { tile } of incoming) {
+							ctx.putImageData(after, 0, 0, tile.x, tile.y, tile.width, tile.height);
+						}
+					});
+				}
+				// Only these tiles are now in step; a change of ours elsewhere that hasn't gone out yet still will
+				for (const { tile } of incoming) { copy_tile(after, /** @type {ImageData} */ (synced), tile); }
+			}
+			incoming.forEach(({ tile, uri }) => { known_tiles[tile.key] = uri; });
+			picture.loaded = true;
+		},
+		/** Opens a picture from one PNG of all of it (a Firebase session saved before tiles). @param {string} uri */
+		async receive_one_image(uri) {
+			const img = await decode_tile(uri);
+			const test_canvas = make_canvas(img);
+			if (!image_data_match(test_canvas.ctx.getImageData(0, 0, test_canvas.width, test_canvas.height), canvas_image_data(), 5)) {
+				picture.apply((ctx) => { /** @type {any} */ (ctx).copy(img); });
+			}
+			picture.loaded = true;
+		},
+	};
+	return picture;
+}
+
 class FirebaseSession {
 	constructor(session_id) {
 		this.id = session_id;
@@ -433,156 +563,69 @@ class FirebaseSession {
 		// (It used to be one PNG of the whole picture, <session>/data, sent in full on every change; a session that
 		// still has one is opened from it, then moved to tiles.)
 		this.fb_picture = this.fb.child("picture");
-		/** The picture as it was last sent or received, to find what changed. @type {ImageData | null} */
-		let synced = null;
-		/** Each tile's PNG as last sent or received, so the echo of our own write isn't taken for a change. @type {Record<string, string>} */
-		let known_tiles = {};
-		let picture_loaded = false;
-		const canvas_image_data = () => main_ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
+		const picture = make_tiled_picture();
 		/** Sends the whole picture: a new session, a different size, or moving off the old format. */
 		const write_whole_picture = () => {
-			const image_data = canvas_image_data();
-			known_tiles = {};
-			for (const tile of tiles_of(image_data.width, image_data.height)) {
-				known_tiles[tile.key] = encode_tile(image_data, tile);
-			}
-			synced = image_data;
 			log("Write the whole picture to Firebase");
-			this.fb_picture.set({ width: image_data.width, height: image_data.height, tiles: { ...known_tiles } });
+			this.fb_picture.set(picture.whole());
 		};
 		this.write_canvas_to_database_immediately = () => {
-			if (!picture_loaded) { return; } // (until the session's picture is here, the canvas isn't it)
+			if (!picture.loaded) { return; } // (until the session's picture is here, the canvas isn't it)
 			const save_paused = handle_data_loss();
 			if (save_paused) {
 				return;
 			}
-			if (!synced || synced.width !== main_canvas.width || synced.height !== main_canvas.height) {
-				write_whole_picture();
-				return;
-			}
-			const image_data = canvas_image_data();
-			const changed = changed_tiles(synced, image_data);
-			if (!changed.length) {
+			const changes = picture.changes();
+			if (!changes) {
 				log("(Don't write canvas data to Firebase; it hasn't changed)");
-				return;
-			}
-			/** @type {Record<string, string>} */
-			const update = {};
-			for (const tile of changed) {
-				const uri = encode_tile(image_data, tile);
-				if (known_tiles[tile.key] === uri) { continue; }
-				known_tiles[tile.key] = uri;
-				update[`tiles/${tile.key}`] = uri;
-			}
-			synced = image_data;
-			if (Object.keys(update).length) {
-				log(`Write ${Object.keys(update).length} changed tile(s) to Firebase`);
+			} else if (changes.whole) {
+				log("Write the whole picture to Firebase");
+				this.fb_picture.set({ width: changes.width, height: changes.height, tiles: changes.tiles });
+			} else {
+				log(`Write ${Object.keys(changes.tiles).length} changed tile(s) to Firebase`);
+				/** @type {Record<string, string>} */
+				const update = {};
+				for (const [key, uri] of Object.entries(changes.tiles)) { update[`tiles/${key}`] = uri; }
 				this.fb_picture.update(update);
 			}
 		};
 		this.write_canvas_to_database_soon = debounce(this.write_canvas_to_database_immediately, 100);
-		let ignore_session_update = false;
 		$G.on("session-update.session-hook", () => {
-			if (ignore_session_update) {
+			if (picture.applying) {
 				log("(Ignore session-update from Sync Session undoable)");
 				return;
 			}
 			this.write_canvas_to_database_soon();
 		});
-		/**
-		 * Puts what someone else sent on the canvas, as one "Sync Session" step.
-		 * @param {(ctx: CanvasRenderingContext2D) => void} draw
-		 */
-		const apply_remote = (draw) => {
-			ignore_session_update = true;
-			try {
-				undoable({
-					name: "Sync Session",
-					icon: get_help_folder_icon("p_database.png"),
-				}, () => {
-					draw(main_ctx);
-					$canvas_area.trigger("resize");
-				});
-			} finally {
-				ignore_session_update = false;
-			}
-		};
 		const failed_to_load = (error) => {
 			show_error_message("Failed to retrieve data from Firebase. The document will not load, and changes will not be saved.", error);
 			file_name = `[Failed to load ${this.id}]`;
 			update_title();
 		};
-		/** A session from before tiles: open its one big PNG, then move it to tiles. @param {string} uri */
-		const open_old_format = async (uri) => {
-			const img = await decode_tile(uri);
-			const test_canvas = make_canvas(img);
-			if (!image_data_match(test_canvas.ctx.getImageData(0, 0, test_canvas.width, test_canvas.height), canvas_image_data(), 5)) {
-				apply_remote((ctx) => { /** @type {any} */ (ctx).copy(img); });
-			}
-			picture_loaded = true;
-			write_whole_picture();
-			this.fb.child("data").remove();
-		};
-		/** @param {{ width?: number, height?: number, tiles?: Record<string, string> } | null} picture */
-		const receive_picture = async (picture) => {
-			if (!picture || !picture.tiles || !(picture.width > 0) || !(picture.height > 0)) {
-				if (picture_loaded) { return; } // (someone cleared it mid-session; what's here is sent with the next change)
-				// No tiles yet: a new session (send this picture), or one in the old format
+		/** @param {{ width?: number, height?: number, tiles?: Record<string, string> } | null} value */
+		const receive_picture = async (value) => {
+			if (!value || !value.tiles || !(value.width > 0) || !(value.height > 0)) {
+				if (picture.loaded) { return; } // (someone cleared it mid-session; what's here is sent with the next change)
+				// No tiles yet: a new session (send this picture), or one saved before tiles (one big PNG at <session>/data)
 				const old = await this.fb.child("data").once("value").then((snap) => snap.val(), () => null);
 				if (typeof old === "string" && old.startsWith("data:image/")) {
-					await open_old_format(old);
+					await picture.receive_one_image(old);
+					write_whole_picture();
+					this.fb.child("data").remove();
 				} else {
-					picture_loaded = true;
+					picture.loaded = true;
 					write_whole_picture();
 				}
 				return;
 			}
-			const { width, height, tiles } = picture;
-			const resized = width !== main_canvas.width || height !== main_canvas.height || !synced;
-			const incoming = Object.entries(tiles)
-				.map(([key, uri]) => ({ tile: tile_for_key(key, width, height), uri }))
-				.filter(({ tile, uri }) => tile && typeof uri === "string" && (resized || known_tiles[tile.key] !== uri));
-			if (!incoming.length && !resized) { return; }
-			const images = await Promise.all(incoming.map(({ uri }) => decode_tile(uri)));
-			const before = canvas_image_data();
-			if (resized) {
-				// The whole picture: start from a blank one this size (a tile that's missing stays transparent)
-				const whole = make_canvas(width, height);
-				incoming.forEach(({ tile }, i) => { whole.ctx.drawImage(images[i], tile.x, tile.y); });
-				const after = whole.ctx.getImageData(0, 0, width, height);
-				if (before.width !== width || before.height !== height || !image_data_match(before, after, 0)) {
-					apply_remote((ctx) => { /** @type {any} */ (ctx).copy(whole); });
-				}
-				synced = after;
-				known_tiles = {};
-			} else {
-				// Just the tiles that changed (each replaces what was there, transparency included)
-				const scratch = make_canvas(width, height);
-				scratch.ctx.putImageData(before, 0, 0);
-				incoming.forEach(({ tile }, i) => {
-					scratch.ctx.clearRect(tile.x, tile.y, tile.width, tile.height);
-					scratch.ctx.drawImage(images[i], tile.x, tile.y);
-				});
-				const after = scratch.ctx.getImageData(0, 0, width, height);
-				const differs = changed_tiles(before, after);
-				if (differs.length) {
-					apply_remote((ctx) => {
-						for (const { tile } of incoming) {
-							ctx.putImageData(after, 0, 0, tile.x, tile.y, tile.width, tile.height);
-						}
-					});
-				}
-				// Only these tiles are now in step; a change of ours elsewhere that hasn't gone out yet still will
-				for (const { tile } of incoming) { copy_tile(after, /** @type {ImageData} */ (synced), tile); }
-			}
-			incoming.forEach(({ tile, uri }) => { known_tiles[tile.key] = uri; });
-			picture_loaded = true;
+			// (the value is all of the tiles; only the ones that differ from what we have are drawn)
+			await picture.receive({ width: value.width, height: value.height, tiles: value.tiles }, false);
 		};
 		// One at a time, in order (each waits for its tiles to decode)
 		let receiving = Promise.resolve();
 		_fb_on(this.fb_picture, "value", (snap) => {
-			const picture = snap.val();
-			receiving = receiving.then(() => receive_picture(picture)).catch((error) => {
+			const value = snap.val();
+			receiving = receiving.then(() => receive_picture(value)).catch((error) => {
 				log(error);
 				failed_to_load(error);
 			});
@@ -933,128 +976,107 @@ FirebaseSession.fb_root = null;
 
 
 class RESTSession {
+	// The Discord activity's rooms (discord-activity/packages/server/src/rooms.ts), as tiles like FirebaseSession:
+	// a change sends only the tiles it touched (PATCH), and a long-polling GET brings only the tiles that changed
+	// since the version we have. (It used to upload the whole picture on every change and download it every second.)
 	constructor(session_id) {
 		this.id = session_id;
+		this.url = `/api/rooms/${encodeURIComponent(session_id)}/picture`;
+		this.picture = make_tiled_picture();
+		/** The room's version we're up to. */
+		this.version = 0;
+		this.ended = false;
+		/** @type {AbortController | null} */
+		this.poll_abort = null;
+		/** Sends go one at a time, in order. */
+		this.sending = Promise.resolve();
 
 		file_name = `[Loading ${this.id}]`;
 		update_title();
 		this.start();
-
-		this._previous_uri = "";
-		this._ignore_session_update = false;
-		this._poll_tid = -1;
-		this._poll_fetch_start_time = -1;
-		this._last_write_time = -1;
 	}
-	async _write_canvas_to_server_immediately() {
+	/** @param {"PUT" | "PATCH"} method @param {{ width: number, height: number, tiles: Record<string, string> }} body */
+	async _send(method, body) {
+		const response = await fetch(this.url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+		if (response.status === 409) {
+			// The room was replaced or resized meanwhile (or forgotten): send all of ours
+			this.picture.resend_whole();
+			this._write_canvas_to_server_soon();
+			return;
+		}
+		if (!response.ok) { throw new Error(`HTTP ${response.status}`); }
+	}
+	_write_canvas_to_server_immediately() {
+		if (!this.picture.loaded) { return; }
 		const save_paused = handle_data_loss();
 		if (save_paused) {
 			return;
 		}
-		// Sync the data from this client to the server (one-way)
-		const uri = main_canvas.toDataURL();
-		if (this._previous_uri !== uri) {
-			// log("clear pointer operations to set data", pointer_operations);
-			// pointer_operations = [];
-			log("Write canvas data to server");
-			this._previous_uri = uri;
-			this._last_write_time = performance.now(); // not sure about this
-			await fetch(`/api/rooms/${this.id}/data`, {
-				method: "PUT",
-				body: uri,
-			});
-			this._last_write_time = performance.now(); // not sure about this
-		} else {
+		const changes = this.picture.changes();
+		if (!changes) {
 			log("(Don't write canvas data to server; it hasn't changed)");
+			return;
 		}
+		log(changes.whole ? "Write the whole picture to the server" : `Write ${Object.keys(changes.tiles).length} changed tile(s) to the server`);
+		const { whole, ...body } = changes;
+		this.sending = this.sending.then(() => this._send(whole ? "PUT" : "PATCH", body)).catch((error) => {
+			log(error);
+			this.picture.resend_whole(); // (it may not have arrived: send it all next time)
+		});
 	}
 	start() {
-		this._write_canvas_to_server_soon = debounce(this._write_canvas_to_server_immediately, 100);
+		this._write_canvas_to_server_soon = debounce(() => this._write_canvas_to_server_immediately(), 100);
 		$G.on("session-update.session-hook", () => {
-			if (this._ignore_session_update) {
+			if (this.picture.applying) {
 				log("(Ignore session-update from Sync Session undoable)");
 				return;
 			}
 			this._write_canvas_to_server_soon();
-			this._last_write_time = performance.now(); // not sure about this
 		});
-		// Poll for changes
-		const poll = async () => {
-			let received_image_data_uri;
-			try {
-				this._poll_fetch_start_time = performance.now();
-				const response = await fetch(`/api/rooms/${this.id}/data`);
-				if (response.status === 404) {
-					// If the image data wasn't found, this is a new session
-					received_image_data_uri = null;
-				} else {
-					received_image_data_uri = await response.text();
-				}
-			} catch (error) {
-				show_error_message("Failed to load image document from the server.", error);
-				file_name = `[Failed to load ${this.id}]`;
-				update_title();
-				return; // Uh, TODO: retry?
-			}
-			file_name = `[${this.id}]`;
-			update_title();
-			this.handle_data_snapshot(received_image_data_uri, this._poll_fetch_start_time);
-			// @ts-ignore  (stupid @types/node interference, with their setTimeout typing)
-			this._poll_tid = setTimeout(poll, 1000);
-		};
-		poll();
+		this._poll();
 	}
-	handle_data_snapshot(uri, start_time) {
-		// Any time we change or receive the image data
-		if (!uri) {
-			// This is a new session; sync the current data to it
-			this._write_canvas_to_server_soon();
-			this._last_write_time = performance.now(); // not sure about this
-		} else {
-			this._previous_uri = uri;
-			// Load the new image data
-			const img = new Image();
-			img.onload = () => {
-
-				if (this._last_write_time > start_time) {
-					// If the image data was written since we started fetching it,
-					// ignore the likely-stale data.
-					log("(Ignore stale image data)");
-					return;
+	async _poll() {
+		let failures = 0;
+		while (!this.ended) {
+			this.poll_abort = new AbortController();
+			try {
+				const wait = this.picture.loaded ? "&wait=1" : "";
+				const response = await fetch(`${this.url}?since=${this.version}${wait}`, { signal: this.poll_abort.signal, cache: "no-store" });
+				if (this.ended) { return; }
+				const update = response.status === 200 ? await response.json() : null;
+				if (update && update.empty) {
+					// A new room: ours is its picture
+					if (!this.picture.loaded) {
+						this.picture.loaded = true;
+						this.picture.resend_whole();
+						this._write_canvas_to_server_immediately();
+					}
+					await new Promise((resolve) => { setTimeout(resolve, 1000); });
+				} else if (update) {
+					await this.picture.receive(update, update.whole);
+					this.version = update.version;
+				} else if (response.status !== 204) {
+					throw new Error(`HTTP ${response.status}`);
 				}
-
-				// Cancel any in-progress pointer operations
-				// if (pointer_operations.length) {
-				// 	$G.triggerHandler("pointerup", "cancel");
-				// }
-
-				const test_canvas = make_canvas(img);
-				const image_data_remote = test_canvas.ctx.getImageData(0, 0, test_canvas.width, test_canvas.height);
-				const image_data_local = main_ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
-
-				if (!image_data_match(image_data_remote, image_data_local, 5)) {
-					this._ignore_session_update = true;
-					undoable({
-						name: "Sync Session",
-						icon: get_help_folder_icon("p_database.png"),
-					}, () => {
-						// Write the image data to the canvas
-						main_ctx.copy(img);
-						$canvas_area.trigger("resize");
-					});
-					this._ignore_session_update = false;
+				if (failures) {
+					failures = 0;
 				}
-			};
-			img.onerror = () => {
-				// uri is invalid, so it might be an error message or something; I'll include it in the expandible details.
-				show_error_message("Failed to load image document from the server. Invalid image data.", uri);
-			};
-			img.src = uri;
+				file_name = `[${this.id}]`;
+				update_title();
+			} catch (error) {
+				if (this.ended) { return; }
+				failures++;
+				log("Polling the room failed", error);
+				if (failures === 3) {
+					show_error_message("Lost the connection to the server. Trying again…", error);
+				}
+				await new Promise((resolve) => { setTimeout(resolve, Math.min(30000, 1000 * 2 ** failures)); });
+			}
 		}
 	}
 	end() {
-		// Stop polling
-		clearTimeout(this._poll_tid);
+		this.ended = true;
+		this.poll_abort?.abort();
 		// Skip debounce and save immediately
 		this._write_canvas_to_server_soon.cancel();
 		this._write_canvas_to_server_immediately();
