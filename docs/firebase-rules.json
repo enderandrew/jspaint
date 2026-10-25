@@ -1,0 +1,31 @@
+{
+	"rules": {
+		"$session": {
+			".read": true,
+			"picture": {
+				".write": true,
+				".validate": "newData.hasChildren(['width', 'height', 'tiles'])",
+				"width": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10000" },
+				"height": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10000" },
+				"tiles": {
+					"$tile": { ".validate": "$tile.matches(/^[0-9]{1,4}_[0-9]{1,4}$/) && newData.isString() && newData.val().beginsWith('data:image/png;base64,') && newData.val().length <= 65536" }
+				},
+				"$other": { ".validate": false }
+			},
+			"users": {
+				"$user": {
+					".write": true,
+					"cursor": {
+						"x": { ".validate": "newData.isNumber()" },
+						"y": { ".validate": "newData.isNumber()" },
+						"away": { ".validate": "newData.isBoolean()" },
+						"$other": { ".validate": false }
+					},
+					"$other": { ".validate": "newData.isString() && newData.val().length <= 100 || newData.isNumber()" }
+				}
+			},
+			"data": { ".write": "!newData.exists()" },
+			"$other": { ".validate": false }
+		}
+	}
+}
