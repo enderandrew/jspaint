@@ -431,6 +431,10 @@ which is not open source software.
 
 You could create a [Firebase Realtime Database](https://firebase.google.com/docs/database/web/start) instance and edit JS Paint's `sessions.js` to point to it,
 replacing the `config` passed to `initializeApp` with the config from the Firebase Console when you set up a Web App.
+Security rules for the database are in [`docs/firebase-rules.json`](docs/firebase-rules.json) (paste them into the console's Rules tab).
+
+A session keeps its picture as 64×64 tiles, each a small PNG (`<session>/picture`), and a change sends only the tiles it touched,
+in one update; a session saved the old way, as one PNG of the whole picture (`<session>/data`), opens from it and moves to tiles.
 
 But the multiplayer mode is very shoddy so far.
 It should be replaced with something open source, more secure, more efficient, and more robust.
