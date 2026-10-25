@@ -112,7 +112,7 @@ function draw_ellipse(ctx, x, y, w, h, stroke, fill) {
 				draw_ellipse_outline(ctx, x, y, w, h, ctx.strokeStyle);
 				return;
 			}
-			
+
 			const outer_inset = Math.floor(stroke_size / 2);
 			const inner_inset = Math.ceil(stroke_size / 2);
 			const outer_x = x - outer_inset;

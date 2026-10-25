@@ -45,6 +45,7 @@ class OnCanvasObject {
 		}
 	}
 	destroy() {
+		/** @type {any} */ (this).handles?.destroy?.(); // (Handles listen to the page; they'd keep this object alive)
 		this.$el.remove();
 		if (this.hideMainCanvasHandles) {
 			canvas_handles.show();

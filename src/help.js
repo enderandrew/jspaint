@@ -115,6 +115,7 @@ function open_help_viewer(options) {
 	const $iframe = $Iframe({ src: "help/default.html" }).addClass("inset-deep");
 	const iframe = $iframe[0];
 	iframe.$window = $help_window; // for focus handling integration
+	$help_window.on("closed", () => { /** @type {any} */ ($iframe).destroy(); }); // (its page-wide listeners would keep the closed page in memory)
 	const $resizer = $(E("div")).addClass("resizer");
 	const $contents = $(E("ul")).addClass("contents inset-deep");
 	// The sidebar: Contents, Index, and Search tabs, like Windows 98's HTML Help
@@ -376,7 +377,15 @@ function $Iframe(options) {
 		// (This try-catch may only be needed when the iframe's document isn't reachable.)
 		try {
 			if (window.themeCSSProperties && window.applyTheme) {
-				window.applyTheme(window.themeCSSProperties, iframe.contentDocument.documentElement);
+				window.applyTheme(window.themeCSSProperties, { element: iframe.contentDocument.documentElement, recurseIntoIframes: true });
+			}
+			if (window.theme_file_name) {
+				const theme_link = iframe.contentDocument.createElement("link");
+				theme_link.rel = "stylesheet";
+				theme_link.type = "text/css";
+				theme_link.href = `../styles/themes/${window.theme_file_name}`;
+				theme_link.id = "theme-link";
+				iframe.contentDocument.head.appendChild(theme_link);
 			}
 
 			// on Wayback Machine, and iframe's url not saved yet

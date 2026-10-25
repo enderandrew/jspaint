@@ -26,6 +26,8 @@ import { $G, E, make_css_cursor, to_canvas_coords } from "./helpers.js";
  */
 function Handles(options) {
 	const { $handles_container, $object_container } = options; // required
+	/** The handles' page-wide listeners, for destroy(). @type {(() => void)[]} */
+	const global_updaters = [];
 	const outset = options.outset || 0;
 	const get_handles_offset_left = options.get_handles_offset_left || (() => 0);
 	const get_handles_offset_top = options.get_handles_offset_top || (() => 0);
@@ -255,12 +257,21 @@ function Handles(options) {
 
 		$handles_container.on("update resize scroll", update_handle);
 		$G.on("resize theme-load", update_handle);
+		global_updaters.push(update_handle);
 		setTimeout(update_handle, 50);
 
 		handles.push($h[0], $grab_region[0]);
 	});
 
 	this.handles = handles;
+
+	/** Stops listening to the page, and takes the handles away (OnCanvasObject.destroy calls this). */
+	this.destroy = () => {
+		for (const update_handle of global_updaters.splice(0)) {
+			$G.off("resize theme-load", update_handle);
+		}
+		$(handles).remove();
+	};
 
 	// It shouldn't scroll when hiding/showing handles, so don't use jQuery hide/show or CSS display.
 	this.hide = () => { $(handles).css({ opacity: 0, pointerEvents: "none" }); };

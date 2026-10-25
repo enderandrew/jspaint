@@ -123,11 +123,24 @@ const $Choose = (things, display, choose, is_chosen, gray_background_for_unselec
 		choose(thing);
 		$G.trigger("option-changed");
 	};
+	// Each option's redraw, for the options shown now. (One set of listeners per chooser, made once: this used to
+	// add a listener per option every time the chooser was shown, so they piled up with every tool switch.)
+	/** @type {(() => void)[]} */
+	let option_updaters = [];
+	$G.on("option-changed theme-load redraw-tool-options-because-webglcontextrestored", () => {
+		for (const update of option_updaters) { update(); }
+	});
 	$chooser.on("update", () => {
 		if (!$chooser.is(":visible")) {
 			return;
 		}
+		// (option pictures drawn with ChooserDiv listen for zoom and theme changes; the old ones are thrown away here)
+		$chooser.find("div").each((_i, div) => {
+			const on_zoom_etc = /** @type {any} */ (div)._on_zoom_etc;
+			if (on_zoom_etc) { $G.off("theme-load resize", on_zoom_etc); }
+		});
 		$chooser.empty();
+		option_updaters = [];
 		for (let i = 0; i < things.length; i++) {
 			((thing) => {
 				const $option_container = $(E("div")).addClass("chooser-option").appendTo($chooser);
@@ -171,10 +184,12 @@ const $Choose = (things, display, choose, is_chosen, gray_background_for_unselec
 					display(thing, is_chosen(thing), reuse_canvas, reuse_div);
 				};
 				update();
-				$G.on("option-changed theme-load redraw-tool-options-because-webglcontextrestored", update);
+				option_updaters.push(update);
 			})(things[i]);
 		}
+	});
 
+	{
 		const onpointerover_while_pointer_down = (event) => {
 			const option_container = event.target.closest(".chooser-option");
 			if (option_container) {
@@ -205,7 +220,7 @@ const $Choose = (things, display, choose, is_chosen, gray_background_for_unselec
 			$chooser.off("pointerover", onpointerover_while_pointer_down);
 			$chooser.off("touchmove", ontouchmove_while_pointer_down);
 		});
-	});
+	}
 	return $chooser;
 };
 /**
