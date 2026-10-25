@@ -113,25 +113,39 @@ const image_format_categories = (image_formats) => {
 };
 */
 
+// The palette formats AnyPalette.js can write (Colors > Save Colors), in the order the file type list shows them
+// (RIFF PAL first, then GIMP). Listed here rather than read from AnyPalette.formats, so the library (370 KB) only
+// loads when a palette is actually opened or saved; palette-formats.test.mjs checks this list against it.
+/** @type {[formatID: string, name: string, extensions: string[]][]} */
+const PALETTE_FORMATS = [
+	["RIFF_PALETTE", "RIFF PAL", ["pal"]],
+	["GIMP_PALETTE", "GIMP palette", ["gpl", "gimp", "colors"]],
+	["PAINT_SHOP_PRO_PALETTE", "Paint Shop Pro palette", ["psppalette", "pal"]],
+	["PAINTDOTNET_PALETTE", "Paint.NET palette", ["txt"]],
+	["KDE_RGB_PALETTE", "KolourPaint palette", ["colors"]],
+	["SKENCIL_PALETTE", "Skencil palette", ["spl"]],
+	["SKETCH_JSON_PALETTE", "Sketch palette", ["sketchpalette"]],
+	["SK1_PALETTE", "sK1 palette", ["skp"]],
+	["ADOBE_SWATCH_EXCHANGE_PALETTE", "Adobe Swatch Exchange", ["ase"]],
+	["STAROFFICE_PALETTE", "StarOffice Colors", ["soc"]],
+	["CSS_VARIABLES", "CSS variables", ["css"]],
+	["SCSS_VARIABLES", "SCSS variables", ["scss"]],
+	["SASS_VARIABLES", "SASS variables", ["sass"]],
+	["LESS_VARIABLES", "LESS variables", ["less"]],
+	["STYLUS_VARIABLES", "Stylus variables", ["styl"]],
+	["HOMESITE_PALETTE", "Homesite palette", ["hpl"]],
+	["ADOBE_COLOR_SWATCH_PALETTE", "Adobe Color Swatch", ["aco"]],
+	["ADOBE_COLOR_TABLE_PALETTE", "Adobe Color Table", ["act"]],
+	["STARCRAFT_PALETTE", "StarCraft palette", ["pal"]],
+	["STARCRAFT_PADDED", "StarCraft terrain palette", ["wpe"]],
+];
 /** @type {PaletteFileFormat[]} */
-const palette_formats = [];
-for (const [format_id, format] of Object.entries(AnyPalette.formats)) {
-	if (format.write) {
-		const inside_parens = format.fileExtensions.map((extension) => `*.${extension}`).join(";");
-		palette_formats.push({
-			formatID: format_id,
-			name: format.name,
-			nameWithExtensions: `${format.name} (${inside_parens})`,
-			extensions: format.fileExtensions,
-		});
-	}
-}
-palette_formats.sort((a, b) =>
-	// Order important formats first, starting with RIFF PAL format:
-	+(b.formatID === "RIFF_PALETTE") - +(a.formatID === "RIFF_PALETTE") ||
-	+(b.formatID === "GIMP_PALETTE") - +(a.formatID === "GIMP_PALETTE") ||
-	0
-);
+const palette_formats = PALETTE_FORMATS.map(([formatID, name, extensions]) => ({
+	formatID,
+	name,
+	nameWithExtensions: `${name} (${extensions.map((extension) => `*.${extension}`).join(";")})`,
+	extensions,
+}));
 
 export { formats_unique_per_file_extension, image_formats, palette_formats };
 // Temporary globals until all dependent code is converted to ES Modules

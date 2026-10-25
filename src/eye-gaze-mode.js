@@ -3,11 +3,13 @@
 /* global pointers:writable */
 /* global $Window, main_canvas, pointer_active, selected_tool, TrackyMouse */
 import { change_url_param, undo } from "./functions.js";
-import { $G, load_image_simple } from "./helpers.js";
+import { $G, load_image_simple, load_script } from "./helpers.js";
 import { TOOL_CURVE, TOOL_FILL, TOOL_MAGNIFIER, TOOL_PICK_COLOR, TOOL_POLYGON } from "./tools.js";
 
 // Tracky Mouse provides dwell clicking and head tracking features.
 // https://trackymouse.js.org/
+// Its script loads the first time either is turned on.
+const load_tracky_mouse = () => load_script("lib/tracky-mouse/core/tracky-mouse.js");
 
 
 let dwell_clicker = { paused: false, dispose: () => { } };
@@ -182,6 +184,7 @@ async function init_dwell_clicker() {
 
 	// (TODO: disable hovering to open submenus (other than with dwell clicking) while Dwell Clicker is enabled?)
 
+	await load_tracky_mouse();
 	dwell_clicker = TrackyMouse.initDwellClicking(dwell_clicker_config);
 
 	update_floating_buttons();
@@ -200,6 +203,7 @@ async function init_tracky_mouse_ui() {
 	await new Promise((resolve) => $(resolve)); // wait for document ready... maybe not needed here?
 	// block for indentation to avoid confusing git diff
 	{
+		await load_tracky_mouse();
 		if (!tracky_mouse_deps_promise) {
 			TrackyMouse.dependenciesRoot = "lib/tracky-mouse/core";
 			tracky_mouse_deps_promise = TrackyMouse.loadDependencies();

@@ -455,6 +455,35 @@ function supports_vertical_writing_mode() {
 }
 
 
+/** @type {Map<string, Promise<void>>} */
+const script_loads = new Map();
+/**
+ * Loads a classic script (a library that sets a global, like lib/UTIF.js) the first time it's needed, once.
+ * @param {string} src
+ * @returns {Promise<void>}
+ */
+function load_script(src) {
+	let promise = script_loads.get(src);
+	if (!promise) {
+		promise = new Promise((resolve, reject) => {
+			const script = document.createElement("script");
+			script.src = src;
+			script.addEventListener("load", () => { resolve(); });
+			script.addEventListener("error", () => {
+				script_loads.delete(src); // (let a later attempt try again)
+				script.remove();
+				reject(new Error(`Failed to load ${src}`));
+			});
+			document.head.append(script);
+		});
+		script_loads.set(src, promise);
+	}
+	return promise;
+}
+
+/** The palette library (lib/anypalette), loaded the first time a palette file is opened or saved. */
+const load_anypalette = () => load_script("lib/anypalette-0.6.0.js");
+
 export {
 	$G,
 	E,
@@ -469,7 +498,9 @@ export {
 	get_rgba_from_color,
 	image_data_match,
 	is_pride_month,
+	load_anypalette,
 	load_image_simple,
+	load_script,
 	make_canvas,
 	make_css_cursor,
 	memoize_synchronous_function,

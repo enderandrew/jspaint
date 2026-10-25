@@ -23,14 +23,23 @@ try {
 	// It's very silly. Also, on subsequent plays, it only plays part of the sound.
 	// And Web Audio API is better for playing SFX anyway because it can play a sound overlapping with itself.
 	const audioContext = window.audioContext = window.audioContext || new AudioContext();
-	const chord_buffer_promise =
-		fetch(CHORD_WAV_URL)
-			.then((response) => response.arrayBuffer())
-			.then((array_buffer) => audioContext.decodeAudioData(array_buffer));
-	const xp_exclamation_buffer_promise =
-		fetch(XP_EXCLAMATION_WAV_URL)
-			.then((response) => response.arrayBuffer())
-			.then((array_buffer) => audioContext.decodeAudioData(array_buffer));
+	// Each sound is fetched the first time it's played, not with the page.
+	/** @type {Map<string, Promise<AudioBuffer>>} */
+	const sound_buffers = new Map();
+	const load_sound = (/** @type {string} */ url) => {
+		let promise = sound_buffers.get(url);
+		if (!promise) {
+			promise = fetch(url)
+				.then((response) => {
+					if (!response.ok) { throw new Error(`HTTP ${response.status} for ${url}`); }
+					return response.arrayBuffer();
+				})
+				.then((array_buffer) => audioContext.decodeAudioData(array_buffer));
+			promise.catch(() => { sound_buffers.delete(url); }); // (try again next time)
+			sound_buffers.set(url, promise);
+		}
+		return promise;
+	};
 	var play_chord = async function () {
 		audioContext.resume(); // in case it was not allowed to start until a user interaction
 		// Note that this should be before waiting for the audio buffer,
@@ -39,7 +48,13 @@ try {
 
 		// Use XP exclamation sound for Windows XP theme, default chord for all others
 		const is_xp_theme = get_theme() === "windows-xp.css";
-		const audio_buffer = await (is_xp_theme ? xp_exclamation_buffer_promise : chord_buffer_promise);
+		let audio_buffer;
+		try {
+			audio_buffer = await load_sound(is_xp_theme ? XP_EXCLAMATION_WAV_URL : CHORD_WAV_URL);
+		} catch (error) {
+			console.warn("Couldn't play the message box sound", error);
+			return;
+		}
 		const source = audioContext.createBufferSource();
 		source.buffer = audio_buffer;
 		source.connect(audioContext.destination);

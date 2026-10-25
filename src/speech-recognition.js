@@ -4,7 +4,7 @@
 /* global $canvas_area, $status_text, button, localize, main_canvas, main_ctx, MENU_DIVIDER, selected_colors, selected_tool, selected_tools, tool_go */
 // import { localize } from "./app-localization.js";
 import { deselect, get_tool_by_id, resize_canvas_without_saving_dimensions, select_tool, show_error_message, update_helper_layer } from "./functions.js";
-import { $G, E, make_canvas } from "./helpers.js";
+import { $G, E, load_script, make_canvas } from "./helpers.js";
 import { menus } from "./menus.js";
 import { stopSimulatingGestures } from "./simulate-random-gestures.js";
 import { TOOL_AIRBRUSH, TOOL_BRUSH, TOOL_CURVE, TOOL_ELLIPSE, TOOL_ERASER, TOOL_FILL, TOOL_FREE_FORM_SELECT, TOOL_LINE, TOOL_PENCIL, TOOL_POLYGON, TOOL_RECTANGLE, TOOL_ROUNDED_RECTANGLE, TOOL_SELECT, TOOL_TEXT, tools } from "./tools.js";
@@ -1986,6 +1986,14 @@ if (speech_recognition_available) {
 
 	trace_and_sketch = (subject_imagedata) => {
 		trace_and_sketch_stop();
+
+		// (the image tracer loads the first time something is sketched)
+		if (typeof ImageTracer === "undefined") {
+			load_script("lib/imagetracer_v1.2.6.js").then(() => { trace_and_sketch(subject_imagedata); }, (error) => {
+				show_error_message("Failed to load the image tracer.", error);
+			});
+			return;
+		}
 
 		// @TODO: clickable cancel button? (in addition to Escape key handling and the "stop" voice command)
 

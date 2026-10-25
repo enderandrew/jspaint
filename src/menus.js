@@ -25,7 +25,7 @@ import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
 	show_add_noise, show_blur, show_brightness_contrast, show_hue_saturation, show_make_it_pop, show_opacity, show_posterize, show_sharpen, show_threshold
 } from "./adjustments.js";
-import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
+import { $G, get_rgba_from_color, is_discord_embed, load_anypalette } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { export_collage_gif } from "./gif-export.js";
 import { is_gif_picker_open, toggle_gif_picker } from "./gif-picker.js";
@@ -1337,6 +1337,12 @@ const menus = {
 			],
 			action: async () => {
 				const { file } = await systemHooks.showOpenFileDialog({ formats: palette_formats });
+				try {
+					await load_anypalette();
+				} catch (error) {
+					show_file_format_errors({ as_palette_error: error });
+					return;
+				}
 				AnyPalette.loadPalette(file, (error, new_palette) => {
 					if (error) {
 						show_file_format_errors({ as_palette_error: error });
@@ -1355,22 +1361,24 @@ const menus = {
 				"save colors", "save list of colors", "save color palette", "save palette", "save color palette file", "save palette file",
 			],
 			action: () => {
-				const ap = new AnyPalette.Palette();
-				ap.name = "JS Paint Saved Colors";
-				ap.numberOfColumns = 16; // 14?
-				for (const color of palette) {
-					const [r, g, b] = get_rgba_from_color(color);
-					ap.push(new AnyPalette.Color({
-						red: r / 255,
-						green: g / 255,
-						blue: b / 255,
-					}));
-				}
+				load_anypalette(); // (starts loading the palette library while the dialog is up)
+				const colors = palette.map((color) => get_rgba_from_color(color));
 				systemHooks.showSaveFileDialog({
 					dialogTitle: localize("Save Colors"),
 					defaultFileName: localize("untitled.pal"),
 					formats: palette_formats,
-					getBlob: (format_id) => {
+					getBlob: async (format_id) => {
+						await load_anypalette();
+						const ap = new AnyPalette.Palette();
+						ap.name = "JS Paint Saved Colors";
+						ap.numberOfColumns = 16; // 14?
+						for (const [r, g, b] of colors) {
+							ap.push(new AnyPalette.Color({
+								red: r / 255,
+								green: g / 255,
+								blue: b / 255,
+							}));
+						}
 						const file_content = AnyPalette.writePalette(ap, AnyPalette.formats[format_id]);
 						const blob = new Blob([file_content], { type: "text/plain" });
 						return new Promise((resolve) => {

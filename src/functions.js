@@ -12,7 +12,7 @@ import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 // import { localize } from "./app-localization.js";
 import { default_palette } from "./color-data.js";
 import { image_formats } from "./file-format-data.js";
-import { $G, E, TAU, debounce, from_canvas_coords, get_help_folder_icon, get_icon_for_tool, get_rgba_from_color, is_discord_embed, is_pride_month, make_canvas, render_access_key, to_canvas_coords } from "./helpers.js";
+import { $G, E, TAU, debounce, from_canvas_coords, get_help_folder_icon, get_icon_for_tool, get_rgba_from_color, is_discord_embed, is_pride_month, load_anypalette, load_script, make_canvas, render_access_key, to_canvas_coords } from "./helpers.js";
 import { apply_image_transformation, draw_grid, draw_selection_box, flip_horizontal, flip_vertical, invert_monochrome, invert_rgb, rotate, stretch_and_skew, threshold_black_and_white } from "./image-manipulation.js";
 import { show_imgur_uploader } from "./imgur.js";
 import { add_block, clear_blocks, legacy_size_for, restore_blocks, snapshot_blocks } from "./blocks.js";
@@ -1062,14 +1062,19 @@ function open_from_file(file, source_file_handle) {
 	// Try loading as an image file first, then as a palette file, but show a combined error message if both fail.
 	read_image_file(file, (as_image_error, image_info) => {
 		if (as_image_error) {
-			AnyPalette.loadPalette(file, (as_palette_error, new_palette) => {
-				if (as_palette_error) {
-					show_file_format_errors({ as_image_error, as_palette_error });
-					return;
-				}
-				palette = new_palette.map((color) => color.toString());
-				$colorbox.rebuild_palette();
-				window.console?.log(`Loaded palette: ${palette.map(() => "%c█").join("")}`, ...palette.map((color) => `color: ${color};`));
+			// Not a picture: maybe a palette (the palette library loads the first time it's needed)
+			load_anypalette().then(() => {
+				AnyPalette.loadPalette(file, (as_palette_error, new_palette) => {
+					if (as_palette_error) {
+						show_file_format_errors({ as_image_error, as_palette_error });
+						return;
+					}
+					palette = new_palette.map((color) => color.toString());
+					$colorbox.rebuild_palette();
+					window.console?.log(`Loaded palette: ${palette.map(() => "%c█").join("")}`, ...palette.map((color) => `color: ${color};`));
+				});
+			}, (load_error) => {
+				show_file_format_errors({ as_image_error, as_palette_error: load_error });
 			});
 			return;
 		}
@@ -1830,6 +1835,10 @@ function show_news() {
 	$latest_news.append($latest_news_style); // in case $this_version_news is $latest_news
 
 	$news_window.$content.append($latest_news.removeAttr("hidden"));
+	// Videos in the news don't load with the page (index.html); start them now that they're on screen
+	for (const video of $latest_news.find("video").get()) {
+		/** @type {HTMLVideoElement} */ (video).play().catch(() => { /* (autoplay can be refused; the controls are there) */ });
+	}
 
 	$news_window.center();
 	$news_window.center(); // @XXX - but it helps tho
@@ -4002,10 +4011,15 @@ function write_image_file(canvas, mime_type, blob_callback) {
 		const metadata = {
 			t305: ["jspaint (UTIF.js)"],
 		};
-		const array_buffer = UTIF.encodeImage(image_data.data.buffer, image_data.width, image_data.height, metadata);
-		const blob = new Blob([array_buffer]);
-		sanity_check_blob(blob, () => {
-			blob_callback(blob);
+		// (UTIF.js loads the first time a TIFF is saved or opened)
+		load_script("lib/UTIF.js").then(() => {
+			const array_buffer = UTIF.encodeImage(image_data.data.buffer, image_data.width, image_data.height, metadata);
+			const blob = new Blob([array_buffer]);
+			sanity_check_blob(blob, () => {
+				blob_callback(blob);
+			});
+		}, (error) => {
+			show_error_message(localize("Failed to save document."), error);
 		});
 	} else {
 		canvas.toBlob((blob) => {
@@ -4110,28 +4124,38 @@ function read_image_file(blob, callback) {
 			const image_data = new ImageData(new Uint8ClampedArray(rgba), width, height);
 			callback(null, { file_format, monochrome, palette, image_data, source_blob: blob });
 		} else if (detected_type_id === "tiff_be" || detected_type_id === "tiff_le") {
-			// IFDs = image file directories
-			// VSNs = ???
-			// This code is based on UTIF.bufferToURI
-			var ifds = UTIF.decode(arrayBuffer);
-			//console.log(ifds);
-			var vsns = ifds, ma = 0, page = vsns[0];
-			if (ifds[0].subIFD) {
-				vsns = vsns.concat(ifds[0].subIFD);
-			}
-			for (var i = 0; i < vsns.length; i++) {
-				var img = vsns[i];
-				if (img["t258"] == null || img["t258"].length < 3) continue;
-				var ar = img["t256"] * img["t257"];
-				if (ar > ma) { ma = ar; page = img; }
-			}
-			UTIF.decodeImage(arrayBuffer, page, ifds);
-			var rgba = UTIF.toRGBA8(page);
+			// (UTIF.js loads the first time a TIFF is opened or saved)
+			load_script("lib/UTIF.js").then(() => {
+				let image_data;
+				try {
+					// IFDs = image file directories
+					// VSNs = ???
+					// This code is based on UTIF.bufferToURI
+					var ifds = UTIF.decode(arrayBuffer);
+					//console.log(ifds);
+					var vsns = ifds, ma = 0, page = vsns[0];
+					if (ifds[0].subIFD) {
+						vsns = vsns.concat(ifds[0].subIFD);
+					}
+					for (var i = 0; i < vsns.length; i++) {
+						var img = vsns[i];
+						if (img["t258"] == null || img["t258"].length < 3) continue;
+						var ar = img["t256"] * img["t257"];
+						if (ar > ma) { ma = ar; page = img; }
+					}
+					UTIF.decodeImage(arrayBuffer, page, ifds);
+					var rgba = UTIF.toRGBA8(page);
 
-			var image_data = new ImageData(new Uint8ClampedArray(rgba.buffer), page.width, page.height);
-
-			file_format = "image/tiff";
-			callback(null, { file_format, monochrome, palette, image_data, source_blob: blob });
+					image_data = new ImageData(new Uint8ClampedArray(rgba.buffer), page.width, page.height);
+				} catch (error) {
+					callback(error);
+					return;
+				}
+				file_format = "image/tiff";
+				callback(null, { file_format, monochrome, palette, image_data, source_blob: blob });
+			}, (error) => {
+				callback(error);
+			});
 		} else if (detected_type_id === "pdf") {
 			file_format = "application/pdf";
 
