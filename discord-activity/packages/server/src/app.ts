@@ -1,9 +1,9 @@
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 // import enableWs from "express-ws";
 import fs from "fs";
 import path from "path";
+import { Reply, Rooms } from "./rooms";
 import { fetchAndRetry } from "./utils";
 dotenv.config({ path: "../../.env" });
 
@@ -12,7 +12,6 @@ const port: number = Number(process.env.PORT) || 1999;
 
 // enableWs(app);
 
-app.use(express.json());
 
 const clientSourcePath = path.join(__dirname, "../../../..");
 const clientId = process.env.VITE_CLIENT_ID;
@@ -61,7 +60,7 @@ app.use((req, res, next) => {
 app.use(express.static(clientSourcePath));
 
 // Fetch token from developer portal and return to the embedded app
-app.post("/api/token", async (req: Request, res: Response) => {
+app.post("/api/token", express.json(), async (req: Request, res: Response) => {
 	const response = await fetchAndRetry(`https://discord.com/api/oauth2/token`, {
 		method: "POST",
 		headers: {
@@ -82,26 +81,21 @@ app.post("/api/token", async (req: Request, res: Response) => {
 	res.send({ access_token });
 });
 
-// Simple multiplayer image editing
-
-const rooms: { [key: string]: string } = {};
-
-// app.post("/api/rooms", (req: Request, res: Response) => {
-// 	const roomId = uuid(); // or the room id might be the Discord Activity instance ID
-// 	rooms[roomId] = "";
-// 	res.send({ roomId });
-// });
-
-app.get("/api/rooms/:roomId/data", (req: Request, res: Response) => {
-	const { roomId } = req.params;
-	res.send(rooms[roomId]);
+// Multi-user rooms: the picture as tiles (rooms.ts)
+const rooms = new Rooms();
+const picture_json = express.json({ limit: "64mb" });
+const send_reply = (res: Response, { status, body }: Reply) => {
+	res.setHeader("Cache-Control", "no-store");
+	if (body === undefined) { res.status(status).end(); } else { res.status(status).json(body); }
+};
+app.get("/api/rooms/:roomId/picture", async (req: Request, res: Response) => {
+	send_reply(res, await rooms.get(req.params.roomId, req.query.since, req.query.wait === "1"));
 });
-
-app.put("/api/rooms/:roomId/data", bodyParser.text({ type: "*/*" }), (req: Request, res: Response) => {
-	const { roomId } = req.params;
-	const image = req.body;
-	rooms[roomId] = image;
-	res.send({ success: true });
+app.put("/api/rooms/:roomId/picture", picture_json, (req: Request, res: Response) => {
+	send_reply(res, rooms.put(req.params.roomId, req.body, true));
+});
+app.patch("/api/rooms/:roomId/picture", picture_json, (req: Request, res: Response) => {
+	send_reply(res, rooms.put(req.params.roomId, req.body, false));
 });
 
 // app.ws("/api/sessions/:session_id", (ws, req) => {

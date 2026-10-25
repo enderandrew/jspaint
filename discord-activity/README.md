@@ -10,6 +10,10 @@ The client (aka front-end) is using vanilla JS.
 
 The server (aka back-end) is using Express with typescript.
 
+Multi-user rooms (`packages/server/src/rooms.ts`) keep each room's picture in memory as 64×64 PNG tiles: Paint
+(`src/sessions.js`, `RESTSession`) sends only the tiles a change touched, and a waiting (long-polling) request brings
+only the tiles that changed since the version it has. Rooms nobody has touched for a day are forgotten.
+
 ## Setting up your Discord Application
 
 Before we write any code, lets follow the instructions [here](https://discord.com/developers/docs/activities/building-an-activity#step-1-creating-a-new-app) to make sure your Discord application is set up correctly.
