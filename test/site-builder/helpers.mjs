@@ -94,7 +94,7 @@ export function drop_file(page, bytes, x, y, name = "drop.gif", type = "image/gi
 /** @param {import("playwright").Page} page @param {string} label */
 export function click_menu_item(page, label) {
 	return page.evaluate((label) => {
-		const item = document.querySelector(`[role=menuitem][aria-label="${label}"], [role=menuitemcheckbox][aria-label="${label}"]`);
+		const item = document.querySelector(`[role=menuitem][aria-label="${label}"], [role=menuitemcheckbox][aria-label="${label}"], [role=menuitemradio][aria-label="${label}"]`);
 		if (!item) { throw new Error(`No menu item "${label}"`); }
 		item.click();
 	}, label);

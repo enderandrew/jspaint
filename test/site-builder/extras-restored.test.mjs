@@ -1,5 +1,5 @@
 // Extras menu items restored from upstream JS Paint: Draw Randomly, Head Tracker, Dwell Clicker, Quick Undo Button,
-// and Vertical Color Box. Each toggles (with a check mark), and does its thing.
+// and Vertical Color Box (now Color Box › Right). Each toggles (with a check mark), and does its thing.
 import { assert, click_menu_item, open_paint } from "./helpers.mjs";
 
 const { page, close } = await open_paint();
@@ -28,8 +28,8 @@ assert.equal(await ink(), after_stop, "stopped drawing");
 await open_extras();
 assert.equal(await checked("Draw Randomly"), false);
 
-// Vertical Color Box: the colors move to the right side, and the Undo/Redo pair with them
-await click_menu_item(page, "Vertical Color Box");
+// Color Box › Right (was the Vertical Color Box checkbox): the colors move to the right side, and the Undo/Redo pair with them
+await click_menu_item(page, "Right");
 await page.waitForTimeout(500);
 assert.equal(await body_has("vertical-color-box-mode"), true);
 assert.equal(await page.evaluate(() => document.querySelector(".colors-component").closest(".component-area").classList.contains("right")), true);
@@ -40,7 +40,7 @@ const overlaps_status_bar = await page.evaluate(() => {
 	return buttons.bottom > status.top && buttons.top < status.bottom;
 });
 assert.equal(overlaps_status_bar, false);
-await click_menu_item(page, "Vertical Color Box");
+await click_menu_item(page, "Bottom");
 await page.waitForTimeout(500);
 assert.equal(await body_has("vertical-color-box-mode"), false);
 assert.equal(await page.evaluate(() => document.querySelector(".quick-buttons").parentElement.classList.contains("bottom")), true, "back in the bottom bar");
