@@ -444,6 +444,24 @@ whereas it breaks component docking calculations if used to shift the colors box
 .tool-options > div {
 	flex: 1;
 }
+.tool-options.tall-tool-options {
+	height: 132px;
+}
+/* The right-click menu (context-menu.js): focused for the keyboard, without a focus ring around it */
+.context-menu:focus {
+	outline: none;
+}
+.choose-shape-options {
+	display: flex;
+	flex-flow: column;
+}
+.choose-shape-options > div {
+	flex: 1;
+}
+.choose-shape-options > .choose-shape-stroke-size {
+	border-top: 1px solid var(--ButtonShadow);
+	box-shadow: inset 0 1px var(--ButtonHilight);
+}
 .tools {
 	display: flex;
 	flex-flow: row wrap;
