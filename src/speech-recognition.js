@@ -1552,6 +1552,9 @@ if (speech_recognition_available) {
 				if (menu_item.submenu) {
 					collect_menu_items(menu_item.submenu);
 				}
+				if (menu_item.radioItems) {
+					collect_menu_items(menu_item.radioItems); // (each gets a checkbox from MenuBar.js that picks it)
+				}
 			}
 		};
 		Object.values(menus).forEach(collect_menu_items);

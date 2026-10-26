@@ -3,7 +3,7 @@
 /* global airbrush_size:writable, brush_shape:writable, brush_size:writable, button:writable, ctrl:writable, eraser_size:writable, fill_color:writable, pick_color_slot:writable, history_node_to_cancel_to:writable, MenuBar:writable, my_canvas_height:writable, my_canvas_width:writable, palette:writable, pencil_size:writable, pointer:writable, pointer_active:writable, pointer_buttons:writable, pointer_over_canvas:writable, pointer_previous:writable, pointer_start:writable, pointer_type:writable, pointers:writable, reverse:writable, shift:writable, stroke_color:writable, stroke_size:writable, update_helper_layer_on_pointermove_active:writable */
 /* global AccessKeys, current_history_node, default_canvas_height, default_magnification, enable_fs_access_api, file_name, get_direction, localize, magnification, main_canvas, main_ctx, return_to_tools, selected_colors, selected_tool, selected_tools, selection, systemHooks, textbox, transparency */
 
-import { $ColorBox } from "./$ColorBox.js";
+import { $ColorBox, get_color_box_position } from "./$ColorBox.js";
 import { $ToolBox } from "./$ToolBox.js";
 import { Handles } from "./Handles.js";
 // import { get_direction, localize } from "./app-localization.js";
@@ -28,6 +28,7 @@ import { init_element_selection } from "./element-selection.js";
 import { fit_page_width, init_page_scroll } from "./page-scroll.js";
 import { init_pan_joystick } from "./pan-joystick.js";
 import { crop_to_selection } from "./crop.js";
+import { init_selection_menu } from "./selection-menu.js";
 import { init_quick_buttons } from "./quick-buttons.js";
 import { init_share } from "./share.js";
 import { init_site_button } from "./site-button.js";
@@ -380,19 +381,14 @@ const update_from_url_params = () => {
 		}
 	}
 
-	// Vertical Color Box Mode
-	if (location.hash.match(/vertical-color-box-mode/i)) {
-		if (!$("body").hasClass("vertical-color-box-mode")) {
-			$("body").addClass("vertical-color-box-mode");
-			$G.triggerHandler("vertical-color-box-mode-toggled");
-			$G.triggerHandler("theme-load"); // signal layout change
-		}
-	} else {
-		if ($("body").hasClass("vertical-color-box-mode")) {
-			$("body").removeClass("vertical-color-box-mode");
-			$G.triggerHandler("vertical-color-box-mode-toggled");
-			$G.triggerHandler("theme-load"); // signal layout change
-		}
+	// Where the color box goes: bottom (as in MS Paint), right (Vertical Color Box Mode), or top (as in Vista's Paint)
+	// (the right wins if both are asked for)
+	const vertical = /vertical-color-box-mode/i.test(location.hash);
+	const top = !vertical && /color-box-top/i.test(location.hash);
+	if (vertical !== $("body").hasClass("vertical-color-box-mode") || top !== $("body").hasClass("color-box-top")) {
+		$("body").toggleClass("vertical-color-box-mode", vertical).toggleClass("color-box-top", top);
+		$G.triggerHandler("vertical-color-box-mode-toggled"); // (any change of place: the color box re-docks)
+		$G.triggerHandler("theme-load"); // signal layout change
 	}
 
 	// Quick Undo Button
@@ -825,19 +821,20 @@ if (window.is_electron_app) {
 let $toolbox = $ToolBox(tools);
 window.$toolbox = $toolbox;
 init_site_button(); // the globe at the bottom of the toolbox: My Site
+init_selection_menu(); // right-clicking a selection
 // let $toolbox2 = $ToolBox(extra_tools, true);//.hide();
 // Note: a second $ToolBox doesn't work because they use the same tool options (which could be remedied)
 // If there's to be extra tools, they should probably get a window, with different UI
 // so it can display names of the tools, and maybe authors and previews (and not necessarily icons)
 
-let $colorbox = $ColorBox($("body").hasClass("vertical-color-box-mode"));
+let $colorbox = $ColorBox(get_color_box_position());
 window.$colorbox = $colorbox;
 
 $G.on("vertical-color-box-mode-toggled", () => {
 	// Destroy and recreate the color box because it uses a constructor parameter
 	// for this state and this handles re-docking to the correct edge
 	$colorbox.destroy();
-	$colorbox = $ColorBox($("body").hasClass("vertical-color-box-mode"));
+	$colorbox = $ColorBox(get_color_box_position());
 	window.$colorbox = $colorbox;
 	prevent_selection($colorbox);
 });

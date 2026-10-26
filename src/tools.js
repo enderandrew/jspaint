@@ -266,6 +266,7 @@ const tools = [{
 				this.y_max - this.y_min,
 				contents_within_polygon,
 			);
+			selection.free_form = true; // (Crop and Invert Selection go by its outline, not its box)
 			selection.cut_out_background();
 		});
 	},

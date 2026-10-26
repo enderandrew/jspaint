@@ -6,7 +6,7 @@ import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 import { show_edit_colors_window } from "./edit-colors.js";
 import { palette_formats } from "./file-format-data.js";
 import { show_multi_user_setup_dialog } from "./functions.js";
-import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
+import { are_you_sure, change_some_url_params, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_page_history } from "./page-history.js";
 import { has_reference_image, is_reference_image_visible, load_reference_image, remove_reference_image, show_reference_image_opacity_window, toggle_reference_image } from "./reference-image.js";
 import { show_help } from "./help.js";
@@ -21,6 +21,7 @@ import { show_paint_plus } from "./paint-plus.js";
 import { show_terms_of_service } from "./terms-of-service.js";
 import { simulateRandomGesturesPeriodically, simulatingGestures, stopSimulatingGestures } from "./simulate-random-gestures.js";
 import { crop_to_selection } from "./crop.js";
+import { invert_selection } from "./selection-menu.js";
 import { colors_of_the_wind, connect_mental_imagery, do_taxes, page_doctor, send_help, show_attitude_coach } from "./menu-jokes.js";
 import {
 	apply_auto_contrast, apply_deep_fry, apply_emboss, apply_film_1998, apply_find_edges, apply_grayscale, apply_lens_flare, apply_sepia, fix_everything,
@@ -463,6 +464,15 @@ const menus = {
 			],
 			action: () => { select_all(); },
 			description: localize("Selects everything."),
+		},
+		{
+			label: localize("&Invert Selection"),
+			speech_recognition: [
+				"invert selection", "invert the selection", "inverse selection", "select everything else", "select the rest", "select everything but the selection",
+			],
+			enabled: () => !!selection,
+			action: () => { invert_selection(); },
+			description: localize("Selects everything that isn't selected."),
 		},
 		{
 			label: localize("Add Link to &Element..."),
@@ -1994,26 +2004,46 @@ const menus = {
 			description: localize("Adds a button for undoing the last action."),
 		},
 		{
-			emoji_icon: "↕️",
-			label: localize("&Vertical Color Box"),
-			speech_recognition: [
-				"toggle vertical color box", "toggle vertical color box mode",
-				"toggle vertical colors box", "toggle vertical colors box mode",
-				"toggle vertical palette", "toggle vertical palette mode",
-				"toggle horizontal color box", "toggle horizontal color box mode",
-				"toggle horizontal colors box", "toggle horizontal colors box mode",
-				"toggle horizontal palette", "toggle horizontal palette mode",
-				// @TODO: "use a vertical/horizontal color box", "place palette on the left", "make palette tall/wide", etc.
+			emoji_icon: "🎨",
+			label: localize("&Color Box"),
+			submenu: [
+				{
+					radioItems: [
+						{
+							label: localize("&Bottom"),
+							value: "bottom",
+							description: localize("Puts the color box at the bottom of the window."),
+							speech_recognition: [
+								"color box at the bottom", "colors at the bottom", "palette at the bottom", "move the palette to the bottom", "move the color box to the bottom",
+								"horizontal color box", "horizontal palette", "toggle horizontal color box", "toggle horizontal palette",
+							],
+						},
+						{
+							label: localize("&Right"),
+							value: "right",
+							description: localize("Puts the color box on the right, arranged vertically."),
+							speech_recognition: [
+								"color box on the right", "colors on the right", "palette on the right", "move the palette to the right", "move the color box to the right",
+								"vertical color box", "vertical palette", "toggle vertical color box", "toggle vertical color box mode", "toggle vertical palette",
+							],
+						},
+						{
+							label: localize("&Top"),
+							value: "top",
+							description: localize("Puts the color box at the top of the window."),
+							speech_recognition: [
+								"color box at the top", "colors at the top", "palette at the top", "move the palette to the top", "move the color box to the top",
+							],
+						},
+					],
+					ariaLabel: localize("Color Box Position"),
+					getValue: () => (/vertical-color-box-mode/i.test(location.hash) ? "right" : /color-box-top/i.test(location.hash) ? "top" : "bottom"),
+					setValue: (/** @type {string} */ value) => {
+						change_some_url_params({ "vertical-color-box-mode": value === "right", "color-box-top": value === "top" });
+					},
+				},
 			],
-			checkbox: {
-				toggle: () => {
-					change_url_param("vertical-color-box-mode", !/vertical-color-box-mode/i.test(location.hash));
-				},
-				check: () => {
-					return /vertical-color-box-mode/i.test(location.hash);
-				},
-			},
-			description: localize("Arranges the color box vertically."),
+			description: localize("Chooses where the color box goes: the bottom, the right, or the top."),
 		},
 		{
 			emoji_icon: "🎙️",
@@ -2097,7 +2127,9 @@ for (const [top_level_menu_key, menu] of Object.entries(menus)) {
 	const top_level_menu_name = top_level_menu_key.replace(/&/, "");
 	const add_literal_navigation_speech_recognition = (menu, ancestor_names) => {
 		for (const menu_item of menu) {
-			if (menu_item !== MENU_DIVIDER) {
+			if (menu_item && menu_item.radioItems) {
+				add_literal_navigation_speech_recognition(menu_item.radioItems, ancestor_names); // (a group of choices has no label of its own)
+			} else if (menu_item !== MENU_DIVIDER) {
 				const menu_item_name = menu_item.label.replace(/&|\.\.\.|\(|\)/g, "");
 				// console.log(menu_item_name);
 				let menu_item_matchers = [menu_item_name];

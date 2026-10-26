@@ -128,6 +128,8 @@ function $ToolBox(tools, is_extras) {
 		});
 		$tool_options.children().detach();
 		$tool_options.append(selected_tool.$options);
+		// (the shapes' options are two choosers, fill style and outline width, so the box is twice as tall)
+		$tool_options.toggleClass("tall-tool-options", Boolean(selected_tool.$options?.hasClass("choose-shape-options")));
 		$tool_options.children().trigger("update");
 		$canvas.css({
 			cursor: make_css_cursor(...selected_tool.cursor),

@@ -529,9 +529,13 @@ const createWindow = () => {
 		 * @returns {MenuItem[]}
 		 */
 		function makeMenu(menu_items) {
-			return menu_items.map((menu_item) => {
+			return menu_items.flatMap((menu_item) => {
 				if (menu_item === "MENU_DIVIDER") {
 					return { type: "separator" };
+				}
+				if (menu_item.radioItems) {
+					// A group of choices (Extras › Color Box): each choice is an item with the checkbox OS-GUI gave it
+					return makeMenu(menu_item.radioItems);
 				}
 				const electron_menu_item = new MenuItem({
 					// Emoji actually look terrible in macOS (mojave at least),
@@ -559,7 +563,7 @@ const createWindow = () => {
 					//
 					click: () => menu_item.action(),
 					submenu: menu_item.submenu ? makeMenu(menu_item.submenu) : undefined,
-					type: menu_item.checkbox ? "checkbox" : undefined,
+					type: menu_item.checkbox ? (menu_item.checkbox.type === "radio" ? "radio" : "checkbox") : undefined,
 					// @TODO: disable menu items when window is closed, and
 					// make File > Exit work on macOS or hide it since it's redundant with Quit JS Paint
 					// Right now it gets an Uncaught Exception:
@@ -577,7 +581,7 @@ const createWindow = () => {
 					}, 100));
 				}
 				if (menu_item.checkbox) {
-					electron_menu_item.type = "checkbox";
+					electron_menu_item.type = menu_item.checkbox.type === "radio" ? "radio" : "checkbox";
 					if (menu_item.checkbox.check) {
 						intervalIDs.push(setInterval(async () => {
 							// OS-GUI.js doesn't use Promises here but the (un)marshalled functions do.

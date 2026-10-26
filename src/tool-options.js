@@ -1,5 +1,5 @@
 // @ts-check
-/* global stroke_size:writable, airbrush_size:writable, brush_shape:writable, brush_size:writable, eraser_size:writable, magnification:writable, tool_transparent_mode:writable */
+/* global localize, stroke_size:writable, airbrush_size:writable, brush_shape:writable, brush_size:writable, eraser_size:writable, magnification:writable, tool_transparent_mode:writable */
 import { set_magnification } from "./functions.js";
 import { $G, E, make_canvas } from "./helpers.js";
 import { get_fill_tolerance, render_brush, replace_colors_with_swatch, set_fill_tolerance, stamp_brush_canvas } from "./image-manipulation.js";
@@ -224,7 +224,7 @@ const $Choose = (things, display, choose, is_chosen, gray_background_for_unselec
 	return $chooser;
 };
 /**
- * @returns {JQuery<HTMLCanvasElement> & { stroke: boolean, fill: boolean }}
+ * @returns {JQuery<HTMLDivElement> & { stroke: boolean, fill: boolean }}
  */
 const $ChooseShapeStyle = () => {
 	const $chooser = $Choose(
@@ -271,7 +271,19 @@ const $ChooseShapeStyle = () => {
 	$chooser.fill = false;
 	$chooser.stroke = true;
 
-	return $chooser;
+	// Under the fill style, the outline's width (as in Windows Vista's Paint; MS Paint used the Line tool's, unseen)
+	const $sizes = make_stroke_size_chooser().addClass("choose-shape-stroke-size");
+	const $options = /** @type {JQuery<HTMLDivElement> & { stroke: boolean, fill: boolean }} */ ($(E("div")).addClass("choose-shape-options").append($chooser, $sizes));
+	// (the shape tools read .fill and .stroke from their options)
+	for (const key of ["fill", "stroke"]) {
+		Object.defineProperty($options, key, { get: () => $chooser[key], set: (value) => { $chooser[key] = value; } });
+	}
+	$options.on("update", (event) => {
+		if (event.target !== $options[0]) { return; } // (the choosers' own updates bubble up here)
+		$chooser.trigger("update");
+		$sizes.trigger("update");
+	});
+	return $options;
 };
 
 const $choose_brush = $Choose(
@@ -326,7 +338,8 @@ const $choose_eraser_size = $Choose(
 	(size) => eraser_size === size
 ).addClass("choose-eraser");
 
-const $choose_stroke_size = $Choose(
+/** A line width chooser (the Line and Curve tools', and under the shapes' fill style, as in Vista's Paint: one width for all). */
+const make_stroke_size_chooser = () => $Choose(
 	[1, 2, 3, 4, 5],
 	(size, is_chosen, reuse_canvas) => {
 		const w = 39, h = 12, b = 5;
@@ -342,40 +355,116 @@ const $choose_stroke_size = $Choose(
 	},
 	(size) => stroke_size === size
 ).addClass("choose-stroke-size");
+const $choose_stroke_size = make_stroke_size_chooser();
 
-const magnifications = [1, 2, 6, 8, 10];
-const $choose_magnification = $Choose(
-	magnifications,
-	(scale, is_chosen, _reuse_canvas, reuse_div) => {
-		const i = magnifications.indexOf(scale);
-		const secret = scale === 10; // 10x is secret
-		const chooser_el = ChooserDiv(
-			"magnification-option",
-			is_chosen, // invert if chosen
-			39, (secret ? 2 : 13), // width, height of destination canvas
-			i * 23, 0, 23, 9, // x, y, width, height from source image
-			8, 2, 23, 9, // x, y, width, height on destination
-			reuse_div,
-		);
-		if (secret) {
-			$(chooser_el).addClass("secret-option");
+// The Magnifier's options: a zoom slider, as in later versions of Paint (it used to be four fixed choices: 1×, 2×, 6×,
+// 8×, and a hidden 10×). Up zooms in. It goes from 12.5% to 1000% (Custom Zoom's limit), and follows any zoom,
+// from View › Zoom, the Magnifier, or pinching; a zoom between the steps shows between them.
+// Drag it, click along it, use the arrow keys (Home/End for the ends), or scroll over it.
+const ZOOM_LEVELS = [0.125, 0.25, 0.5, 1, 2, 3, 4, 6, 8, 10];
+/** @param {number} scale */
+const zoom_percent_text = (scale) => `${+(scale * 100).toFixed(1)}%`;
+/** Where a zoom falls along the steps (fractional between two), so any zoom has a place. @param {number} scale */
+const zoom_position = (scale) => {
+	if (scale <= ZOOM_LEVELS[0]) { return 0; }
+	for (let i = 1; i < ZOOM_LEVELS.length; i++) {
+		if (scale <= ZOOM_LEVELS[i]) {
+			const below = ZOOM_LEVELS[i - 1], above = ZOOM_LEVELS[i];
+			return i - 1 + Math.log(scale / below) / Math.log(above / below);
 		}
-		return chooser_el;
-	},
-	(scale) => {
-		set_magnification(scale);
-	},
-	(scale) => scale === magnification,
-	true,
-).addClass("choose-magnification")
-	.css({ position: "relative" }); // positioning context for .secret-option `position: "absolute"` canvas
+	}
+	return ZOOM_LEVELS.length - 1;
+};
+/** Zooms around the middle of what's in view (the slider isn't pointing anywhere on the picture). @param {number} scale */
+const zoom_to = (scale) => {
+	if (scale === magnification) { return; }
+	const $area = $(".canvas-area");
+	set_magnification(scale, {
+		x: ($area.scrollLeft() + $area.innerWidth() / 2) / magnification,
+		y: ($area.scrollTop() + $area.innerHeight() / 2) / magnification,
+	});
+};
+const $choose_magnification = (() => {
+	const $slider = $(E("div")).addClass("choose-magnification zoom-slider").attr({
+		role: "slider",
+		tabindex: 0,
+		"aria-label": localize("Zoom"),
+		"aria-orientation": "vertical",
+		"aria-valuemin": ZOOM_LEVELS[0] * 100,
+		"aria-valuemax": ZOOM_LEVELS[ZOOM_LEVELS.length - 1] * 100,
+	}).css("touch-action", "none");
+	const $track = $(E("div")).addClass("zoom-slider-track").appendTo($slider);
+	for (let i = 0; i < ZOOM_LEVELS.length; i++) {
+		$(E("div")).addClass("zoom-slider-tick").toggleClass("zoom-slider-tick-100", ZOOM_LEVELS[i] === 1).appendTo($track).data("index", i);
+	}
+	const $thumb = $(E("div")).addClass("zoom-slider-thumb").appendTo($track);
+	const $label = $(E("div")).addClass("zoom-slider-label").appendTo($slider);
+	/** Track positions, from the top (most zoomed in) to the bottom. */
+	const y_for = (/** @type {number} */ position) => (1 - position / (ZOOM_LEVELS.length - 1)) * 100;
+	const update = () => {
+		$track.children(".zoom-slider-tick").each((_i, tick) => {
+			tick.style.top = `${y_for($(tick).data("index"))}%`;
+		});
+		$thumb.css("top", `${y_for(zoom_position(magnification))}%`);
+		$label.text(zoom_percent_text(magnification));
+		$slider.attr({ "aria-valuenow": +(magnification * 100).toFixed(1), "aria-valuetext": zoom_percent_text(magnification) });
+		$slider.attr("title", `${localize("Zoom")}: ${zoom_percent_text(magnification)}`);
+	};
+	$slider.on("update", update);
+	$G.on("magnification-changed option-changed", () => { if ($slider[0].isConnected) { update(); } });
 
-$choose_magnification.on("update", () => {
-	$choose_magnification
-		.find(".secret-option")
-		.parent()
-		.css({ position: "absolute", bottom: "-2px", left: 0, opacity: 0, height: 2, overflow: "hidden" });
-});
+	/** The step nearest a point on the track. @param {number} client_y */
+	const index_at = (client_y) => {
+		const rect = $track[0].getBoundingClientRect();
+		const fraction = 1 - Math.min(1, Math.max(0, (client_y - rect.top) / rect.height));
+		return Math.round(fraction * (ZOOM_LEVELS.length - 1));
+	};
+	const step = (/** @type {number} */ by) => {
+		const position = zoom_position(magnification);
+		// (from between two steps, the first step goes to the next one in that direction)
+		const index = by > 0 ? Math.floor(position + 1e-6) + by : Math.ceil(position - 1e-6) + by;
+		zoom_to(ZOOM_LEVELS[Math.min(ZOOM_LEVELS.length - 1, Math.max(0, index))]);
+	};
+	$slider.on("pointerdown", (event) => {
+		event.preventDefault();
+		$slider[0].focus();
+		const pointer_id = event.pointerId;
+		zoom_to(ZOOM_LEVELS[index_at(event.clientY)]);
+		const move = (/** @type {PointerEvent} */ e) => {
+			if (e.pointerId === pointer_id) { zoom_to(ZOOM_LEVELS[index_at(e.clientY)]); }
+		};
+		const up = (/** @type {PointerEvent} */ e) => {
+			if (e.pointerId !== pointer_id) { return; }
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", up);
+			window.removeEventListener("pointercancel", up);
+		};
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", up);
+		window.addEventListener("pointercancel", up);
+	});
+	$slider.on("keydown", (event) => {
+		const keys = { ArrowUp: 1, ArrowRight: 1, PageUp: 1, ArrowDown: -1, ArrowLeft: -1, PageDown: -1 };
+		if (event.key in keys) {
+			step(keys[event.key]);
+		} else if (event.key === "Home") {
+			zoom_to(ZOOM_LEVELS[0]);
+		} else if (event.key === "End") {
+			zoom_to(ZOOM_LEVELS[ZOOM_LEVELS.length - 1]);
+		} else {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation(); // (not the app's own shortcuts)
+	});
+	$slider.on("wheel", (event) => {
+		const delta = /** @type {WheelEvent} */ (event.originalEvent).deltaY;
+		if (!delta) { return; }
+		event.preventDefault();
+		step(delta < 0 ? 1 : -1);
+	});
+	return $slider;
+})();
 
 const airbrush_sizes = [9, 16, 24];
 const $choose_airbrush_size = $Choose(

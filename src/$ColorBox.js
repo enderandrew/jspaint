@@ -1,5 +1,5 @@
 // @ts-check
-/* global $bottom, $left, $right, button, get_direction, localize, palette, selected_colors */
+/* global $bottom, $left, $right, $top, button, get_direction, localize, palette, selected_colors */
 import { $Component } from "./$Component.js";
 // import { get_direction, localize } from "./app-localization.js";
 import { show_edit_colors_window } from "./edit-colors.js";
@@ -56,7 +56,23 @@ function update_$swatch($swatch, new_color) {
  * @param {boolean} vertical
  * @returns {JQuery<HTMLDivElement> & I$Component & I$ColorBox}
  */
-function $ColorBox(vertical) {
+/**
+ * Where the color box goes, from Extras › Color Box: "bottom" (as in MS Paint), "right" (Vertical Color Box Mode), or
+ * "top" (as in Windows Vista's Paint). Set by the address (#vertical-color-box-mode, #color-box-top; app.js).
+ * @returns {"bottom" | "right" | "top"}
+ */
+function get_color_box_position() {
+	if ($("body").hasClass("vertical-color-box-mode")) { return "right"; }
+	if ($("body").hasClass("color-box-top")) { return "top"; }
+	return "bottom";
+}
+
+/**
+ * @param {"bottom" | "right" | "top" | boolean} position - where it goes (true: right, false: bottom, as before)
+ */
+function $ColorBox(position) {
+	if (typeof position === "boolean") { position = position ? "right" : "bottom"; }
+	const vertical = position === "right";
 	const $cb = $(E("div")).addClass("color-box");
 
 	const $current_colors = $Swatch(selected_colors.ternary).addClass("current-colors");
@@ -150,7 +166,7 @@ function $ColorBox(vertical) {
 		$c.appendTo(get_direction() === "rtl" ? $left : $right); // opposite ToolBox by default
 	} else {
 		$c = $Component(localize("Colors"), "colors-component", "wide", $cb);
-		$c.appendTo($bottom);
+		$c.appendTo(position === "top" ? $top : $bottom);
 	}
 
 	build_palette();
@@ -167,6 +183,7 @@ function $ColorBox(vertical) {
 
 export {
 	$ColorBox,
+	get_color_box_position,
 	$Swatch,
 	update_$swatch
 };

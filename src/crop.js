@@ -1,12 +1,14 @@
 // @ts-check
-/* global $canvas_area, main_canvas, main_ctx, selection */
+/* global $canvas_area, main_canvas, main_ctx, selected_colors, selection:writable, transparency */
 
 // Image › Crop to Selection (Ctrl+Shift+X, as in later versions of Paint): the picture becomes just what's selected.
 // The selection is put down first (so a moved selection is cropped where it is now), then the canvas is cut to
 // the selection's box, as one undoable step. Page elements keep their places on the page.
+// A free-form (or inverted) selection keeps only what's inside its outline, as in Vista's Paint: the rest of its
+// box is the background color (or transparent, in a picture with transparency).
 
 import { deselect, show_error_message, undoable } from "./functions.js";
-import { get_help_folder_icon } from "./helpers.js";
+import { get_help_folder_icon, make_canvas } from "./helpers.js";
 import { showMessageBox } from "./msgbox.js";
 
 export function crop_to_selection() {
@@ -25,6 +27,32 @@ export function crop_to_selection() {
 	const bottom = Math.min(main_canvas.height, Math.round(selection.y + selection.height));
 	const width = right - x;
 	const height = bottom - y;
+	if (selection.free_form) {
+		if (width < 1 || height < 1) {
+			show_error_message("The selection is outside the picture, so there's nothing to crop to.");
+			return;
+		}
+		const cropped = selection;
+		undoable({
+			name: "Crop to Selection",
+			icon: get_help_folder_icon("p_cut.png"),
+		}, () => {
+			const out = make_canvas(width, height);
+			if (!transparency) {
+				out.ctx.fillStyle = selected_colors.background;
+				out.ctx.fillRect(0, 0, width, height);
+			}
+			out.ctx.drawImage(cropped.canvas, cropped.x - x, cropped.y - y, cropped.width, cropped.height);
+			cropped.destroy();
+			selection = null;
+			main_canvas.width = width;
+			main_canvas.height = height;
+			main_ctx.disable_image_smoothing();
+			main_ctx.drawImage(out, 0, 0);
+			$canvas_area.trigger("resize");
+		});
+		return;
+	}
 	deselect(); // put the selection down where it is
 	if (width < 1 || height < 1) {
 		show_error_message("The selection is outside the picture, so there's nothing to crop to.");

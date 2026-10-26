@@ -17,6 +17,8 @@ class OnCanvasSelection extends OnCanvasObject {
 	 */
 	constructor(x, y, width, height, image_source) {
 		super(x, y, width, height, true);
+		/** A free-form selection (or an inverted one): only the pixels inside its outline are selected. */
+		this.free_form = false;
 
 		this.$el.addClass("selection");
 		let last_tool_transparent_mode = tool_transparent_mode;

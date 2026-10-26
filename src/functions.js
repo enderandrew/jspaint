@@ -41,7 +41,8 @@ const param_types = {
 	"easy-undo": "bool",
 	"dwell-clicker": "bool",
 	"head-tracker": "bool",
-	"vertical-color-box-mode": "bool", // could rename this to simply "vertical-color-box" or "vertical-palette"
+	"vertical-color-box-mode": "bool", // the color box on the right (Extras › Color Box › Right); could rename this to simply "vertical-color-box" or "vertical-palette"
+	"color-box-top": "bool", // the color box at the top, as in Windows Vista's Paint (Extras › Color Box › Top)
 	"speech-recognition-mode": "bool", // could rename this to simply "voice"
 	// dev settings
 	"compare-reference": "bool",
@@ -413,7 +414,7 @@ function set_magnification(new_scale, anchor_point) {
 	const anchor_on_page = from_canvas_coords(anchor_point);
 
 	magnification = new_scale;
-	if (new_scale !== 1) {
+	if (new_scale > 1) { // (the Magnifier zooms back in to this; zooming out isn't something to return to)
 		return_to_magnification = new_scale;
 	}
 	update_magnified_canvas_size(); // also updates canvas_bounding_client_rect used by from_canvas_coords()

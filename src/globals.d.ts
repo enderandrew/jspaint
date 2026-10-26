@@ -561,6 +561,8 @@ declare class OnCanvasSelection extends OnCanvasObject {
 	canvas: PixelCanvas;
 	source_canvas: PixelCanvas;
 	dragging: boolean;
+	/** A free-form (or inverted) selection: only the pixels inside its outline are selected. */
+	free_form: boolean;
 }
 declare class OnCanvasTextBox extends OnCanvasObject {
 	constructor(x: number, y: number, width: number, height: number, starting_text?: string);
