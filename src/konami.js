@@ -35,6 +35,15 @@ function afterSequence(sequence, action) {
 	};
 }
 
+/** The Konami code's sound effect, fetched the first time the code is entered. @type {HTMLAudioElement | null} */
+let konami_audio = null;
+/** Plays audio/KONAMI.ogg (quietly does nothing if the browser won't play it). */
+export function play_konami_sound() {
+	konami_audio ??= new Audio("audio/KONAMI.ogg");
+	konami_audio.currentTime = 0;
+	konami_audio.play().catch(() => { /* (no sound: autoplay blocked, or no Ogg support) */ });
+}
+
 export function onKonamiCodeEntered(action) {
 	addEventListener("keydown", afterSequence([38, 38, 40, 40, 37, 39, 37, 39, 66, 65], action));
 }

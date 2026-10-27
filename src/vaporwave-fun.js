@@ -1,5 +1,5 @@
 // @ts-check
-import { onKonamiCodeEntered } from "./konami.js";
+import { onKonamiCodeEntered, play_konami_sound } from "./konami.js";
 (() => {
 	/** @type {number} */
 	let rAF_ID;
@@ -218,7 +218,10 @@ import { onKonamiCodeEntered } from "./konami.js";
 		}
 	};
 
-	onKonamiCodeEntered(toggle_vaporwave);
+	onKonamiCodeEntered(() => {
+		play_konami_sound();
+		toggle_vaporwave();
+	});
 	addEventListener("keydown", (event) => {
 		if (event.key === "Escape") {
 			stop_vaporwave();
