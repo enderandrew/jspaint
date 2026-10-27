@@ -1,38 +1,132 @@
 name: Release Electron App
-# Runs only when started by hand: Actions > Release Electron App > Run workflow.
-# It builds the branch you pick there and makes a draft release named for its tag,
-# which is v<version from package.json> unless you type a different one.
+# Runs only when started by hand: Actions > Release Electron App > Run workflow. It builds the desktop app for
+# Windows, macOS and Linux from the branch you pick there, then:
+#  - keeps each platform's files as a download on the run's page (Artifacts: desktop-Windows, desktop-macOS,
+#    desktop-Linux), for 30 days;
+#  - and puts them all on the Releases page, as one of:
+#      "Development build" (the default): a pre-release tagged dev-build, "Latest development build", replaced
+#        by each run (its tag moves to the commit built), so there's always exactly one;
+#      "Draft release": a draft tagged v<version from package.json> (or the tag you type), with that version's
+#        CHANGELOG.md section as its notes, for you to look over and publish.
+#
+# Files: Windows: the Squirrel installer (…Setup.exe, plus the .nupkg and RELEASES it updates from) and an .msix;
+# macOS: a .zip of the app; Linux: .deb, .rpm and .AppImage.
+
 on:
   workflow_dispatch:
     inputs:
+      release:
+        description: "Where the files go besides the run's downloads"
+        type: choice
+        options:
+          - Development build
+          - Draft release
+        default: Development build
       tag:
-        description: "Release tag (leave empty for v + the version in package.json)"
+        description: "Draft release only: its tag (leave empty for v + the version in package.json)"
         required: false
         default: ""
-permissions:
-  id-token: write # Required for OIDC
-  contents: write # Required for creating releases
-jobs:
-  publish:
-    runs-on: ${{ matrix.os }}
 
+permissions:
+  contents: write # for the release
+
+# One at a time (the development build is replaced each run)
+concurrency:
+  group: release-desktop-app
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
+      fail-fast: false # (one platform failing still leaves the others' files)
       matrix:
         os: [ubuntu-22.04, windows-latest, macos-latest]
 
     steps:
-      # checkout v7, setup-node v7 and release-action v1.21.0 all run on Node 24
-      # (GitHub removed the Node 20 runtime for actions in September 2026).
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
           # Node 24 LTS. Electron Forge 8 needs Node 22.13 or newer.
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
           cache: npm
 
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      # (make, not publish: the files are uploaded below, so nothing here needs a GitHub token)
+      - name: Build the app and its installers
+        run: npm run electron:make
+        env:
+          JSPAINT_OFFICIAL_RELEASE: "true"
+
+      - name: Keep the files for download
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-${{ runner.os }}
+          path: |
+            out/make/**/*.exe
+            out/make/**/*.nupkg
+            out/make/**/RELEASES
+            out/make/**/*.msix
+            out/make/**/*.zip
+            out/make/**/*.deb
+            out/make/**/*.rpm
+            out/make/**/*.AppImage
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: build
+    # (whatever built: a platform that failed is left out, and noted)
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: desktop-*
+          path: dist
+
+      - name: Gather the files
+        id: files
+        shell: bash
+        run: |
+          mkdir -p release-files
+          # (flattened; RELEASES is Squirrel's update list, kept under its own name)
+          find dist -type f -exec cp {} release-files/ \;
+          ls -la release-files
+          if [ -z "$(ls -A release-files)" ]; then echo "Nothing was built." >&2; exit 1; fi
+          missing=""
+          for platform in Windows macOS Linux; do
+            [ -d "dist/desktop-$platform" ] || missing="$missing $platform"
+          done
+          echo "missing=$missing" >> "$GITHUB_OUTPUT"
+
+      - name: Replace the development build
+        if: inputs.release == 'Development build'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MISSING: ${{ steps.files.outputs.missing }}
+        run: |
+          # The last one goes, tag and all, so the tag points at this commit
+          gh release delete dev-build --cleanup-tag --yes || true
+          notes="Built from ${GITHUB_SHA::7} on $(date -u '+%Y-%m-%d %H:%M UTC') by the Release Electron App workflow. Not a release: the latest development build, replaced each time the workflow runs."
+          if [ -n "$MISSING" ]; then notes="$notes"$'\n\n'"Missing this time (its build failed):$MISSING"; fi
+          gh release create dev-build release-files/* \
+            --target "$GITHUB_SHA" \
+            --title "Latest development build" \
+            --notes "$notes" \
+            --prerelease \
+            --latest=false
+
       - name: Work out the release tag
+        if: inputs.release == 'Draft release'
         id: tag
         shell: bash
         env:
@@ -42,32 +136,30 @@ jobs:
           if [ -z "$tag" ]; then tag="v$(node -p "require('./package.json').version")"; fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      - name: Install Node.js dependencies
-        run: npm ci
-
-      - name: Build and upload binaries
-        run: npm run electron:publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JSPAINT_OFFICIAL_RELEASE: "true"
-
-      - name: Extract changelog section
-        if: runner.os == 'Windows'
+      - name: Extract the changelog section
+        if: inputs.release == 'Draft release'
         id: changelog
         shell: bash
-        run: node scripts/release/extract-changelog.js >> $GITHUB_OUTPUT
+        # (if CHANGELOG.md has no section for this version, the draft gets a placeholder to fill in)
+        run: |
+          if ! node scripts/release/extract-changelog.js >> "$GITHUB_OUTPUT"; then
+            printf 'changelog<<EndOfStringDelimiter\n(Write the release notes here.)\nEndOfStringDelimiter\n' >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Update Release
-        if: runner.os == 'Windows'
+      - name: Make the draft release
+        if: inputs.release == 'Draft release'
         uses: ncipollo/release-action@v1.21.0
         with:
-          body: ${{ steps.changelog.outputs.changelog }}
-          allowUpdates: true
           tag: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           commit: ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          artifacts: release-files/*
           draft: true
+          allowUpdates: true
+          replacesArtifacts: true
+          removeArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Publish to Windows Store
       #   uses: isaacrlevin/windows-store-action@25ac1ac31e3434add3fede11f458a453fe371fb0
@@ -76,4 +168,4 @@ jobs:
       #     client-id: ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }}
       #     client-secret: ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
       #     app-id: ${{ secrets.STORE_APP_ID }}
-      #     package-path: "${{ github.workspace }}/out/make/msix/x64/JS Paint.msix"
+      #     package-path: release-files/JS Paint.msix
