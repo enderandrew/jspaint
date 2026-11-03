@@ -5,6 +5,7 @@
 		"lib",
 		"out", // Electron Forge output
 		"pages-dist", // GitHub Pages build
+		"w93-dist", // Windows 93 build
 		"*.png",
 		"*.gif",
 		"*.jpg",

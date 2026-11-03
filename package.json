@@ -133,6 +133,7 @@
     "update-localization": "node ./localization/preprocess.js",
     "update-cli-docs": "node ./scripts/update-cli-docs.js",
     "sync-os-gui": "node ./sync-package.js os-gui && git apply --ignore-whitespace ./lib/os-gui.patch && npm run build-css",
+    "build-w93": "node scripts/build-w93.mjs",
     "serve": "node scripts/static-server.mjs 1999",
     "test:start-server": "node scripts/static-server.mjs 11822",
     "test": "npm run test:site-builder",

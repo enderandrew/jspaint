@@ -15,6 +15,7 @@ export default [
 			"**/lib/", // vendored dependencies
 			"**/out/", // Electron build
 			"**/pages-dist/", // GitHub Pages build (scripts/build-pages.mjs)
+			"**/w93-dist/", // Windows 93 build (scripts/build-w93.mjs)
 			"**/build/", // maybe nothing
 			"**/dist/", // maybe nothing
 			"**/worker/editor/dist/", // built copy of the Paint app for the editor Worker
