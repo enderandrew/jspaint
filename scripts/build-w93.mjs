@@ -8,7 +8,11 @@
 //    evaluates strings there, which the policy blocked: "EvalError: Evaluating a string as JavaScript violates
 //    the following Content Security Policy directive…"), and no longer names Firebase's servers;
 //  - Firebase (lib/firebase/) and the service worker (sw.js) are left out.
-// Windows 93 opens a file in it with ?open=<path> on the frame's address, or iframe.contentWindow.jspaint_open(file).
+//  - w93/app.manifest.json5 and w93/jspaint-w93.js go next to index.html. Windows 93 opens files with an app by
+//    emitting "decode" on it (with a file agent), which Paint's page can't hear from inside its frame: the module
+//    listens for it and calls iframe.contentWindow.jspaint_open(blob, name) (src/host.js). The manifest's `decode`
+//    file types are what make Windows 93 pass files over at all (without them, double-clicking a picture opens an
+//    empty Paint). ?open=<path> on the frame's address works too, for other hosts.
 //
 //   node scripts/build-w93.mjs [output-dir]
 
@@ -25,6 +29,9 @@ execFileSync(process.execPath, [path.join(root, "scripts/build-pages.mjs"), dist
 
 fs.rmSync(path.join(dist, "lib/firebase"), { recursive: true, force: true });
 fs.rmSync(path.join(dist, "sw.js"), { force: true });
+for (const file of ["app.manifest.json5", "jspaint-w93.js"]) {
+	fs.copyFileSync(path.join(root, "w93", file), path.join(dist, file));
+}
 
 const index_path = path.join(dist, "index.html");
 let html = fs.readFileSync(index_path, "utf8");
@@ -43,4 +50,4 @@ policy = policy.replace(/connect-src([^;]*);/, (_m, rest) => `connect-src ${with
 html = html.replace(csp, (_m, before, _old, after) => before + policy + after);
 fs.writeFileSync(index_path, html);
 
-console.log(`${path.relative(root, dist)}: for Windows 93 (no Firebase, no service worker, 'unsafe-eval' allowed)`);
+console.log(`${path.relative(root, dist)}: for Windows 93 (no Firebase, no service worker, 'unsafe-eval' allowed, with app.manifest.json5)`);
