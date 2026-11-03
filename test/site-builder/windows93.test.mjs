@@ -1,7 +1,8 @@
 // The Windows 93 build (scripts/build-w93.mjs, src/host.js), in a stand-in host page: the host can evaluate code in
 // Paint's frame (Windows 93's app framework does, and the policy used to block it with an EvalError), there's no
 // Extras › Multi-User and no Firebase, no service worker, and the host opens a picture in Paint with ?open=<path>
-// or iframe.contentWindow.jspaint_open(blob).
+// or iframe.contentWindow.jspaint_open(blob). And Windows 93's own way: the manifest's module (w93/jspaint-w93.js)
+// hears the app's "decode" event (a double-clicked file) and passes the file into Paint's frame.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -16,6 +17,11 @@ assert.equal(existsSync(path.join(root, "w93-dist/sw.js")), false, "no service w
 const html = readFileSync(path.join(root, "w93-dist/index.html"), "utf8");
 assert.match(html, /<meta name="jspaint-host" content="windows93">/);
 assert.doesNotMatch(html.match(/<meta http-equiv="Content-Security-Policy" content="[^"]*"/)[0], /firebase/i);
+const manifest = readFileSync(path.join(root, "w93-dist/app.manifest.json5"), "utf8");
+assert.match(manifest, /module: "\.\/jspaint-w93\.js"/);
+assert.match(manifest, /document: "\.\/index\.html"/);
+assert.match(manifest, /"image\/png": \["\.png"\]/, "the manifest lists the pictures Windows 93 should open with Paint");
+assert.equal(existsSync(path.join(root, "w93-dist/jspaint-w93.js")), true);
 
 // The host: a page on the same origin with Paint in a frame, opening a picture from a path (as /c/… would be)
 const browser = await chromium.launch();
@@ -70,6 +76,41 @@ await frame.evaluate(() => { saved = true; return window.jspaint_open("/c/users/
 await frame.waitForTimeout(500);
 assert.match(await frame.evaluate(() => [...document.querySelectorAll(".window")].filter((w) => w.offsetParent).map((w) => w.textContent).join("\n")), /Couldn't open \/c\/users\/nobody\/missing\.jpg/);
 errors.splice(0, errors.length, ...errors.filter((e) => !/missing\.jpg|status of 404|Couldn't open/.test(e)));
+
+// Windows 93's way: a stand-in App (an emitter with the window's element) and the module from the build; the
+// file agent arrives before Paint has started, as it does when a picture is double-clicked
+const windows93 = await browser.newPage({ viewport: { width: 1000, height: 720 } });
+windows93.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+windows93.on("console", (message) => { if (message.type() === "error") { errors.push(`console: ${message.text().slice(0, 300)}`); } });
+await windows93.goto(new URL("test/site-builder/README.md", BASE_URL).href);
+await windows93.evaluate(async () => {
+	const handlers = {};
+	const el = document.createElement("div");
+	document.body.replaceChildren(el);
+	const app = {
+		el,
+		signal: new AbortController().signal,
+		on(event, fn) { (handlers[event] ??= []).push(fn); return app; },
+		emit(event, ...args) { for (const fn of handlers[event] ?? []) { fn(...args); } },
+	};
+	const { renderApp } = await import("/w93-dist/jspaint-w93.js");
+	renderApp(app);
+	// a 50×30 red picture, in a file agent like Windows 93's
+	const canvas = document.createElement("canvas");
+	canvas.width = 50;
+	canvas.height = 30;
+	const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
+	ctx.fillStyle = "#f00";
+	ctx.fillRect(0, 0, 50, 30);
+	const blob = await new Promise((resolve) => { canvas.toBlob(resolve, "image/png"); });
+	app.emit("decode", { path: "/c/users/windows93/desktop/red.png", getName: () => "red.png", getBlob: async () => blob });
+	// then Windows 93 puts index.html in the window
+	el.innerHTML = '<iframe src="/w93-dist/index.html" style="width: 900px; height: 650px"></iframe>';
+});
+const w93_frame = await (await windows93.waitForSelector("iframe")).contentFrame();
+await w93_frame.waitForFunction(() => typeof main_canvas !== "undefined" && main_canvas.width === 50 && main_canvas.height === 30, null, { timeout: 60000 });
+assert.deepEqual(await w93_frame.evaluate(() => [...main_ctx.getImageData(25, 15, 1, 1).data]), [255, 0, 0, 255]);
+assert.match(await w93_frame.evaluate(() => document.title), /red\.png/, "opened from the decode event, with its name");
 
 await browser.close();
 assert.deepEqual(errors, [], "page errors");
