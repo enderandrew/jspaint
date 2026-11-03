@@ -1,0 +1,134 @@
+{
+  name: "JSPaint",
+  command: "jspaint",
+  desription: "MS Paint recreated in glorious Javascript and enhanced with new toys",
+  categories: ["Utility", "Editor", "Paint", "Graphics"],
+
+  width: 800,
+  height: 700,
+
+  maximizable: true,
+  resizable: true,
+
+decode: {
+    types: [
+      {
+        description: "BMP image",
+        accept: {
+          "image/bmp": [".bmp"],
+        },
+      },
+      {
+        description: "BMP image",
+        accept: {
+          "image/bmp": [".dib"],
+        },
+      },
+      {
+        description: "GIF image",
+        accept: {
+          "image/gif": [".gif"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".jfif"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".jpg"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".jpeg"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".jpe"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".pjpeg"],
+        },
+      },
+      {
+        description: "JPG image",
+        accept: {
+          "image/jpg": [".pjp"],
+        },
+      },
+      {
+        description: "PNG image",
+        accept: {
+          "image/png": [".png"],
+        },
+      },
+      {
+        description: "SVG image",
+        accept: {
+          "image/svg": [".svg"],
+        },
+      },
+      {
+        description: "WEBP image",
+        accept: {
+          "image/web": [".webp"],
+        },
+      },
+      {
+        description: "TIFF image",
+        accept: {
+          "image/tiff": [".tiff"],
+        },
+      },
+      {
+        description: "TIFF image",
+        accept: {
+          "image/tiff": [".tif"],
+        },
+      },
+      {
+        description: "AVIF image",
+        accept: {
+          "image/avif": [".avif"],
+        },
+      },
+      {
+        description: "Icon",
+        accept: {
+          "image/x-icon": [".ico"],
+        },
+      },
+      {
+        description: "Icon",
+        accept: {
+          "image/x-icon": [".cur"],
+        },
+      },
+      {
+        description: "HTML Web Page",
+        accept: {
+          "text/html": [".html"],
+        },
+      },
+      {
+        description: "HTML Web Page",
+        accept: {
+          "text/html": [".htm"],
+        },
+      },
+    ],
+  },
+
+  about: "./about.md",
+  document: "./index.html",
+}
