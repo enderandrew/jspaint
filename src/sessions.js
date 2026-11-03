@@ -12,6 +12,7 @@ import { showMessageBox } from "./msgbox.js";
 import { localStore } from "./storage.js";
 import { get_backup_image, put_backup_image, restore_layers_sidecar, save_layers_sidecar } from "./layer-storage.js";
 import { begin_loading } from "./loading-veil.js";
+import { multi_user_available } from "./host.js";
 
 const log = (...args) => {
 	window.console?.log(...args);
@@ -1130,7 +1131,8 @@ const update_session_from_location_hash = () => {
 			} catch (_error) {
 				// ignore, as this is only for development
 			}
-			if (local) {
+			if (local || !multi_user_available) {
+				// (a build for another system has no multi-user sessions: a #session: address is a document kept here)
 				log(`Starting a new LocalSession, ID: ${session_id}`);
 				current_session = new LocalSession(session_id);
 			} else if (online_session_implementation === "RESTSession") {

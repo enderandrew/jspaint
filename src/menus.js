@@ -6,6 +6,7 @@ import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
 import { show_edit_colors_window } from "./edit-colors.js";
 import { palette_formats } from "./file-format-data.js";
 import { show_multi_user_setup_dialog } from "./functions.js";
+import { multi_user_available } from "./host.js";
 import { are_you_sure, change_some_url_params, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_page_history } from "./page-history.js";
 import { has_reference_image, is_reference_image_visible, load_reference_image, remove_reference_image, show_reference_image_opacity_window, toggle_reference_image } from "./reference-image.js";
@@ -2122,6 +2123,15 @@ const menus = {
 		},
 	],
 };
+
+// A build for another system (host.js) has no multi-user sessions: Extras › Multi-User goes, with its divider
+if (!multi_user_available) {
+	for (const menu of Object.values(menus)) {
+		const index = menu.findIndex((item) => typeof item === "object" && "label" in item && item.label === localize("&Multi-User"));
+		if (index === -1) { continue; }
+		menu.splice(menu[index - 1] === MENU_DIVIDER ? index - 1 : index, menu[index - 1] === MENU_DIVIDER ? 2 : 1);
+	}
+}
 
 for (const [top_level_menu_key, menu] of Object.entries(menus)) {
 	const top_level_menu_name = top_level_menu_key.replace(/&/, "");

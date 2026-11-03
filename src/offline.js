@@ -4,13 +4,14 @@
 // Not in the desktop app (its files are on disk already), nor in the Discord activity (Discord's proxy owns
 // its addresses), nor under automated tests unless a test asks for it.
 import { is_discord_embed } from "./helpers.js";
+import { offline_worker_available } from "./host.js";
 
 /** @type {any} */
 const window_any = window;
 
 function wanted() {
 	if (!("serviceWorker" in navigator) || !window.isSecureContext || !/^https?:$/.test(location.protocol)) { return false; }
-	if (window_any.is_electron_app || is_discord_embed) { return false; }
+	if (window_any.is_electron_app || is_discord_embed || !offline_worker_available) { return false; } // (inside a host, its service worker serves the files)
 	if (navigator.webdriver) {
 		try {
 			return localStorage.getItem("jspaint test service worker") === "on";
